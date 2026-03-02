@@ -1,0 +1,51 @@
+---
+title: 'PutLiveChannel'
+description: 'Create a LiveChannel for RTMP streaming'
+---
+
+Creates a LiveChannel for RTMP-based video streaming to OSS. The channel generates an ingest URL for streaming and stores the video as HLS segments.
+
+## Request
+
+```
+PUT /{ChannelName}?live HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<LiveChannelConfiguration>
+  <Description>My live stream</Description>
+  <Status>enabled</Status>
+  <Target>
+    <Type>HLS</Type>
+    <FragDuration>5</FragDuration>
+    <FragCount>3</FragCount>
+    <PlaylistName>playlist.m3u8</PlaylistName>
+  </Target>
+</LiveChannelConfiguration>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Status` | String | `enabled` or `disabled`. |
+| `Target.Type` | String | Output format. Only `HLS` is supported. |
+| `Target.FragDuration` | Integer | Fragment duration in seconds (default: 5). |
+| `Target.FragCount` | Integer | Number of fragments in the playlist (default: 3). |
+| `Target.PlaylistName` | String | HLS playlist filename (default: `playlist.m3u8`). |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CreateLiveChannelResult>
+  <PublishUrls>
+    <Url>rtmp://my-bucket.oss-cn-hangzhou.aliyuncs.com/live/{ChannelName}</Url>
+  </PublishUrls>
+  <PlayUrls>
+    <Url>https://my-bucket.oss-cn-hangzhou.aliyuncs.com/{ChannelName}/playlist.m3u8</Url>
+  </PlayUrls>
+</CreateLiveChannelResult>
+```

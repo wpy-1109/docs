@@ -1,0 +1,222 @@
+---
+title: "Bucket Tagging"
+sidebarTitle: "Bucket Tagging"
+description: "Learn how to classify and manage buckets using tags in Alibaba Cloud OSS."
+"og:title": "Bucket Tagging - Alibaba Cloud OSS"
+---
+
+Bucket tags are key-value pairs that you attach to buckets for classification, cost tracking, and access control. You can use tags to filter buckets by project, environment, or department, and to create RAM policies that restrict access to tagged buckets.
+
+<Info>
+You can configure up to 20 tags per bucket. Tag keys are case-sensitive and must be unique within a bucket.
+</Info>
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:PutBucketTagging` permission
+
+## Tag constraints
+
+| Property | Constraint |
+|----------|-----------|
+| Maximum tags per bucket | 20 |
+| Key length | 1--64 characters (UTF-8) |
+| Value length | 0--128 characters (UTF-8) |
+| Key restrictions | Cannot start with `http://`, `https://`, or `Aliyun` (case-insensitive) |
+
+## Using the console
+
+<Steps>
+  <Step title="Navigate to Bucket Tagging">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/), click the bucket name, then choose **Bucket Settings > Bucket Tagging**.
+  </Step>
+  <Step title="Add tags">
+    Click **Create Tag**, enter the key and value, then click **Save**. Click **+ Tag** to add multiple tags.
+  </Step>
+</Steps>
+
+## Using ossutil CLI
+
+```bash
+# Add tags to a bucket
+ossutil api put-bucket-tags --bucket examplebucket --body '{
+  "Tagging": {
+    "TagSet": {
+      "Tag": [
+        {"Key": "project", "Value": "website"},
+        {"Key": "env", "Value": "production"}
+      ]
+    }
+  }
+}'
+
+# Query bucket tags
+ossutil api get-bucket-tags --bucket examplebucket
+
+# Delete all bucket tags
+ossutil api delete-bucket-tags --bucket examplebucket
+```
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="bucket_tagging.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Add tags
+    result = client.put_bucket_tags(oss.PutBucketTagsRequest(
+        bucket="examplebucket",
+        tagging=oss.Tagging(
+            tag_set=oss.TagSet(
+                tags=[
+                    oss.Tag(key="project", value="website"),
+                    oss.Tag(key="env", value="production"),
+                ]
+            )
+        )
+    ))
+
+    print(f"Tags set. Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="BucketTagging.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.SetBucketTaggingRequest;
+
+    public class BucketTagging {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                SetBucketTaggingRequest request = new SetBucketTaggingRequest("examplebucket");
+                request.setTag("project", "website");
+                request.setTag("env", "production");
+                ossClient.setBucketTagging(request);
+                System.out.println("Tags set successfully.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="bucket_tagging.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        request := &oss.PutBucketTagsRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            Tagging: &oss.Tagging{
+                TagSet: &oss.TagSet{
+                    Tags: []oss.Tag{
+                        {Key: oss.Ptr("project"), Value: oss.Ptr("website")},
+                        {Key: oss.Ptr("env"), Value: oss.Ptr("production")},
+                    },
+                },
+            },
+        }
+
+        result, err := client.PutBucketTags(context.TODO(), request)
+        if err != nil {
+            log.Fatalf("Failed to set tags: %v", err)
+        }
+
+        log.Printf("Tags set: %#v\n", result)
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="bucketTagging.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function putBucketTags() {
+      try {
+        const result = await client.putBucketTags('examplebucket', {
+          project: 'website',
+          env: 'production',
+        });
+        console.log('Tags set:', result);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    putBucketTags();
+    ```
+  </Tab>
+</Tabs>
+
+## Use cases
+
+Tags enable tag-based RAM policies. For example, you can grant a RAM user read and write access only to buckets tagged with `project: website`:
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["oss:*"],
+      "Resource": ["acs:oss:*:*:*"],
+      "Condition": {
+        "StringEquals": {
+          "oss:BucketTag/project": "website"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Next steps
+
+- [Object tagging](/guides/objects/object-tagging)
+- [RAM policies](/guides/access-control/ram-policies)
+- [Resource groups](/guides/buckets/resource-groups)

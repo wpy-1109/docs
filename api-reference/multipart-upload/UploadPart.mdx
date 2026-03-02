@@ -1,0 +1,44 @@
+---
+title: 'UploadPart'
+description: 'Upload a part of a multipart upload'
+---
+
+Uploads a part for a multipart upload. Each part must be between 100 KB and 5 GB (except the last part, which can be smaller).
+
+## Request
+
+```
+PUT /{ObjectName}?partNumber={PartNumber}&uploadId={UploadId} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+Content-Length: {PartSize}
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `partNumber` | Integer | Yes | Part number (1-10000). |
+| `uploadId` | String | Yes | Upload ID from InitiateMultipartUpload. |
+
+### Request body
+
+The part data (binary content).
+
+## Response
+
+```http
+HTTP/1.1 200 OK
+ETag: "7265F4D211B56873A381D321F586E4A9"
+x-oss-hash-crc64ecma: 316181249502703****
+```
+
+Save the `ETag` for each part -- you need them for CompleteMultipartUpload.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchUpload` | 404 | The upload ID does not exist. |
+| `EntityTooSmall` | 400 | Part is smaller than 100 KB (except the last part). |
+| `EntityTooLarge` | 400 | Part exceeds 5 GB. |
+| `InvalidArgument` | 400 | Part number is out of range (1-10000). |

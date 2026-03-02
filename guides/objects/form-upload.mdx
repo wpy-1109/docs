@@ -1,0 +1,134 @@
+---
+title: "Form Upload (POST)"
+sidebarTitle: "Form Upload"
+description: "Learn how to upload objects using HTML forms and HTTP POST requests in Alibaba Cloud OSS."
+"og:title": "Form Upload (POST) - Alibaba Cloud OSS"
+---
+
+Form upload lets you upload objects directly from an HTML page using an HTTP POST request. The server generates a policy to control upload attributes such as object size, type, and destination. This is ideal for browser-based uploads without routing files through your application server.
+
+<Info>
+Form upload supports files up to **5 GB**. For larger files, use [multipart upload](/guides/objects/multipart-upload).
+</Info>
+
+## How it works
+
+1. Your application server generates a POST policy and signature.
+2. The browser sends an HTTP POST request directly to the OSS endpoint with the file and policy.
+3. OSS validates the policy, stores the object, and returns a response.
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:PutObject` permission
+- CORS configured on the bucket if uploading from a browser
+
+## HTML form example
+
+```html
+<form action="https://examplebucket.oss-cn-hangzhou.aliyuncs.com"
+      method="post" enctype="multipart/form-data">
+  <input type="hidden" name="key" value="uploads/${filename}" />
+  <input type="hidden" name="OSSAccessKeyId" value="your-access-key-id" />
+  <input type="hidden" name="policy" value="base64-encoded-policy" />
+  <input type="hidden" name="signature" value="computed-signature" />
+  <input type="hidden" name="success_action_status" value="200" />
+  <input type="file" name="file" />
+  <input type="submit" value="Upload" />
+</form>
+```
+
+## Policy fields
+
+| Field | Description |
+|-------|-------------|
+| `expiration` | When the policy expires (ISO 8601 format). |
+| `conditions` | Array of conditions that must be met (bucket, key prefix, content-length-range, etc.). |
+
+Example policy (before Base64 encoding):
+
+```json
+{
+  "expiration": "2026-12-31T12:00:00.000Z",
+  "conditions": [
+    {"bucket": "examplebucket"},
+    ["starts-with", "$key", "uploads/"],
+    ["content-length-range", 0, 104857600]
+  ]
+}
+```
+
+## Server-Side policy generation
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="generate_policy.py"
+    import json
+    import base64
+    import hmac
+    import hashlib
+    from datetime import datetime, timedelta
+
+    access_key_id = "your-access-key-id"
+    access_key_secret = "your-access-key-secret"
+
+    # Create policy
+    expiration = (datetime.utcnow() + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    policy = {
+        "expiration": expiration,
+        "conditions": [
+            {"bucket": "examplebucket"},
+            ["starts-with", "$key", "uploads/"],
+            ["content-length-range", 0, 100 * 1024 * 1024],  # 100 MB max
+        ],
+    }
+
+    policy_b64 = base64.b64encode(json.dumps(policy).encode()).decode()
+    signature = base64.b64encode(
+        hmac.new(access_key_secret.encode(), policy_b64.encode(), hashlib.sha1).digest()
+    ).decode()
+
+    print(f"Policy: {policy_b64}")
+    print(f"Signature: {signature}")
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="generatePolicy.js"
+    const crypto = require('crypto');
+
+    const accessKeyId = 'your-access-key-id';
+    const accessKeySecret = 'your-access-key-secret';
+
+    const expiration = new Date(Date.now() + 3600 * 1000).toISOString();
+    const policy = {
+      expiration,
+      conditions: [
+        { bucket: 'examplebucket' },
+        ['starts-with', '$key', 'uploads/'],
+        ['content-length-range', 0, 100 * 1024 * 1024],
+      ],
+    };
+
+    const policyB64 = Buffer.from(JSON.stringify(policy)).toString('base64');
+    const signature = crypto
+      .createHmac('sha1', accessKeySecret)
+      .update(policyB64)
+      .digest('base64');
+
+    console.log('Policy:', policyB64);
+    console.log('Signature:', signature);
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+Generate policies and signatures on your server. Never expose your AccessKey Secret in client-side code.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/guides/objects/upload-objects)
+- [Presigned URLs](/guides/access-control/presigned-urls)
+- [CORS](/guides/access-control/cors)
+- [Direct client upload](/guides/advanced/direct-client-upload)

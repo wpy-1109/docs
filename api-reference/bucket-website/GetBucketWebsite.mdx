@@ -1,0 +1,23 @@
+---
+title: 'GetBucketWebsite'
+description: 'Query the static website hosting configuration of a bucket'
+---
+
+Queries the static website hosting configuration of a bucket.
+
+## Request
+
+```
+GET /?website HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+Returns the website configuration XML.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchWebsiteConfiguration` | 404 | No website configuration exists for this bucket. |

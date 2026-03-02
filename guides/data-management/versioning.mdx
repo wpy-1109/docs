@@ -1,0 +1,44 @@
+---
+title: "Versioning"
+sidebarTitle: "Versioning"
+description: "Learn how to configure versioning in Alibaba Cloud OSS."
+"og:title": "Versioning - Alibaba Cloud OSS"
+---
+
+Versioning protects your data from accidental deletion or overwrite by keeping multiple versions of each object. When you overwrite or delete an object, OSS preserves the previous version.
+
+## Versioning states
+
+| State | Description |
+|-------|-------------|
+| **Unversioned** | Default. Overwrites and deletes are permanent. |
+| **Enabled** | All objects are versioned. Deletes add a delete marker. |
+| **Suspended** | New versions are not created, but existing versions are preserved. |
+
+<Note>
+Once versioning is enabled on a bucket, it cannot be returned to the unversioned state. It can only be suspended.
+</Note>
+
+## Enable versioning
+
+<Tabs>
+  <Tab title="Console">
+    Navigate to your bucket, choose **Data Protection > Versioning**, and set the status to **Enabled**.
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client.put_bucket_versioning(oss.PutBucketVersioningRequest(
+        bucket="examplebucket",
+        versioning_configuration=oss.VersioningConfiguration(
+            status="Enabled"
+        )
+    ))
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Lifecycle rules](/guides/data-management/lifecycle-rules)
+- [WORM retention policies](/guides/security/worm-retention)
+- [Delete objects](/guides/objects/delete-objects)

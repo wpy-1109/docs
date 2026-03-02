@@ -1,0 +1,60 @@
+---
+title: 'GetBucketStat'
+description: 'Query storage usage and object counts for a bucket'
+---
+
+Returns the storage capacity, object count, and multipart upload statistics for a bucket.
+
+## Request
+
+```
+GET /?stat HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketStat>
+  <Storage>1024000</Storage>
+  <ObjectCount>100</ObjectCount>
+  <MultipartUploadCount>5</MultipartUploadCount>
+  <LiveChannelCount>0</LiveChannelCount>
+  <LastModifiedTime>1618650940</LastModifiedTime>
+  <StandardStorage>512000</StandardStorage>
+  <StandardObjectCount>50</StandardObjectCount>
+  <InfrequentAccessStorage>256000</InfrequentAccessStorage>
+  <InfrequentAccessObjectCount>25</InfrequentAccessObjectCount>
+  <ArchiveStorage>256000</ArchiveStorage>
+  <ArchiveObjectCount>25</ArchiveObjectCount>
+  <ColdArchiveStorage>0</ColdArchiveStorage>
+  <ColdArchiveObjectCount>0</ColdArchiveObjectCount>
+</BucketStat>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Storage` | Long | Total storage size in bytes. |
+| `ObjectCount` | Long | Total number of objects. |
+| `MultipartUploadCount` | Long | Number of in-progress multipart uploads. |
+| `LiveChannelCount` | Long | Number of LiveChannels. |
+| `LastModifiedTime` | Long | Last modified time as Unix timestamp. |
+| `StandardStorage` | Long | Storage used by Standard objects (bytes). |
+| `StandardObjectCount` | Long | Number of Standard objects. |
+| `InfrequentAccessStorage` | Long | Storage used by IA objects (bytes). |
+| `ArchiveStorage` | Long | Storage used by Archive objects (bytes). |
+| `ColdArchiveStorage` | Long | Storage used by Cold Archive objects (bytes). |
+
+<Note>
+Statistics may not reflect real-time values. They are updated periodically and may have a delay of up to one hour.
+</Note>
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The specified bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to access this bucket. |

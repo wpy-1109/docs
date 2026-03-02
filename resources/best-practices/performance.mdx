@@ -1,0 +1,130 @@
+---
+title: 'Performance Optimization'
+description: 'Best practices for optimizing OSS upload, download, and request performance'
+---
+
+## Upload performance
+
+### Multipart upload
+
+Split large files into parallel parts for significantly faster uploads:
+
+- Use 100 MB to 1 GB part sizes for optimal throughput
+- Upload parts in parallel (8-16 concurrent parts recommended)
+- Enable resumable upload to recover from failures without re-uploading
+- Use multipart upload for files larger than 100 MB
+
+```bash
+# ossutil: Upload with 100MB parts and 8 parallel tasks
+ossutil cp large-file.tar oss://bucket/ --part-size 104857600 --parallel 8
+```
+
+### Transfer acceleration
+
+Enable transfer acceleration for cross-region or international transfers:
+
+1. Enable via `PutBucketTransferAcceleration`
+2. Use the accelerate endpoint: `oss-accelerate.aliyuncs.com`
+3. Particularly effective for uploads/downloads over 1 GB across long distances
+
+### CDN integration
+
+For frequently downloaded content:
+
+1. Create an Alibaba Cloud CDN distribution pointing to your OSS bucket
+2. Set appropriate `Cache-Control` and `Expires` headers on objects
+3. OSS-to-CDN traffic is cheaper than direct internet egress
+
+## Download performance
+
+### Range GET
+
+Download partial objects to reduce bandwidth:
+
+```http
+GET /large-file.bin HTTP/1.1
+Range: bytes=0-10485759
+```
+
+- Split large downloads into parallel range requests
+- Use for resumable downloads
+- Effective for video streaming and partial content delivery
+
+### Caching headers
+
+Set headers when uploading to control downstream caching:
+
+| Header | Example | Use Case |
+|--------|---------|----------|
+| `Cache-Control` | `max-age=86400` | Cache for 24 hours |
+| `Cache-Control` | `no-cache` | Validate with origin before serving |
+| `Expires` | `Wed, 08 Jul 2026 16:57:01 GMT` | Explicit expiration date |
+
+## Request performance
+
+### Randomize object key prefixes
+
+Avoid sequential or timestamp-based naming that creates hot partitions:
+
+```
+# Bad: Sequential keys create hotspots
+2025-04-17/log-001.txt
+2025-04-17/log-002.txt
+
+# Good: Randomized prefix distributes requests
+a3f2/2025-04-17/log-001.txt
+b7c1/2025-04-17/log-002.txt
+```
+
+### Connection pooling
+
+Reuse HTTP connections in SDK clients to avoid TCP handshake overhead:
+
+```python
+# Python: Use a single client instance across requests
+import oss2
+auth = oss2.Auth('key-id', 'key-secret')
+bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', 'my-bucket')
+
+# Reuse 'bucket' instance for all operations
+for key in object_keys:
+    bucket.get_object(key)
+```
+
+### Exponential backoff
+
+Handle 503 throttling errors gracefully:
+
+```python
+import time
+import random
+
+def retry_with_backoff(func, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except oss2.exceptions.ServerError as e:
+            if e.status != 503 or attempt == max_retries - 1:
+                raise
+            wait = min(2 ** attempt + random.uniform(0, 1), 30)
+            time.sleep(wait)
+```
+
+### Distribute load
+
+- Use multiple buckets for workloads exceeding single-bucket request limits
+- Distribute objects across prefixes to avoid partition hot spots
+- For listing operations, use pagination and avoid listing entire buckets
+
+## OSS select
+
+Query CSV/JSON files in-place without downloading:
+
+```python
+result = bucket.select_object(
+    'data/sales.csv',
+    "select * from ossobject where revenue > 10000"
+)
+```
+
+This reduces data transfer and processing time for analytical queries.

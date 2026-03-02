@@ -1,0 +1,104 @@
+---
+title: "Download Objects - Java SDK"
+sidebarTitle: "Download Objects"
+description: "Download objects from Alibaba Cloud OSS using the Java SDK. Covers simple download, range download, conditional download, and resumable download."
+"og:title": "Download Objects with OSS Java SDK"
+---
+
+# Download Objects
+
+## Simple download
+
+### Download to a local file
+
+```java title="DownloadToFile.java"
+ossClient.getObject(new GetObjectRequest(bucketName, objectName),
+    new File("/path/to/local/file.txt"));
+```
+
+### Streaming download
+
+```java title="StreamDownload.java"
+OSSObject ossObject = ossClient.getObject(bucketName, objectName);
+InputStream inputStream = ossObject.getObjectContent();
+
+BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+String line;
+while ((line = reader.readLine()) != null) {
+    System.out.println(line);
+}
+reader.close();
+ossObject.close();
+```
+
+### V2 SDK download
+
+```java title="DownloadV2.java"
+try (GetObjectResult result = client.getObject(
+        GetObjectRequest.newBuilder()
+            .bucket(bucketName).key(objectName).build())) {
+
+    byte[] data = IOUtils.toByteArray(result.body());
+    System.out.printf("Content-Length: %d, ETag: %s%n",
+        result.contentLength(), result.eTag());
+}
+```
+
+## Range download
+
+Download a specific byte range:
+
+```java title="RangeDownload.java"
+GetObjectRequest request = new GetObjectRequest(bucketName, objectName);
+request.setRange(0, 1023); // First 1 KB
+
+OSSObject ossObject = ossClient.getObject(request);
+// Read the stream
+ossObject.close();
+```
+
+## Conditional download
+
+```java title="ConditionalDownload.java"
+GetObjectRequest request = new GetObjectRequest(bucketName, objectName);
+request.setModifiedSinceConstraint(sinceDate);        // Only if modified since
+// request.setUnmodifiedSinceConstraint(sinceDate);    // Only if NOT modified since
+// request.setMatchingETagConstraints(etagList);       // Only if ETag matches
+// request.setNonmatchingETagConstraints(etagList);    // Only if ETag doesn't match
+
+OSSObject ossObject = ossClient.getObject(request);
+```
+
+## Resumable download
+
+For large files with checkpoint support:
+
+```java title="ResumableDownload.java"
+DownloadFileRequest downloadRequest = new DownloadFileRequest(bucketName, objectName);
+downloadRequest.setDownloadFile("/path/to/local/file.zip");
+downloadRequest.setPartSize(1024 * 1024);       // 1MB per part
+downloadRequest.setTaskNum(10);                   // 10 concurrent threads
+downloadRequest.setEnableCheckpoint(true);        // Enable resume
+downloadRequest.setCheckpointFile("/tmp/download-checkpoint");
+
+DownloadFileResult result = ossClient.downloadFile(downloadRequest);
+```
+
+## Download with progress
+
+```java title="ProgressDownload.java"
+GetObjectRequest request = new GetObjectRequest(bucketName, objectName);
+request.setProgressListener(progressEvent -> {
+    long bytes = progressEvent.getBytes();
+    ProgressEventType type = progressEvent.getEventType();
+    System.out.printf("Event: %s, Bytes: %d%n", type, bytes);
+});
+
+ossClient.getObject(request, new File("/path/to/local/file.txt"));
+```
+
+## Next steps
+
+- [Upload objects](/sdks/java/upload-objects)
+- [Presigned URLs](/sdks/java/presigned-urls)
+- [API reference: getObject](/api-reference/object-basic/GetObject)

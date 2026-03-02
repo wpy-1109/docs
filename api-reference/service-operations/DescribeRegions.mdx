@@ -1,0 +1,81 @@
+---
+title: 'DescribeRegions'
+description: 'Query endpoints for all supported regions or a specific region'
+---
+
+## Request
+
+```
+GET /?regions HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+To query a specific region, add the `regions` parameter:
+
+```
+GET /?regions={RegionId} HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `regions` | String | No | The region ID to query (e.g., `oss-cn-hangzhou`). If omitted, returns all regions. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<RegionInfoList>
+  <RegionInfo>
+    <Region>oss-cn-hangzhou</Region>
+    <InternetEndpoint>oss-cn-hangzhou.aliyuncs.com</InternetEndpoint>
+    <InternalEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</InternalEndpoint>
+    <AccelerateEndpoint>oss-accelerate.aliyuncs.com</AccelerateEndpoint>
+  </RegionInfo>
+</RegionInfoList>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Region` | String | Region identifier (e.g., `oss-cn-hangzhou`). |
+| `InternetEndpoint` | String | Public internet endpoint. |
+| `InternalEndpoint` | String | Internal endpoint for same-region ECS access (no traffic fees). |
+| `AccelerateEndpoint` | String | Transfer acceleration endpoint. |
+
+## Example
+
+**Request:**
+
+```http
+GET /?regions HTTP/1.1
+Host: oss-cn-hangzhou.aliyuncs.com
+Date: Thu, 17 Apr 2025 03:15:40 GMT
+Authorization: OSS4-HMAC-SHA256 Credential=LTAI****/20250417/cn-hangzhou/oss/aliyun_v4_request,Signature=****
+```
+
+**Response:**
+
+```xml
+HTTP/1.1 200 OK
+x-oss-request-id: 566B870D207FB3044302****
+
+<?xml version="1.0" encoding="UTF-8"?>
+<RegionInfoList>
+  <RegionInfo>
+    <Region>oss-cn-hangzhou</Region>
+    <InternetEndpoint>oss-cn-hangzhou.aliyuncs.com</InternetEndpoint>
+    <InternalEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</InternalEndpoint>
+    <AccelerateEndpoint>oss-accelerate.aliyuncs.com</AccelerateEndpoint>
+  </RegionInfo>
+  <RegionInfo>
+    <Region>oss-cn-shanghai</Region>
+    <InternetEndpoint>oss-cn-shanghai.aliyuncs.com</InternetEndpoint>
+    <InternalEndpoint>oss-cn-shanghai-internal.aliyuncs.com</InternalEndpoint>
+    <AccelerateEndpoint>oss-accelerate.aliyuncs.com</AccelerateEndpoint>
+  </RegionInfo>
+</RegionInfoList>
+```

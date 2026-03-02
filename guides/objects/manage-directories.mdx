@@ -1,0 +1,79 @@
+---
+title: "Manage Directories"
+sidebarTitle: "Manage Directories"
+description: "Learn how to create and manage directory-like structures in Alibaba Cloud OSS."
+"og:title": "Manage Directories - Alibaba Cloud OSS"
+---
+
+OSS uses a flat namespace where objects are identified by keys (paths). Directory-like structures are simulated by using forward slashes (`/`) in object keys. For buckets with hierarchical namespace enabled, OSS provides native directory operations.
+
+## Simulated directories (Standard buckets)
+
+In standard buckets, directories are represented as zero-byte objects with keys ending in `/`:
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="manage_directories.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Create a directory (zero-byte object ending in /)
+    client.put_object(oss.PutObjectRequest(
+        bucket="examplebucket",
+        key="photos/2025/",
+        body="",
+    ))
+
+    # List objects in a directory using prefix and delimiter
+    result = client.list_objects_v2(oss.ListObjectsV2Request(
+        bucket="examplebucket",
+        prefix="photos/",
+        delimiter="/",
+    ))
+
+    # Common prefixes represent subdirectories
+    for prefix in result.common_prefixes:
+        print(f"Directory: {prefix.prefix}")
+
+    # Contents represent files in this directory
+    for obj in result.contents:
+        print(f"File: {obj.key}")
+    ```
+  </Tab>
+  <Tab title="ossutil CLI">
+    ```bash
+    # Create a directory
+    ossutil mkdir oss://examplebucket/photos/2025/
+
+    # List contents of a directory
+    ossutil ls oss://examplebucket/photos/ --delimiter /
+
+    # Delete a directory and all its contents
+    ossutil rm oss://examplebucket/photos/2025/ -r
+    ```
+  </Tab>
+</Tabs>
+
+## Native directories (Hierarchical namespace)
+
+For buckets with hierarchical namespace enabled, use the dedicated directory APIs:
+
+```bash
+# Create a directory
+ossutil api create-directory --bucket examplebucket --key photos/2025/
+
+# Delete a directory
+ossutil api delete-directory --bucket examplebucket --key photos/2025/
+```
+
+## Next steps
+
+- [Hierarchical namespace](/guides/advanced/hierarchical-namespace)
+- [Upload objects](/guides/objects/upload-objects)
+- [Delete objects](/guides/objects/delete-objects)

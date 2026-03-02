@@ -1,0 +1,42 @@
+---
+title: 'PutBucketTags'
+description: 'Add or modify tags for a bucket'
+---
+
+Adds or modifies tags for a bucket. A bucket can have up to 20 tags.
+
+## Request
+
+```
+PUT /?tagging HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Tagging>
+  <TagSet>
+    <Tag>
+      <Key>environment</Key>
+      <Value>production</Value>
+    </Tag>
+    <Tag>
+      <Key>team</Key>
+      <Value>backend</Value>
+    </Tag>
+  </TagSet>
+</Tagging>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `InvalidTag` | 400 | Tag key or value exceeds limits (key: 128 chars, value: 256 chars). |
+| `NoSuchBucket` | 404 | The bucket does not exist. |

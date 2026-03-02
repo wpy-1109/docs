@@ -1,0 +1,50 @@
+---
+title: 'PutBucketAcl'
+description: 'Set the access control list (ACL) of a bucket'
+---
+
+Sets the access control list (ACL) for a bucket.
+
+## Request
+
+```
+PUT /?acl HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-acl: {ACL}
+```
+
+### Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-oss-acl` | String | Yes | Bucket ACL value. |
+
+### ACL values
+
+| Value | Description |
+|-------|-------------|
+| `private` | Only the bucket owner can read and write. |
+| `public-read` | Anyone can read. Only the owner can write. |
+| `public-read-write` | Anyone can read and write. Use with caution. |
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Example
+
+```http
+PUT /?acl HTTP/1.1
+Host: my-bucket.oss-cn-hangzhou.aliyuncs.com
+x-oss-acl: private
+Date: Thu, 17 Apr 2025 03:15:40 GMT
+Authorization: OSS4-HMAC-SHA256 Credential=LTAI****/20250417/cn-hangzhou/oss/aliyun_v4_request,Signature=****
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to set the ACL. |
+| `InvalidArgument` | 400 | The ACL value is invalid. |

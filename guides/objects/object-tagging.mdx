@@ -1,0 +1,87 @@
+---
+title: "Object Tagging"
+sidebarTitle: "Object Tagging"
+description: "Learn how to tag objects for classification, lifecycle management, and access control in Alibaba Cloud OSS."
+"og:title": "Object Tagging - Alibaba Cloud OSS"
+---
+
+Object tags are key-value pairs that you attach to objects for classification, lifecycle rule targeting, and fine-grained access control. You can add up to 10 tags per object.
+
+## Tag constraints
+
+| Property | Constraint |
+|----------|-----------|
+| Maximum tags per object | 10 |
+| Key length | 1--128 characters (UTF-8) |
+| Value length | 0--256 characters (UTF-8) |
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="object_tagging.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Set tags on an existing object
+    result = client.put_object_tagging(oss.PutObjectTaggingRequest(
+        bucket="examplebucket",
+        key="example.txt",
+        tagging=oss.Tagging(
+            tag_set=oss.TagSet(
+                tags=[
+                    oss.Tag(key="department", value="engineering"),
+                    oss.Tag(key="classification", value="public"),
+                ]
+            )
+        )
+    ))
+
+    # Get tags
+    tags = client.get_object_tagging(oss.GetObjectTaggingRequest(
+        bucket="examplebucket",
+        key="example.txt",
+    ))
+
+    for tag in tags.tag_set.tags:
+        print(f"{tag.key}: {tag.value}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="ObjectTagging.java"
+    Map<String, String> tags = new HashMap<>();
+    tags.put("department", "engineering");
+    tags.put("classification", "public");
+    ossClient.setObjectTagging("examplebucket", "example.txt", tags);
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="objectTagging.js"
+    await client.putObjectTagging('example.txt', {
+      department: 'engineering',
+      classification: 'public',
+    });
+
+    const tags = await client.getObjectTagging('example.txt');
+    console.log('Tags:', tags.tag);
+    ```
+  </Tab>
+</Tabs>
+
+## Use cases
+
+- **Lifecycle rules**: Target objects with specific tags for automatic deletion or storage class transition.
+- **Access control**: Create RAM policies that restrict access based on object tags.
+- **Cost tracking**: Tag objects by department or project for billing analysis.
+
+## Next steps
+
+- [Bucket tagging](/guides/buckets/bucket-tagging)
+- [Lifecycle rules](/guides/data-management/lifecycle-rules)
+- [Object metadata](/guides/objects/manage-object-metadata)

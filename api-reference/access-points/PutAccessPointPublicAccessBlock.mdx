@@ -1,0 +1,34 @@
+---
+title: 'PutAccessPointPublicAccessBlock'
+description: 'Enable Block Public Access for an access point'
+---
+
+Enables the Block Public Access configuration for a specified access point.
+
+## Request
+
+```
+PUT /?publicAccessBlock HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-access-point-name: {AccessPointName}
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<PublicAccessBlockConfiguration>
+  <BlockPublicAccess>true</BlockPublicAccess>
+</PublicAccessBlockConfiguration>
+```
+
+## Response
+
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPoint` | 404 | The access point does not exist. |

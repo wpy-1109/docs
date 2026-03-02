@@ -1,0 +1,17 @@
+---
+title: 'CleanRestoredObject'
+description: 'End the restored state of an object early'
+---
+
+Ends the restored state of an Archive/Cold Archive object in advance, before the restore period expires.
+
+## Request
+
+```
+POST /{ObjectName}?cleanRestoredObject HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

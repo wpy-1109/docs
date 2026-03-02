@@ -1,0 +1,62 @@
+---
+title: 'OSS-HDFS Overview'
+description: 'HDFS-compatible data lake storage built on OSS'
+---
+
+OSS-HDFS (also known as JindoFS) is a cloud-native data lake storage capability built on OSS. It is fully compatible with the Hadoop Distributed File System (HDFS) interface and provides hierarchical namespace and unified metadata management for big data and AI workloads.
+
+OSS-HDFS is not a separate storage service -- it is a set of capabilities you enable on an existing OSS bucket.
+
+## Benefits
+
+| Feature | Description |
+|---------|-------------|
+| **HDFS-compatible access** | Use the standard Hadoop FileSystem API with no code changes |
+| **Hierarchical namespace** | True directory hierarchy with atomic rename and delete operations |
+| **Unified storage** | Data stored in OSS with unlimited capacity and elastic scaling |
+| **Ecosystem support** | Works with Spark, Hive, Flink, Presto, HBase, and more |
+| **Enterprise security** | File/directory permissions, ACLs, and extended attributes (XAttrs) |
+| **Cost-efficient** | Standard OSS billing applies -- no separate service fees |
+
+## Use cases
+
+- Offline data warehousing with Hive and Spark
+- Online analytical processing (OLAP)
+- Compute-storage decoupled HBase
+- Real-time computing with Flink
+- ETL pipelines (significant performance advantages over standard OSS)
+- Data migration and lake formation
+
+## Supported engines
+
+### Open-Source ecosystem
+
+| Engine | Support |
+|--------|---------|
+| Apache Spark | Full support via JindoSDK |
+| Apache Hive | Full support |
+| Apache Flink | Full support |
+| Presto / Trino | Full support |
+| Apache HBase | Full support |
+| Apache Impala | Full support |
+
+### Alibaba cloud services
+
+| Service | Support |
+|---------|---------|
+| E-MapReduce (EMR) | Built-in integration |
+| DataLake Analytics (DLA) | Native support |
+| MaxCompute | Supported via external tables |
+
+## Architecture
+
+OSS-HDFS uses a multi-node, active-active redundancy mechanism for metadata management, replacing the traditional HDFS NameNode active/standby architecture. This provides:
+
+- Exabyte-scale data management
+- Hundreds of millions of files
+- Terabytes of throughput
+- No single point of failure
+
+<Warning>
+After enabling OSS-HDFS, data is stored in the `.dlsdata/` directory. Do not perform write operations on this directory using standard OSS methods (rename, delete, modify). This can cause data loss or corruption.
+</Warning>

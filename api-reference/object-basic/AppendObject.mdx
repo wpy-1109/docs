@@ -1,0 +1,43 @@
+---
+title: 'AppendObject'
+description: 'Upload by appending data to an existing object'
+---
+
+Appends data to an existing appendable object, or creates a new appendable object. Objects created with AppendObject are of type `Appendable`.
+
+## Request
+
+```
+POST /{ObjectName}?append&position={Position} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `append` | - | Yes | Flag indicating append operation. |
+| `position` | Long | Yes | Byte offset to append at. `0` for new objects, equal to current size for appending. |
+
+## Response
+
+```http
+HTTP/1.1 200 OK
+x-oss-next-append-position: 1024
+x-oss-hash-crc64ecma: 316181249502703****
+```
+
+| Header | Description |
+|--------|-------------|
+| `x-oss-next-append-position` | The position for the next append. |
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `ObjectNotAppendable` | 409 | The object was not created with AppendObject. |
+| `PositionNotEqualToLength` | 409 | The position does not match the current object size. |
+
+<Note>
+Appendable objects do not support copying, and their storage class cannot be changed to IA, Archive, or ColdArchive.
+</Note>

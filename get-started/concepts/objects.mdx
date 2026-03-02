@@ -1,0 +1,121 @@
+---
+title: "Objects"
+sidebarTitle: "Objects"
+description: "Understand objects in Alibaba Cloud OSS -- the basic unit of data storage."
+icon: "file"
+"og:title": "Objects - Alibaba Cloud OSS"
+"og:description": "Understand objects in Alibaba Cloud OSS -- the basic unit of data storage."
+---
+
+# Objects
+
+An object is the basic unit of data storage in OSS. Any file you upload -- a document, image, video, or binary blob -- is stored as an object within a [bucket](/get-started/concepts/buckets).
+
+## Components of an object
+
+Every object consists of four components:
+
+| Component | Description |
+|-----------|-------------|
+| **Key** | The unique name (path) that identifies the object within a bucket. Also called object name or object key. |
+| **Data** | The actual file content, stored as a sequence of bytes. |
+| **Metadata** | Key-value pairs that describe the object (e.g., content type, last modified time, custom headers). |
+| **Version ID** | A unique identifier assigned to each version of the object when [versioning](/guides/data-management/versioning) is enabled. |
+
+## Object keys
+
+Each object is uniquely identified by its key within a bucket. The key is the full path of the object, including any simulated directory prefixes.
+
+**Examples**:
+
+| Object Location | Key |
+|-----------------|-----|
+| File in root directory | `readme.txt` |
+| File in a subdirectory | `images/2024/photo.jpg` |
+| Deeply nested file | `backups/db/2024/01/dump.sql.gz` |
+
+### Key naming rules
+
+- Use **UTF-8** encoding
+- Length must be **1 to 1,023 bytes**
+- Must **not** start with a forward slash (`/`) or backslash (`\`)
+- Keys are **case-sensitive** (`Photo.jpg` and `photo.jpg` are different objects)
+
+### Naming best practices
+
+<Tip>
+- Use meaningful names that include context (dates, user IDs, categories) for easier management.
+- Use prefixes to organize related objects (e.g., `logs/2024/03/access.log`).
+- Avoid sequential prefixes (timestamps, alphabetical sequences) for high-throughput workloads -- use random prefixes to distribute load across partitions.
+</Tip>
+
+## Object types
+
+Objects are categorized by how they were created. The type cannot be changed after creation.
+
+| Type | Created By | Description |
+|------|-----------|-------------|
+| **Normal** | Simple upload (`PutObject`) | Standard objects created by uploading in a single request. Maximum size: 5 GB. |
+| **Multipart** | Multipart upload | Large objects uploaded in parts and assembled. Maximum size: 48.8 TB. |
+| **Appendable** | Append upload (`AppendObject`) | Objects that support appending data to the end. Useful for streaming logs. |
+| **Symlink** | `PutSymlink` | Symbolic links that point to other objects for quick access. |
+
+<Note>
+Objects cannot be converted between types. For example, you cannot convert a Normal object to an Appendable object.
+</Note>
+
+## Object metadata
+
+Metadata is a set of key-value pairs attached to each object. OSS supports two types:
+
+### Standard HTTP headers
+
+| Header | Description | Example |
+|--------|-------------|---------|
+| `Content-Type` | MIME type of the object | `image/jpeg` |
+| `Content-Length` | Size of the object in bytes | `1048576` |
+| `Last-Modified` | Timestamp of the last modification | `2024-01-15T10:30:00Z` |
+| `ETag` | Hash of the object content | `"d41d8cd98f00b204e9800998ecf8427e"` |
+| `Content-Encoding` | Encoding applied to the object | `gzip` |
+| `Cache-Control` | Caching directives for clients | `max-age=3600` |
+
+### User-defined metadata
+
+You can attach custom metadata using the `x-oss-meta-` prefix:
+
+```
+x-oss-meta-author: jane-doe
+x-oss-meta-project: website-redesign
+x-oss-meta-upload-source: mobile-app
+```
+
+User metadata keys are case-insensitive and stored as lowercase.
+
+## Object size limits
+
+| Upload Method | Maximum Object Size |
+|--------------|-------------------|
+| Simple upload (`PutObject`) | 5 GB |
+| Form upload (`PostObject`) | 5 GB |
+| Append upload (`AppendObject`) | 5 GB |
+| Multipart upload | 48.8 TB |
+
+<Tip>
+Use multipart upload for files larger than 100 MB. It provides better reliability through parallel uploads and automatic retry of failed parts.
+</Tip>
+
+## Overwrite behavior
+
+By default, uploading an object with the same key as an existing object **overwrites** the existing object. The previous data is permanently lost.
+
+To prevent accidental overwrites:
+
+- **Enable versioning** on the bucket to keep all previous versions.
+- **Set the `x-oss-forbid-overwrite` header** to `true` in upload requests to reject overwrites.
+
+## Next steps
+
+- [Buckets](/get-started/concepts/buckets)
+- [Upload objects](/guides/objects/upload-objects)
+- [Object metadata](/guides/objects/manage-object-metadata)
+- [Naming conventions](/get-started/concepts/naming-conventions)

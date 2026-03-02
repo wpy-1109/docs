@@ -1,0 +1,30 @@
+---
+title: 'PutBucketTransferAcceleration'
+description: 'Enable or disable transfer acceleration for a bucket'
+---
+
+Configures transfer acceleration for a bucket. When enabled, users worldwide can access the bucket with accelerated speeds through optimized network paths.
+
+## Request
+
+```
+PUT /?transferAcceleration HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<TransferAccelerationConfiguration>
+  <Enabled>true</Enabled>
+</TransferAccelerationConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+<Note>
+Transfer acceleration incurs additional fees. The accelerate endpoint is `oss-accelerate.aliyuncs.com`.
+</Note>

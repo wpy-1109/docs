@@ -1,0 +1,145 @@
+---
+title: 'ossutil Overview'
+description: 'Command-line tool for managing Alibaba Cloud OSS buckets and objects'
+---
+
+ossutil is a command-line tool that simplifies the management of OSS across different operating systems. It supports fast uploads, downloads, synchronization, and bucket management.
+
+## Installation
+
+<Tabs>
+  <Tab title="Linux">
+    <Steps>
+      <Step title="Install unzip">
+        ```bash
+        # Alibaba Cloud Linux / CentOS
+        sudo yum install -y unzip
+
+        # Ubuntu / Debian
+        sudo apt install -y unzip
+        ```
+      </Step>
+      <Step title="Download ossutil">
+        ```bash
+        curl -o ossutil-2.2.0-linux-amd64.zip \
+          https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-linux-amd64.zip
+        ```
+      </Step>
+      <Step title="Extract and install">
+        ```bash
+        unzip ossutil-2.2.0-linux-amd64.zip
+        cd ossutil-2.2.0-linux-amd64
+        chmod 755 ossutil
+        sudo mv ossutil /usr/local/bin/
+        ```
+      </Step>
+      <Step title="Verify installation">
+        ```bash
+        ossutil version
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="macOS">
+    <Steps>
+      <Step title="Download ossutil">
+        ```bash
+        # Intel Mac
+        curl -o ossutil.zip \
+          https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-mac-amd64.zip
+
+        # Apple Silicon (M1/M2/M3)
+        curl -o ossutil.zip \
+          https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-mac-arm64.zip
+        ```
+      </Step>
+      <Step title="Extract and install">
+        ```bash
+        unzip ossutil.zip
+        chmod 755 ossutil
+        sudo mv ossutil /usr/local/bin/
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Windows">
+    1. Download the Windows package from the [Alibaba Cloud downloads page](https://www.alibabacloud.com/help/en/oss/developer-reference/install-ossutil)
+    2. Extract the ZIP file
+    3. Run `ossutil.exe` from Command Prompt or PowerShell
+    4. Optionally add the directory to your system PATH
+  </Tab>
+</Tabs>
+
+## Download links
+
+| OS | Architecture | Package |
+|-----|-------------|---------|
+| Linux | x86_64 | `ossutil-2.2.0-linux-amd64.zip` |
+| Linux | ARM64 | `ossutil-2.2.0-linux-arm64.zip` |
+| macOS | x86_64 | `ossutil-2.2.0-mac-amd64.zip` |
+| macOS | ARM64 | `ossutil-2.2.0-mac-arm64.zip` |
+| Windows | x86_64 | `ossutil-2.2.0-windows-amd64.zip` |
+
+## Configuration
+
+### Interactive setup
+
+```bash
+ossutil config
+```
+
+Follow the prompts to enter:
+1. Configuration file path (default: `~/.ossutilconfig`)
+2. AccessKey ID
+3. AccessKey Secret
+4. Region ID (e.g., `cn-hangzhou`)
+5. Custom endpoint (optional)
+
+### Configuration file
+
+The configuration file uses INI format:
+
+```ini
+[default]
+accessKeyID = "LTAI****"
+accessKeySecret = "****"
+region = cn-hangzhou
+```
+
+### Configuration precedence
+
+Command-line flags > Environment variables > Configuration file
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `OSS_ACCESS_KEY_ID` | AccessKey ID |
+| `OSS_ACCESS_KEY_SECRET` | AccessKey Secret |
+| `OSS_SESSION_TOKEN` | STS session token |
+| `OSS_REGION` | Default region |
+| `OSS_ENDPOINT` | Custom endpoint |
+
+## Quick start
+
+```bash
+# Create a bucket
+ossutil mb oss://my-bucket
+
+# Upload a file
+ossutil cp localfile.txt oss://my-bucket/
+
+# List objects
+ossutil ls oss://my-bucket
+
+# Download a file
+ossutil cp oss://my-bucket/localfile.txt ./downloaded.txt
+
+# Delete a file
+ossutil rm oss://my-bucket/localfile.txt
+
+# Delete a bucket
+ossutil rb oss://my-bucket
+```
+
+See [Command Reference](/tools/ossutil/commands) for the complete list of commands and options.

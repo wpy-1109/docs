@@ -1,0 +1,17 @@
+---
+title: 'CloseMetaQuery'
+description: 'Disable data indexing for a bucket'
+---
+
+Disables the metadata management feature and deletes the metadata index for a bucket.
+
+## Request
+
+```
+POST /?metaQuery&comp=delete HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

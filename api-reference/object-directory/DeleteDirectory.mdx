@@ -1,0 +1,21 @@
+---
+title: 'DeleteDirectory'
+description: 'Delete a directory from a hierarchical namespace bucket'
+---
+
+Deletes a directory from a bucket with hierarchical namespace enabled.
+
+## Request
+
+```
+POST /{DirectoryName}/?deleteDir HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+<Warning>
+The directory must be empty before deletion.
+</Warning>

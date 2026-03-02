@@ -1,0 +1,34 @@
+---
+title: "Download Objects - PHP SDK"
+sidebarTitle: "Download Objects"
+description: "Download objects from Alibaba Cloud OSS using the PHP SDK."
+"og:title": "Download Objects with OSS PHP SDK"
+---
+
+# Download Objects
+
+## Download to memory
+
+```php title="downloadMemory.php"
+$content = $ossClient->getObject($bucket, 'example.txt');
+echo $content;
+```
+
+## Download to a local file
+
+```php title="downloadFile.php"
+$options = [OssClient::OSS_FILE_DOWNLOAD => '/path/to/local/file.txt'];
+$ossClient->getObject($bucket, 'example.txt', $options);
+```
+
+## Range download
+
+```php title="rangeDownload.php"
+$options = [OssClient::OSS_RANGE => '0-1023']; // First 1 KB
+$content = $ossClient->getObject($bucket, 'example.txt', $options);
+```
+
+## Next steps
+
+- [Upload objects](/sdks/php/upload-objects)
+- [Manage objects](/sdks/php/manage-objects)

@@ -1,0 +1,42 @@
+---
+title: 'HeadObject'
+description: 'Get object metadata without downloading the content'
+---
+
+Returns only the metadata of an object (headers), not the content. Same headers as GetObject but with no response body.
+
+## Request
+
+```
+HEAD /{ObjectName} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `If-Modified-Since` | String | No | Return metadata only if modified after this date. |
+| `If-Unmodified-Since` | String | No | Return metadata only if not modified after this date. |
+| `If-Match` | String | No | Return metadata only if ETag matches. |
+| `If-None-Match` | String | No | Return metadata only if ETag does not match. |
+
+## Response
+
+```http
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 1024
+ETag: "D41D8CD98F00B204E9800998ECF8****"
+Last-Modified: Thu, 17 Apr 2025 03:15:40 GMT
+x-oss-object-type: Normal
+x-oss-storage-class: Standard
+x-oss-meta-custom: value
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchKey` | 404 | The object does not exist. |
+| `NotModified` | 304 | Object not modified (conditional). |

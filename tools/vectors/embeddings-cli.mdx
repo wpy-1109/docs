@@ -1,0 +1,52 @@
+---
+title: 'Embeddings CLI'
+description: 'Command-line tools for managing vector embeddings in OSS'
+---
+
+## Upload embeddings
+
+```bash
+# Upload a single embedding
+ossutil vector put oss://bucket/doc.txt \
+  --vector "[0.1, 0.2, 0.3, ...]" \
+  --dimension 768
+
+# Batch upload from a JSONL file
+ossutil vector batch-put oss://bucket/ \
+  --input embeddings.jsonl
+```
+
+## Search
+
+```bash
+# K-nearest-neighbor search
+ossutil vector search oss://bucket/ \
+  --query "[0.1, 0.2, 0.3, ...]" \
+  --top-k 10 \
+  --metric cosine
+```
+
+## Index management
+
+```bash
+# Create an index
+ossutil vector create-index oss://bucket/ \
+  --dimension 768 \
+  --metric cosine \
+  --index-type hnsw
+
+# Check index status
+ossutil vector index-status oss://bucket/
+
+# Delete an index
+ossutil vector delete-index oss://bucket/
+```
+
+## JSONL format
+
+For batch uploads, use JSONL format:
+
+```json
+{"key": "doc1.txt", "vector": [0.1, 0.2, 0.3]}
+{"key": "doc2.txt", "vector": [0.4, 0.5, 0.6]}
+```

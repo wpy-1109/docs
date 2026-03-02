@@ -1,0 +1,167 @@
+---
+title: "Query Bucket Info"
+sidebarTitle: "Query Bucket Info"
+description: "Learn how to query bucket information in Alibaba Cloud OSS using the console, CLI, or SDK."
+"og:title": "Query Bucket Info - Alibaba Cloud OSS"
+---
+
+You can query a bucket's metadata to retrieve details such as its region, storage class, creation date, ACL, and redundancy type. This is useful for auditing configurations, verifying compliance, and optimizing data access paths.
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:GetBucketInfo` permission
+
+## Information returned
+
+| Field | Description |
+|-------|-------------|
+| `Name` | Bucket name |
+| `Location` | Region where the bucket is hosted (e.g., `oss-cn-hangzhou`) |
+| `CreationDate` | When the bucket was created |
+| `StorageClass` | Storage class (Standard, IA, Archive, etc.) |
+| `DataRedundancyType` | LRS or ZRS |
+| `Acl` | Access control level (private, public-read, public-read-write) |
+| `Versioning` | Versioning status (Enabled, Suspended, or null) |
+| `TransferAcceleration` | Whether transfer acceleration is enabled |
+
+## Using the console
+
+<Steps>
+  <Step title="Navigate to your bucket">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/) and click the bucket name in the **Buckets** page.
+  </Step>
+  <Step title="View bucket details">
+    The **Overview** page displays the bucket's region, storage class, creation time, endpoint, and other configuration details.
+  </Step>
+</Steps>
+
+## Using ossutil CLI
+
+```bash
+# Query bucket information
+ossutil api get-bucket-info --bucket examplebucket
+```
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="query_bucket_info.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.get_bucket_info(oss.GetBucketInfoRequest(
+        bucket="examplebucket"
+    ))
+
+    info = result.bucket_info
+    print(f"Name: {info.name}")
+    print(f"Location: {info.location}")
+    print(f"Storage Class: {info.storage_class}")
+    print(f"Creation Date: {info.creation_date}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="QueryBucketInfo.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.BucketInfo;
+
+    public class QueryBucketInfo {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                BucketInfo info = ossClient.getBucketInfo("examplebucket");
+                System.out.println("Location: " + info.getBucketLocation());
+                System.out.println("Storage Class: " + info.getStorageClass());
+                System.out.println("Created: " + info.getCreationDate());
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="query_bucket_info.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        result, err := client.GetBucketInfo(context.TODO(), &oss.GetBucketInfoRequest{
+            Bucket: oss.Ptr("examplebucket"),
+        })
+        if err != nil {
+            log.Fatalf("Failed to get bucket info: %v", err)
+        }
+
+        log.Printf("Location: %v", oss.ToString(result.BucketInfo.Location))
+        log.Printf("Storage Class: %v", oss.ToString(result.BucketInfo.StorageClass))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="queryBucketInfo.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function getBucketInfo() {
+      try {
+        const result = await client.getBucketInfo('examplebucket');
+        console.log('Bucket Info:', result.bucket);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    getBucketInfo();
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [List buckets](/guides/buckets/list-buckets)
+- [View storage usage](/guides/buckets/storage-capacity)
+- [Regions & endpoints](/get-started/concepts/regions-and-endpoints)

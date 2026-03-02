@@ -1,0 +1,59 @@
+---
+title: 'PostObject'
+description: 'Upload an object using an HTML form (POST)'
+---
+
+Uploads an object using an HTML form (multipart/form-data). Used for browser-based uploads where the client submits a form directly to OSS.
+
+## Request
+
+```
+POST / HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+Content-Type: multipart/form-data; boundary=----Boundary
+```
+
+### Form fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `key` | String | Yes | Object key. Supports `${filename}` variable. |
+| `policy` | String | Yes | Base64-encoded policy JSON. |
+| `OSSAccessKeyId` | String | Yes | AccessKey ID. |
+| `signature` | String | Yes | Signature computed from the policy. |
+| `Content-Type` | String | No | MIME type of the object. |
+| `Content-Disposition` | String | No | How the object is displayed/downloaded. |
+| `success_action_redirect` | String | No | URL to redirect to after successful upload. |
+| `success_action_status` | String | No | HTTP status to return on success (`200`, `201`, `204`). |
+| `x-oss-object-acl` | String | No | Object ACL. |
+| `x-oss-storage-class` | String | No | Storage class. |
+| `x-oss-meta-*` | String | No | Custom metadata. |
+| `file` | Binary | Yes | File content. Must be the last field. |
+
+### Policy example
+
+```json
+{
+  "expiration": "2025-04-18T03:15:40.000Z",
+  "conditions": [
+    {"bucket": "my-bucket"},
+    ["content-length-range", 0, 10485760],
+    ["starts-with", "$key", "uploads/"]
+  ]
+}
+```
+
+## Response
+
+Success response depends on `success_action_status`:
+- `200`: Returns HTTP 200 with empty body
+- `201`: Returns HTTP 201 with XML body containing bucket, key, ETag
+- `204`: Returns HTTP 204 with empty body (default)
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `InvalidPolicyDocument` | 400 | The policy document is invalid. |
+| `AccessDenied` | 403 | Signature or policy verification failed. |
+| `EntityTooLarge` | 400 | File exceeds size limit in policy. |

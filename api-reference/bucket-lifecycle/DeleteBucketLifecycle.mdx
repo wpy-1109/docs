@@ -1,0 +1,21 @@
+---
+title: 'DeleteBucketLifecycle'
+description: 'Delete lifecycle rules from a bucket'
+---
+
+Deletes all lifecycle rules from a bucket.
+
+## Request
+
+```
+DELETE /?lifecycle HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 204 with empty body.
+
+<Warning>
+This deletes all lifecycle rules. To modify specific rules, use PutBucketLifecycle with the complete updated rule set.
+</Warning>

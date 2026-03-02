@@ -1,0 +1,78 @@
+---
+title: "Quick Start - Browser.js SDK"
+sidebarTitle: "Quick Start"
+description: "Upload and download objects from the browser using the Alibaba Cloud OSS Browser.js SDK."
+"og:title": "Quick Start with OSS Browser.js SDK"
+---
+
+# Quick Start
+
+## Prerequisites
+
+- `ali-oss` package installed or loaded via CDN
+- CORS configured on your OSS bucket
+- STS token endpoint on your backend server
+
+## Upload a file
+
+```html title="upload.html"
+<input type="file" id="fileInput" />
+<script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+<script>
+  const client = new OSS({
+    region: 'oss-cn-hangzhou',
+    accessKeyId: 'your-sts-access-key-id',
+    accessKeySecret: 'your-sts-access-key-secret',
+    stsToken: 'your-sts-token',
+    bucket: 'my-bucket',
+    authorizationV4: true
+  });
+
+  document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    const result = await client.put(`uploads/${file.name}`, file);
+    console.log('Upload result:', result);
+  });
+</script>
+```
+
+## Download / preview an object
+
+```javascript title="download.js"
+// Generate a signed URL for download
+const url = client.signatureUrl('documents/report.pdf', {
+  expires: 3600 // 1 hour
+});
+window.open(url);
+```
+
+## List objects
+
+```javascript title="listObjects.js"
+const result = await client.list({
+  prefix: 'photos/',
+  'max-keys': 100
+});
+
+result.objects.forEach(obj => {
+  console.log(`Key: ${obj.name}, Size: ${obj.size}`);
+});
+```
+
+## Delete an object
+
+```javascript title="deleteObject.js"
+const result = await client.delete('uploads/old-file.txt');
+console.log('Deleted:', result);
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" icon="upload" href="/sdks/browser-js/upload-objects">
+    Multipart upload, resumable upload, and progress tracking.
+  </Card>
+  <Card title="Manage Objects" icon="file" href="/sdks/browser-js/manage-objects">
+    Copy, list, and delete objects.
+  </Card>
+</CardGroup>

@@ -1,0 +1,23 @@
+---
+title: 'Traffic Fees'
+description: 'OSS data transfer and bandwidth pricing'
+---
+
+## Traffic types
+
+| Traffic Type | Cost |
+|-------------|------|
+| **Inbound (upload)** | Free |
+| **Internal (same-region ECS)** | Free (via internal endpoint) |
+| **Outbound internet** | Per-GB fee |
+| **Cross-region replication** | Per-GB fee |
+| **Transfer acceleration** | Per-GB fee (in addition to outbound) |
+| **OSS to CDN (back-to-origin)** | Per-GB fee (cheaper than direct outbound) |
+
+## Cost-Saving tips
+
+1. **Use internal endpoints** from same-region ECS instances
+2. **Use CDN** for frequently downloaded content (CDN back-to-origin traffic is cheaper)
+3. **Enable pay-by-requester** for shared data scenarios
+4. **Use transfer acceleration** only when needed (adds cost but improves speed)
+5. **Compress data** before upload to reduce storage and transfer costs

@@ -1,0 +1,85 @@
+---
+title: "Restore Archived Objects"
+sidebarTitle: "Restore Archived"
+description: "Learn how to restore archived, cold archive, and deep cold archive objects in Alibaba Cloud OSS."
+"og:title": "Restore Archived Objects - Alibaba Cloud OSS"
+---
+
+Objects stored in Archive, Cold Archive, or Deep Cold Archive storage classes must be restored before you can read them. The restore process copies the data to a readable state for a temporary period.
+
+## Restore times
+
+| Storage Class | Restore Time | Readable Duration |
+|--------------|-------------|-------------------|
+| Archive | About 1 minute | 1--7 days (configurable) |
+| Cold Archive | 1--5 hours (standard) | 1--7 days (configurable) |
+| Deep Cold Archive | Up to 12 hours | 1--7 days (configurable) |
+
+## Prerequisites
+
+- The `oss:RestoreObject` permission
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="restore_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.restore_object(oss.RestoreObjectRequest(
+        bucket="examplebucket",
+        key="archived-file.zip",
+        restore_request=oss.RestoreRequest(
+            days=3,  # Keep restored copy for 3 days
+        )
+    ))
+
+    print(f"Restore initiated. Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="RestoreObject.java"
+    ossClient.restoreObject("examplebucket", "archived-file.zip");
+    System.out.println("Restore initiated.");
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="restore_object.go"
+    _, err := client.RestoreObject(context.TODO(), &oss.RestoreObjectRequest{
+        Bucket: oss.Ptr("examplebucket"),
+        Key:    oss.Ptr("archived-file.zip"),
+        RestoreRequest: &oss.RestoreRequest{
+            Days: oss.Ptr(int32(3)),
+        },
+    })
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="restoreObject.js"
+    await client.restore('archived-file.zip', { type: 'ColdArchive', Days: 3 });
+    ```
+  </Tab>
+</Tabs>
+
+## Using ossutil CLI
+
+```bash
+ossutil api restore-object --bucket examplebucket --key archived-file.zip
+```
+
+<Tip>
+Enable [archive direct reading](/guides/data-management/archive-direct-read) to access Archive and Cold Archive objects without manually initiating a restore.
+</Tip>
+
+## Next steps
+
+- [Storage classes](/get-started/concepts/storage-classes)
+- [Archive direct reading](/guides/data-management/archive-direct-read)
+- [Storage class conversion](/guides/data-management/storage-class-conversion)

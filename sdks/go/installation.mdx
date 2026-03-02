@@ -1,0 +1,55 @@
+---
+title: "Installation - Go SDK"
+sidebarTitle: "Installation"
+description: "Install the Alibaba Cloud OSS SDK for Go. Supports both V1 and V2 SDK versions."
+"og:title": "Install OSS Go SDK"
+---
+
+# Installation
+
+## Prerequisites
+
+- Go 1.18 or later
+
+## SDK versions
+
+| Feature | V1 SDK | V2 SDK |
+|---------|--------|--------|
+| Import | `github.com/aliyun/aliyun-oss-go-sdk/oss` | `github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss` |
+| Status | Stable | **Recommended** |
+| Signature | V1 | V4 (more secure) |
+| Resumable | Basic | Advanced with checkpoints |
+
+## Install V2 SDK (Recommended)
+
+```bash
+go get github.com/aliyun/alibabacloud-oss-go-sdk-v2
+```
+
+```go title="main.go"
+import (
+    "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+    "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+)
+```
+
+## Install V1 SDK
+
+```bash
+go get github.com/aliyun/aliyun-oss-go-sdk
+```
+
+```go title="main.go"
+import "github.com/aliyun/aliyun-oss-go-sdk/oss"
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Initialize the Client" icon="gear" href="/sdks/go/initialization">
+    Configure credentials and create an OSS client.
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/sdks/go/quick-start">
+    Upload your first object in minutes.
+  </Card>
+</CardGroup>

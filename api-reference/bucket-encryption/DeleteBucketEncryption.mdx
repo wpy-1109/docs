@@ -1,0 +1,23 @@
+---
+title: 'DeleteBucketEncryption'
+description: 'Delete the server-side encryption configuration of a bucket'
+---
+
+Deletes the default server-side encryption rules of a bucket.
+
+## Request
+
+```
+DELETE /?encryption HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 204 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |

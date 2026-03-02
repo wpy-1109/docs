@@ -1,0 +1,126 @@
+---
+title: "Manage Objects - Node.js SDK"
+sidebarTitle: "Manage Objects"
+description: "List, copy, delete, and manage object metadata using the Alibaba Cloud OSS SDK for Node.js."
+"og:title": "Manage Objects with OSS Node.js SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+```javascript title="listObjects.js"
+// List all objects (default max 100)
+const result = await client.list();
+result.objects.forEach(obj => {
+  console.log('Key:', obj.name, 'Size:', obj.size);
+});
+
+// List with prefix
+const filtered = await client.list({ prefix: 'photos/', 'max-keys': 50 });
+
+// List with delimiter (directory-like)
+const dirs = await client.list({ prefix: 'photos/', delimiter: '/' });
+dirs.prefixes.forEach(dir => console.log('Directory:', dir));
+```
+
+## Check if an object exists
+
+```javascript title="objectExists.js"
+try {
+  await client.head('example.txt');
+  console.log('Object exists');
+} catch (err) {
+  if (err.code === 'NoSuchKey') {
+    console.log('Object does not exist');
+  }
+}
+```
+
+## Copy objects
+
+```javascript title="copyObjects.js"
+// Copy within the same bucket
+const result = await client.copy('dest.txt', 'source.txt');
+
+// Copy across buckets
+const result2 = await client.copy('dest.txt', 'source.txt', 'source-bucket');
+```
+
+## Rename objects
+
+```javascript title="renameObjects.js"
+// OSS doesn't have a native rename -- copy then delete
+await client.copy('new-name.txt', 'old-name.txt');
+await client.delete('old-name.txt');
+```
+
+## Delete objects
+
+```javascript title="deleteObjects.js"
+// Delete a single object
+await client.delete('example.txt');
+
+// Delete multiple objects
+const result = await client.deleteMulti(['key1.txt', 'key2.txt', 'key3.txt']);
+console.log('Deleted:', result.deleted);
+```
+
+## Object metadata
+
+```javascript title="objectMetadata.js"
+// Get metadata
+const head = await client.head('example.txt');
+console.log('Content-Type:', head.res.headers['content-type']);
+console.log('Content-Length:', head.res.headers['content-length']);
+console.log('ETag:', head.res.headers.etag);
+
+// Set metadata on upload
+await client.put('example.txt', Buffer.from('content'), {
+  headers: {
+    'Content-Type': 'text/plain',
+    'x-oss-meta-author': 'your-name',
+  },
+});
+```
+
+## Object ACL
+
+```javascript title="objectAcl.js"
+// Set object ACL
+await client.putACL('example.txt', 'public-read');
+
+// Get object ACL
+const acl = await client.getACL('example.txt');
+console.log('ACL:', acl.acl);
+```
+
+## Object tagging
+
+```javascript title="objectTagging.js"
+// Set tags
+await client.putObjectTagging('example.txt', {
+  tag: [
+    { key: 'project', value: 'demo' },
+    { key: 'env', value: 'test' },
+  ],
+});
+
+// Get tags
+const tags = await client.getObjectTagging('example.txt');
+
+// Delete tags
+await client.deleteObjectTagging('example.txt');
+```
+
+## Restore archived objects
+
+```javascript title="restoreObject.js"
+await client.restore('archived-object.txt');
+```
+
+## Next steps
+
+- [Upload objects](/sdks/nodejs/upload-objects)
+- [Download objects](/sdks/nodejs/download-objects)
+- [Presigned URLs](/sdks/nodejs/presigned-urls)

@@ -1,0 +1,186 @@
+---
+title: "Download Objects"
+sidebarTitle: "Download Objects"
+description: "Learn how to download objects from Alibaba Cloud OSS using the console, CLI, or SDK."
+"og:title": "Download Objects - Alibaba Cloud OSS"
+---
+
+You can download objects from OSS using the console, CLI, SDK, or presigned URLs. OSS supports simple downloads for complete files, range downloads for partial content, and resumable downloads for large files over unreliable networks.
+
+## Download methods overview
+
+| Method | Use Case |
+|--------|----------|
+| [Simple download](#simple-download) | Download a complete file |
+| [Range download](/guides/objects/range-download) | Download a specific byte range |
+| [Resumable download](/guides/objects/resumable-download) | Large files over unreliable networks |
+| [Conditional download](/guides/objects/conditional-download) | Download only if modified |
+| [Presigned URL](/guides/access-control/presigned-urls) | Share a temporary download link |
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:GetObject` permission
+
+## Simple download
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="download_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.get_object(oss.GetObjectRequest(
+        bucket="examplebucket",
+        key="example.txt",
+    ))
+
+    # Save to a local file
+    with open("/path/to/local/file.txt", "wb") as f:
+        for chunk in result.body.iter_bytes():
+            f.write(chunk)
+
+    print("Download complete.")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="DownloadObject.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.OSSObject;
+    import java.io.*;
+
+    public class DownloadObject {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                OSSObject ossObject = ossClient.getObject("examplebucket", "example.txt");
+                try (InputStream in = ossObject.getObjectContent();
+                     FileOutputStream out = new FileOutputStream("/path/to/local/file.txt")) {
+                    byte[] buf = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buf)) != -1) {
+                        out.write(buf, 0, bytesRead);
+                    }
+                }
+                System.out.println("Download complete.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="download_object.go"
+    package main
+
+    import (
+        "context"
+        "io"
+        "log"
+        "os"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        result, err := client.GetObject(context.TODO(), &oss.GetObjectRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            Key:    oss.Ptr("example.txt"),
+        })
+        if err != nil {
+            log.Fatalf("Download failed: %v", err)
+        }
+        defer result.Body.Close()
+
+        file, _ := os.Create("/path/to/local/file.txt")
+        defer file.Close()
+
+        io.Copy(file, result.Body)
+        log.Println("Download complete.")
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="downloadObject.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function download() {
+      try {
+        const result = await client.get('example.txt', '/path/to/local/file.txt');
+        console.log('Download complete:', result.res.status);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    download();
+    ```
+  </Tab>
+</Tabs>
+
+## Using ossutil CLI
+
+```bash
+# Download a single file
+ossutil cp oss://examplebucket/example.txt /path/to/local/file.txt
+
+# Download a directory recursively
+ossutil cp oss://examplebucket/dir/ /path/to/local/dir/ -r
+
+# Download with Transfer Acceleration
+ossutil cp oss://examplebucket/example.txt ./file.txt --endpoint oss-accelerate.aliyuncs.com
+```
+
+## Using the console
+
+<Steps>
+  <Step title="Navigate to objects">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/), click the bucket, then click **Object List**.
+  </Step>
+  <Step title="Download">
+    Find the object and click **More > Download** in the Actions column.
+  </Step>
+</Steps>
+
+## Next steps
+
+- [Range download](/guides/objects/range-download)
+- [Resumable download](/guides/objects/resumable-download)
+- [Presigned URLs](/guides/access-control/presigned-urls)

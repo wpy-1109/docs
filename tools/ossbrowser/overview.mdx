@@ -1,0 +1,103 @@
+---
+title: 'ossbrowser'
+description: 'GUI tool for managing OSS buckets and objects visually'
+---
+
+ossbrowser is the official graphical management tool for OSS. It provides a visual, desktop-based way to manage buckets and objects, similar to a file explorer.
+
+## Download
+
+| Platform | Architecture | Format |
+|----------|-------------|--------|
+| Windows | x86-64 | `.exe` installer |
+| macOS | Universal | `.dmg` installer |
+| Linux | x86-64 | `.AppImage` |
+
+Download from the [Alibaba Cloud OSS documentation portal](https://www.alibabacloud.com/help/en/oss/developer-reference/ossbrowser-2-0-overview/).
+
+## Installation
+
+<Steps>
+  <Step title="Download the installer">
+    Download the appropriate installer for your operating system.
+  </Step>
+  <Step title="Run the installer">
+    - **Windows**: Run the `.exe` installer and follow the prompts
+    - **macOS**: Open the `.dmg` and drag ossbrowser to Applications
+    - **Linux**: Make the `.AppImage` executable with `chmod +x` and run it
+  </Step>
+  <Step title="Configure credentials">
+    On first launch, enter your access credentials to connect to OSS.
+  </Step>
+</Steps>
+
+## Login methods
+
+<Tabs>
+  <Tab title="AccessKey Login">
+    Use your AccessKey ID and AccessKey Secret for full account access.
+
+    1. Select **AK Login** mode
+    2. Enter your AccessKey ID and Secret
+    3. Optionally set a preset OSS path to restrict scope
+    4. Select the region/endpoint
+    5. Click **Login**
+  </Tab>
+  <Tab title="STS Token Login">
+    Use temporary security credentials for scoped, time-limited access. Ideal for granting limited access to sub-users.
+
+    1. Select **STS Token Login** mode
+    2. Enter the temporary AccessKey ID, Secret, and Security Token
+    3. Set the preset OSS path
+    4. Click **Login**
+  </Tab>
+  <Tab title="Preset OSS Path">
+    Restrict access to a specific bucket or directory path. Useful for providing access to only certain resources.
+  </Tab>
+</Tabs>
+
+## Key features
+
+| Feature | Description |
+|---------|-------------|
+| Bucket management | Create, delete, and configure buckets |
+| File upload/download | Drag-and-drop, batch operations, resumable transfers |
+| File preview | Preview images, text files, and other formats in-app |
+| Access control | Set ACLs at bucket and object level |
+| Cross-region support | Access buckets across Alibaba Cloud regions |
+| Search and filter | Locate files within buckets |
+| Directory-like view | Browse objects in a folder-style hierarchy |
+| Operation logs | View detailed logs of operations performed |
+
+## Preview support
+
+ossbrowser supports in-app preview for:
+
+- **Images**: JPEG, PNG, GIF, BMP, WebP
+- **Text files**: TXT, JSON, XML, CSV
+- **Documents**: Depends on format support
+
+## Common operations
+
+### Upload files
+
+1. Navigate to the target bucket and directory
+2. Click **Upload** or drag-and-drop files into the window
+3. Monitor upload progress in the transfer panel
+4. Large files automatically use multipart upload with resumable support
+
+### Download files
+
+1. Select one or more files/directories
+2. Click **Download** and choose the local destination
+3. Downloads support resume if interrupted
+
+### Manage permissions
+
+1. Right-click a bucket or object
+2. Select **Set ACL** from the context menu
+3. Choose from `private`, `public-read`, or `public-read-write`
+
+<Note>
+For production workloads with frequent or automated operations, use [ossutil](/tools/ossutil/overview) (CLI) or an SDK instead.
+</Note>

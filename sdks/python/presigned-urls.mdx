@@ -1,0 +1,132 @@
+---
+title: "Presigned URLs - Python SDK"
+sidebarTitle: "Presigned URLs"
+description: "Generate presigned URLs for secure, temporary access to Alibaba Cloud OSS objects using the Python SDK."
+"og:title": "Presigned URLs with OSS Python SDK"
+---
+
+# Presigned URLs
+
+Presigned URLs allow you to grant temporary access to OSS objects without sharing your credentials. Anyone with the URL can perform the specified operation until the URL expires.
+
+## Generate a download URL
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="presigned_download_v2.py"
+    import datetime
+    import alibabacloud_oss_v2 as oss
+
+    pre_result = client.presign(oss.GetObjectRequest(
+        bucket='my-bucket',
+        key='documents/report.pdf',
+    ), expires=datetime.timedelta(minutes=10))
+
+    print(f'Download URL: {pre_result.url}')
+    print(f'Expires: {pre_result.expiration}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="presigned_download_v1.py"
+    # Generate signed GET URL with 1-hour expiration
+    url = bucket.sign_url('GET', 'documents/report.pdf', 3600)
+    print(f'Download URL: {url}')
+    ```
+  </Tab>
+</Tabs>
+
+## Generate an upload URL
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="presigned_upload_v2.py"
+    import datetime
+    import alibabacloud_oss_v2 as oss
+
+    pre_result = client.presign(oss.PutObjectRequest(
+        bucket='my-bucket',
+        key='uploads/user-file.txt',
+    ), expires=datetime.timedelta(hours=1))
+
+    print(f'Upload URL: {pre_result.url}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="presigned_upload_v1.py"
+    # Generate signed PUT URL with 1-hour expiration
+    url = bucket.sign_url('PUT', 'uploads/user-file.txt', 3600)
+    print(f'Upload URL: {url}')
+
+    # With Content-Type header
+    headers = {'Content-Type': 'application/octet-stream'}
+    url = bucket.sign_url('PUT', 'uploads/user-file.txt', 3600, headers=headers)
+    ```
+  </Tab>
+</Tabs>
+
+## Use a presigned URL
+
+Once generated, presigned URLs can be used with any HTTP client:
+
+```python title="use_presigned_url.py"
+import requests
+
+# Download using a presigned URL
+response = requests.get(download_url)
+with open('/path/to/save/file.pdf', 'wb') as f:
+    f.write(response.content)
+
+# Upload using a presigned URL
+with open('/path/to/local/file.txt', 'rb') as f:
+    response = requests.put(upload_url, data=f)
+print(f'Upload status: {response.status_code}')
+```
+
+## Presigned URL for multipart upload
+
+Generate presigned URLs for each part in a multipart upload (useful for client-side uploads):
+
+```python title="presigned_multipart.py"
+import alibabacloud_oss_v2 as oss
+
+# Initiate multipart upload via presigned URL
+init_result = client.presign(oss.InitiateMultipartUploadRequest(
+    bucket='my-bucket',
+    key='large-file.zip',
+))
+
+# Generate presigned URLs for each part
+part_size = 5 * 1024 * 1024  # 5MB per part
+total_parts = (file_size + part_size - 1) // part_size
+part_urls = []
+
+for part_number in range(1, total_parts + 1):
+    presign_result = client.presign(oss.UploadPartRequest(
+        bucket='my-bucket',
+        key='large-file.zip',
+        part_number=part_number,
+        upload_id=upload_id,
+    ))
+    part_urls.append({
+        'part_number': part_number,
+        'url': presign_result.url,
+        'method': 'PUT',
+    })
+```
+
+## URL expiration
+
+| Signature Version | Maximum Expiration |
+|-------------------|--------------------|
+| V1 | 7 days (604,800 seconds) |
+| V4 | 7 days (604,800 seconds) |
+
+<Tip>
+Set the shortest expiration time that meets your use case. For one-time downloads, 5--15 minutes is usually sufficient.
+</Tip>
+
+## Next steps
+
+- [Upload objects](/sdks/python/upload-objects)
+- [Download objects](/sdks/python/download-objects)
+- [Presigned URLs (Guide)](/guides/access-control/presigned-urls)

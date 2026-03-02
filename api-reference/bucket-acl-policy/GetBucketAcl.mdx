@@ -1,0 +1,42 @@
+---
+title: 'GetBucketAcl'
+description: 'Query the access control list (ACL) of a bucket'
+---
+
+Returns the ACL of the specified bucket.
+
+## Request
+
+```
+GET /?acl HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessControlPolicy>
+  <Owner>
+    <ID>51264</ID>
+    <DisplayName>51264</DisplayName>
+  </Owner>
+  <AccessControlList>
+    <Grant>private</Grant>
+  </AccessControlList>
+</AccessControlPolicy>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Owner.ID` | String | Account ID of the bucket owner. |
+| `AccessControlList.Grant` | String | Bucket ACL (`private`, `public-read`, `public-read-write`). |
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to query the ACL. |

@@ -1,0 +1,28 @@
+---
+title: 'DeleteCname'
+description: 'Delete a CNAME record from a bucket'
+---
+
+Deletes a custom domain name (CNAME) record from a bucket.
+
+## Request
+
+```
+POST /?cname&comp=delete HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketCnameConfiguration>
+  <Cname>
+    <Domain>cdn.example.com</Domain>
+  </Cname>
+</BucketCnameConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

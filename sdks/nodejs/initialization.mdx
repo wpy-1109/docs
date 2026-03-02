@@ -1,0 +1,65 @@
+---
+title: "Initialization - Node.js SDK"
+sidebarTitle: "Initialization"
+description: "Configure credentials and initialize the Alibaba Cloud OSS Node.js SDK client."
+"og:title": "Initialize OSS Node.js SDK Client"
+---
+
+# Initialization
+
+## Create an OSS client
+
+```javascript title="init.js"
+const OSS = require('ali-oss');
+
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+  accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+  bucket: 'your-bucket-name',
+  authorizationV4: true,  // Use V4 signature (recommended)
+});
+```
+
+Set environment variables:
+
+```bash
+export OSS_ACCESS_KEY_ID="your-access-key-id"
+export OSS_ACCESS_KEY_SECRET="your-access-key-secret"
+```
+
+## Using STS temporary credentials
+
+```javascript title="init_sts.js"
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: 'temporary-access-key-id',
+  accessKeySecret: 'temporary-access-key-secret',
+  stsToken: 'security-token',
+  bucket: 'your-bucket-name',
+  authorizationV4: true,
+});
+```
+
+## Configuration options
+
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `region` | `string` | Region identifier (e.g., `oss-cn-hangzhou`) | Required |
+| `accessKeyId` | `string` | AccessKey ID | Required |
+| `accessKeySecret` | `string` | AccessKey Secret | Required |
+| `bucket` | `string` | Default bucket name | Optional |
+| `stsToken` | `string` | STS security token | Optional |
+| `authorizationV4` | `boolean` | Use V4 signature | `false` |
+| `timeout` | `number` | Request timeout (ms) | `60000` |
+| `secure` | `boolean` | Use HTTPS | `true` |
+| `endpoint` | `string` | Custom endpoint | Auto-generated |
+
+<Warning>
+Never hardcode credentials in source code. Use environment variables or STS temporary credentials.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/sdks/nodejs/upload-objects)
+- [Download objects](/sdks/nodejs/download-objects)

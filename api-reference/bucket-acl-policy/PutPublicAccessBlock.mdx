@@ -1,0 +1,33 @@
+---
+title: 'PutPublicAccessBlock'
+description: 'Enable Block Public Access globally for OSS'
+---
+
+Globally enables Block Public Access for all OSS resources under the account.
+
+## Request
+
+```
+PUT /?publicAccessBlock HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<PublicAccessBlockConfiguration>
+  <BlockPublicAccess>true</BlockPublicAccess>
+</PublicAccessBlockConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `AccessDenied` | 403 | Insufficient permissions. |
+| `InvalidArgument` | 400 | Invalid configuration value. |

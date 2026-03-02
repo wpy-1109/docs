@@ -1,0 +1,135 @@
+---
+title: "Copy Objects"
+sidebarTitle: "Copy Objects"
+description: "Learn how to copy objects within or across buckets in Alibaba Cloud OSS."
+"og:title": "Copy Objects - Alibaba Cloud OSS"
+---
+
+You can copy objects within the same bucket or across buckets without downloading and re-uploading them. For objects up to 5 GB, use simple copy (CopyObject). For larger objects up to 48.8 TB, use multipart copy (UploadPartCopy).
+
+<Info>
+Copying does not affect the source object. The destination gets a new copy with its own metadata and version.
+</Info>
+
+## Prerequisites
+
+- The `oss:GetObject` permission on the source bucket
+- The `oss:PutObject` permission on the destination bucket
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="copy_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.copy_object(oss.CopyObjectRequest(
+        bucket="dest-bucket",
+        key="dest-object.txt",
+        source_bucket="source-bucket",
+        source_key="source-object.txt",
+    ))
+
+    print(f"Copied. ETag: {result.etag}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="CopyObject.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.CopyObjectResult;
+
+    public class CopyObject {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint).credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig).region(region).build();
+
+            try {
+                CopyObjectResult result = ossClient.copyObject(
+                    "source-bucket", "source-object.txt",
+                    "dest-bucket", "dest-object.txt");
+                System.out.println("Copied. ETag: " + result.getETag());
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="copy_object.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        result, err := client.CopyObject(context.TODO(), &oss.CopyObjectRequest{
+            Bucket:       oss.Ptr("dest-bucket"),
+            Key:          oss.Ptr("dest-object.txt"),
+            SourceBucket: oss.Ptr("source-bucket"),
+            SourceKey:    oss.Ptr("source-object.txt"),
+        })
+        if err != nil {
+            log.Fatalf("Copy failed: %v", err)
+        }
+        log.Printf("Copied. ETag: %v", oss.ToString(result.ETag))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="copyObject.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'dest-bucket',
+    });
+
+    async function copyObject() {
+      const result = await client.copy(
+        'dest-object.txt',
+        'source-object.txt',
+        'source-bucket'
+      );
+      console.log('Copied:', result);
+    }
+
+    copyObject();
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Move / rename objects](/guides/objects/move-rename-objects)
+- [Cross-Region replication](/guides/data-management/cross-region-replication)

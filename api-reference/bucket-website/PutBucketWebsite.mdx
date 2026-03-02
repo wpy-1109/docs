@@ -1,0 +1,53 @@
+---
+title: 'PutBucketWebsite'
+description: 'Configure static website hosting for a bucket'
+---
+
+Configures a bucket for static website hosting with index document, error document, and routing rules.
+
+## Request
+
+```
+PUT /?website HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<WebsiteConfiguration>
+  <IndexDocument>
+    <Suffix>index.html</Suffix>
+  </IndexDocument>
+  <ErrorDocument>
+    <Key>error.html</Key>
+    <HttpStatus>404</HttpStatus>
+  </ErrorDocument>
+  <RoutingRules>
+    <RoutingRule>
+      <RuleNumber>1</RuleNumber>
+      <Condition>
+        <KeyPrefixEquals>docs/</KeyPrefixEquals>
+        <HttpErrorCodeReturnedEquals>404</HttpErrorCodeReturnedEquals>
+      </Condition>
+      <Redirect>
+        <RedirectType>Mirror</RedirectType>
+        <MirrorURL>https://origin.example.com/</MirrorURL>
+      </Redirect>
+    </RoutingRule>
+  </RoutingRules>
+</WebsiteConfiguration>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `IndexDocument.Suffix` | String | Default index page (e.g., `index.html`). |
+| `ErrorDocument.Key` | String | Custom error page object key. |
+| `ErrorDocument.HttpStatus` | Integer | HTTP status code for error page (default: 404). |
+| `RoutingRule` | Element | Redirect or mirror-based routing rule. |
+| `Redirect.RedirectType` | String | `Mirror` (back-to-origin), `External`, `AliCDN`, or `Internal`. |
+
+## Response
+
+**Success:** HTTP 200 with empty body.

@@ -1,0 +1,31 @@
+---
+title: 'PutUserDefinedLogFieldsConfig'
+description: 'Configure custom log fields for real-time logs'
+---
+
+Configures user-defined fields in the real-time logs of a bucket. You can add custom request headers and query parameters to log entries.
+
+## Request
+
+```
+PUT /?userDefinedLogFieldsConfig HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<UserDefinedLogFieldsConfiguration>
+  <HeaderSet>
+    <Header>x-custom-header</Header>
+  </HeaderSet>
+  <ParamSet>
+    <Param>custom-param</Param>
+  </ParamSet>
+</UserDefinedLogFieldsConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

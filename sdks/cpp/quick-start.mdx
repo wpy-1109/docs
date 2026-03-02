@@ -1,0 +1,142 @@
+---
+title: "Quick Start - C++ SDK"
+sidebarTitle: "Quick Start"
+description: "Upload, download, and list objects with the Alibaba Cloud OSS SDK for C++."
+"og:title": "Quick Start with OSS C++ SDK"
+---
+
+# Quick Start
+
+This guide walks you through the essential OSS operations using the C++ SDK.
+
+## Prerequisites
+
+- OSS C++ SDK built and installed
+- Environment variables `OSS_ACCESS_KEY_ID` and `OSS_ACCESS_KEY_SECRET` configured
+- An existing OSS bucket
+
+## Upload from memory
+
+```cpp title="upload.cpp"
+#include <alibabacloud/oss/OssClient.h>
+using namespace AlibabaCloud::OSS;
+
+int main() {
+    std::string Endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+    std::string Region = "cn-hangzhou";
+    std::string BucketName = "my-bucket";
+    std::string ObjectName = "greeting.txt";
+
+    InitializeSdk();
+
+    ClientConfiguration conf;
+    conf.signatureVersion = SignatureVersionType::V4;
+    auto credentialsProvider = std::make_shared<EnvironmentVariableCredentialsProvider>();
+    OssClient client(Endpoint, credentialsProvider, conf);
+    client.SetRegion(Region);
+
+    auto content = std::make_shared<std::stringstream>("Hello, Alibaba Cloud OSS!");
+    auto outcome = client.PutObject(BucketName, ObjectName, content);
+
+    if (outcome.isSuccess()) {
+        std::cout << "Upload successful. ETag: " << outcome.result().ETag() << std::endl;
+    } else {
+        std::cout << "Upload failed: " << outcome.error().Code() << " - " << outcome.error().Message() << std::endl;
+    }
+
+    ShutdownSdk();
+    return 0;
+}
+```
+
+## Upload a local file
+
+```cpp title="uploadFile.cpp"
+#include <alibabacloud/oss/OssClient.h>
+#include <fstream>
+using namespace AlibabaCloud::OSS;
+
+int main() {
+    // ... (initialization as above) ...
+
+    auto content = std::make_shared<std::fstream>("/path/to/local/file.pdf", std::ios::in | std::ios::binary);
+    auto outcome = client.PutObject("my-bucket", "documents/file.pdf", content);
+
+    if (outcome.isSuccess()) {
+        std::cout << "File uploaded." << std::endl;
+    }
+
+    ShutdownSdk();
+    return 0;
+}
+```
+
+## Download an object
+
+```cpp title="download.cpp"
+auto outcome = client.GetObject("my-bucket", "greeting.txt");
+
+if (outcome.isSuccess()) {
+    std::string content;
+    (*outcome.result().Content()) >> content;
+    std::cout << "Content: " << content << std::endl;
+}
+```
+
+## Download to a local file
+
+```cpp title="downloadToFile.cpp"
+GetObjectRequest request("my-bucket", "documents/file.pdf");
+request.setResponseStreamFactory([=]() {
+    return std::make_shared<std::fstream>("/path/to/local/file.pdf",
+        std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+});
+
+auto outcome = client.GetObject(request);
+if (outcome.isSuccess()) {
+    std::cout << "Downloaded to local file." << std::endl;
+}
+```
+
+## List objects
+
+```cpp title="listObjects.cpp"
+ListObjectsRequest request("my-bucket");
+request.setPrefix("photos/");
+request.setMaxKeys(100);
+
+auto outcome = client.ListObjects(request);
+
+if (outcome.isSuccess()) {
+    for (const auto& obj : outcome.result().ObjectSummarys()) {
+        std::cout << "Key: " << obj.Key() << ", Size: " << obj.Size() << std::endl;
+    }
+}
+```
+
+## Delete an object
+
+```cpp title="deleteObject.cpp"
+auto outcome = client.DeleteObject("my-bucket", "greeting.txt");
+
+if (outcome.isSuccess()) {
+    std::cout << "Object deleted." << std::endl;
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Bucket Operations" icon="folder" href="/sdks/cpp/bucket-operations">
+    Create, list, and manage buckets.
+  </Card>
+  <Card title="Upload Objects" icon="upload" href="/sdks/cpp/upload-objects">
+    Simple upload, streaming, and metadata.
+  </Card>
+  <Card title="Multipart Upload" icon="layer-group" href="/sdks/cpp/multipart-upload">
+    Upload large files in parts.
+  </Card>
+  <Card title="Manage Objects" icon="file" href="/sdks/cpp/manage-objects">
+    Copy, delete, and manage objects.
+  </Card>
+</CardGroup>

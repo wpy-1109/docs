@@ -1,0 +1,104 @@
+---
+title: 'Cost Optimization'
+description: 'Reduce OSS costs with storage class management, lifecycle rules, and efficient access patterns'
+---
+
+## Storage classes
+
+Choose the right storage class based on access frequency:
+
+| Storage Class | Use Case | Min Duration | Retrieval Fee |
+|---------------|----------|--------------|---------------|
+| **Standard** | Frequently accessed (hot data) | None | None |
+| **Infrequent Access (IA)** | Accessed less than once/month | 30 days | Per-GB retrieval |
+| **Archive** | Accessed less than once/quarter | 60 days | Per-GB retrieval + restore wait |
+| **Cold Archive** | Long-term archival | 180 days | Per-GB retrieval + hours restore |
+| **Deep Cold Archive** | Compliance/regulatory archival | 180 days | Per-GB retrieval + 12-48h restore |
+
+<Note>
+If you delete or transition objects before the minimum storage duration, you are still charged for the full minimum period.
+</Note>
+
+## Lifecycle rules
+
+Automatically transition objects to cheaper storage classes or delete expired data:
+
+```
+Rule: "archive-old-logs"
+Scope: Prefix = "logs/"
+├── Transition to IA: 30 days
+├── Transition to Archive: 90 days
+├── Transition to Cold Archive: 365 days
+├── Delete: 2555 days (7 years)
+└── Abort incomplete multipart uploads: 7 days
+```
+
+### Abort incomplete multipart uploads
+
+Failed or abandoned multipart uploads consume storage. Add a lifecycle rule to clean them up:
+
+```xml
+<Rule>
+  <ID>abort-multipart</ID>
+  <Prefix></Prefix>
+  <Status>Enabled</Status>
+  <AbortMultipartUpload>
+    <Days>7</Days>
+  </AbortMultipartUpload>
+</Rule>
+```
+
+## Traffic cost reduction
+
+### Use internal endpoints
+
+Access OSS from ECS instances in the same region using internal endpoints to avoid internet traffic fees:
+
+```
+# Internet endpoint (charges traffic fees)
+https://my-bucket.oss-cn-hangzhou.aliyuncs.com
+
+# Internal endpoint (no traffic fees)
+https://my-bucket.oss-cn-hangzhou-internal.aliyuncs.com
+```
+
+### CDN for frequent downloads
+
+OSS-to-CDN traffic is cheaper than direct internet egress:
+
+1. Create a CDN distribution pointing to your OSS bucket
+2. Use CDN domain for end-user downloads
+3. Set Cache-Control headers for effective caching
+
+### Pay-by-Requester
+
+For shared data scenarios, enable pay-by-requester so that data consumers pay for access:
+
+```xml
+<RequestPaymentConfiguration>
+  <Payer>Requester</Payer>
+</RequestPaymentConfiguration>
+```
+
+## Storage capacity units (SCUs)
+
+Prepaid storage packages offer significant discounts (up to 50%+) compared to pay-as-you-go:
+
+- Purchase SCUs for predictable storage workloads
+- SCUs can offset Standard, IA, and Archive storage fees
+- Available in 1-month, 6-month, and 1-year terms
+
+## Request cost optimization
+
+- **Batch small files**: Reduce unnecessary LIST/GET operations
+- **Use ListObjectsV2**: More efficient than ListObjects for large result sets
+- **Avoid unnecessary HEAD requests**: Cache metadata locally
+- **Use OSS Select**: Query data in-place instead of downloading entire files
+- **Set Deep Cold Archive via lifecycle**: Uploading as Standard then transitioning via lifecycle rules reduces PUT fees compared to uploading directly as Deep Cold Archive
+
+## Monitoring costs
+
+1. Use the **Billing Management** console to track daily costs
+2. Set budget alerts for unexpected cost spikes
+3. Use bucket tags to allocate costs across teams or projects
+4. Review storage usage reports regularly with `GetBucketStat`

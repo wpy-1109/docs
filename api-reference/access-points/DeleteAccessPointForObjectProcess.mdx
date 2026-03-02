@@ -1,0 +1,24 @@
+---
+title: 'DeleteAccessPointForObjectProcess'
+description: 'Deletes an Object FC access point.'
+---
+
+Deletes an Object FC access point.
+
+## Request
+
+```
+DELETE /?accessPointForObjectProcess HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 204.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPointForObjectProcess` | 404 | The Object FC access point does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

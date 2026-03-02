@@ -1,0 +1,55 @@
+---
+title: "Content Detection"
+sidebarTitle: "Content Detection"
+description: "Learn how to use content moderation to detect inappropriate content in objects stored in Alibaba Cloud OSS."
+"og:title": "Content Detection - Alibaba Cloud OSS"
+---
+
+OSS integrates with Alibaba Cloud Content Moderation to automatically detect inappropriate content in images, videos, and text stored in your buckets. This helps you enforce content policies and comply with regulations.
+
+## Capabilities
+
+| Content Type | Detection Types |
+|-------------|----------------|
+| Images | Pornography, violence, terrorism, ads, logos, QR codes |
+| Videos | Frame-by-frame image analysis, audio content analysis |
+| Text | Spam, abuse, sensitive information |
+
+## How it works
+
+1. Enable Content Moderation for your bucket.
+2. Configure detection rules specifying which content types and categories to scan.
+3. New uploads are automatically scanned. Existing objects can be scanned in batch.
+4. Detection results include confidence scores and category labels.
+
+## Enable content detection
+
+<Steps>
+  <Step title="Activate Content Moderation">
+    Activate [Content Moderation](https://www.alibabacloud.com/product/content-moderation) in your Alibaba Cloud account.
+  </Step>
+  <Step title="Configure OSS integration">
+    In the Content Moderation console, configure your OSS bucket as a scan source. Set the scan scope (all objects or specific prefixes).
+  </Step>
+  <Step title="Set up callbacks">
+    Configure callback URLs or event notifications to receive scan results and take automated action on flagged content.
+  </Step>
+</Steps>
+
+## Handling results
+
+| Action | Description |
+|--------|-------------|
+| Pass | Content is clean. No action needed. |
+| Review | Content is flagged for manual review. |
+| Block | Content violates policies. Move to quarantine or delete. |
+
+<Tip>
+Combine content detection with [event notifications](/guides/advanced/event-notifications) to automatically process flagged content, such as moving it to a quarantine prefix or notifying moderators.
+</Tip>
+
+## Next steps
+
+- [Image processing](/guides/data-processing/image-processing)
+- [AI content awareness](/guides/data-processing/ai-content-awareness)
+- [Event notifications](/guides/advanced/event-notifications)

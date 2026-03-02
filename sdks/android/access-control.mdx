@@ -1,0 +1,65 @@
+---
+title: "Access Control - Android SDK"
+sidebarTitle: "Access Control"
+description: "Configure access control using the Alibaba Cloud OSS SDK for Android."
+"og:title": "Access Control with OSS Android SDK"
+---
+
+# Access Control
+
+## STS authentication (Recommended)
+
+Mobile apps must use STS temporary credentials:
+
+```java title="stsAuth.java"
+OSSCredentialProvider credentialProvider = new OSSFederationCredentialProvider() {
+    @Override
+    public OSSFederationToken getFederationToken() {
+        // Call your backend to get STS token
+        return new OSSFederationToken(accessKeyId, accessKeySecret, securityToken, expiration);
+    }
+};
+
+OSS oss = new OSSClient(getApplicationContext(), endpoint, credentialProvider);
+```
+
+## Presigned URLs
+
+Generate temporary access URLs:
+
+```java title="presignedUrl.java"
+// Generate a download URL (valid for 1 hour)
+String url = oss.presignConstrainedObjectURL("my-bucket", "report.pdf", 3600);
+Log.d("OSS", "Download URL: " + url);
+
+// Generate an upload URL
+String uploadUrl = oss.presignConstrainedObjectURL("my-bucket", "uploads/file.txt", 3600);
+```
+
+## Error handling
+
+```java title="errorHandling.java"
+@Override
+public void onFailure(PutObjectRequest request, ClientException ce, ServiceException se) {
+    if (ce != null) {
+        // Client-side error (network issues, etc.)
+        Log.e("OSS", "Client Error: " + ce.getMessage());
+    }
+    if (se != null) {
+        // Server-side error
+        Log.e("OSS", "Error Code: " + se.getErrorCode());
+        Log.e("OSS", "Request ID: " + se.getRequestId());
+        Log.e("OSS", "Host ID: " + se.getHostId());
+        Log.e("OSS", "Message: " + se.getRawMessage());
+    }
+}
+```
+
+<Warning>
+  Never hard-code AccessKey credentials in your Android app. APK files can be decompiled, exposing any embedded secrets.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/sdks/android/upload-objects)
+- [Manage objects](/sdks/android/manage-objects)

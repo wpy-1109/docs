@@ -1,0 +1,34 @@
+---
+title: "Access Points"
+sidebarTitle: "Access Points"
+description: "Learn how to create and manage access points for Alibaba Cloud OSS buckets."
+"og:title": "Access Points - Alibaba Cloud OSS"
+---
+
+Access points provide dedicated endpoints for a bucket with independent access policies. Each access point has its own ARN and can enforce its own permissions, making it easier to manage shared datasets with multiple applications or teams.
+
+## Key benefits
+
+- **Simplified permissions**: Each access point has its own policy instead of one complex bucket policy.
+- **Network controls**: Restrict access to VPC-only or internet-only.
+- **Independent endpoints**: Each access point has a unique hostname.
+
+## Using the console
+
+<Steps>
+  <Step title="Create an access point">
+    Navigate to your bucket, choose **Access Point** in the left pane, and click **Create Access Point**.
+  </Step>
+  <Step title="Configure">
+    Set the access point name, network type (Internet or VPC), and public access block settings.
+  </Step>
+  <Step title="Set policy">
+    Attach an access point policy to control which principals can access the bucket through this access point.
+  </Step>
+</Steps>
+
+## Next steps
+
+- [Object process access points](/guides/access-control/object-fc-access-points)
+- [Block public access](/guides/access-control/block-public-access)
+- [Bucket policies](/guides/access-control/bucket-policies)

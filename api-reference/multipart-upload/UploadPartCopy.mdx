@@ -1,0 +1,32 @@
+---
+title: 'UploadPartCopy'
+description: 'Copy data from an existing object as a multipart upload part'
+---
+
+Copies data from an existing object as a part in a multipart upload. Used to copy objects larger than 5 GB.
+
+## Request
+
+```
+PUT /{ObjectName}?partNumber={PartNumber}&uploadId={UploadId} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-copy-source: /{SourceBucket}/{SourceObject}
+x-oss-copy-source-range: bytes={Start}-{End}
+```
+
+### Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-oss-copy-source` | String | Yes | Source object path. |
+| `x-oss-copy-source-range` | String | No | Byte range to copy from the source. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CopyPartResult>
+  <LastModified>2025-04-17T03:15:40.000Z</LastModified>
+  <ETag>"7265F4D211B56873A381D321F586E4A9"</ETag>
+</CopyPartResult>
+```

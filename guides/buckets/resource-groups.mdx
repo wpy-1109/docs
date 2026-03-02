@@ -1,0 +1,158 @@
+---
+title: "Resource Groups"
+sidebarTitle: "Resource Groups"
+description: "Learn how to organize buckets into resource groups for centralized management in Alibaba Cloud OSS."
+"og:title": "Resource Groups - Alibaba Cloud OSS"
+---
+
+Resource groups let you organize your Alibaba Cloud resources, including OSS buckets, into logical groups for centralized access control, cost allocation, and management. Each bucket belongs to one resource group at a time.
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- Resource groups created in the [Resource Management console](https://resourcemanager.console.alibabacloud.com/)
+
+## Key concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Default Resource Group** | All resources belong to the default group unless reassigned. |
+| **Custom Resource Group** | A user-created group for organizing resources by project, department, or environment. |
+| **Resource Group ID** | A unique identifier (e.g., `rg-aek27tc****`) used in API calls and policies. |
+
+## Using the console
+
+<Steps>
+  <Step title="Navigate to your bucket">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/) and click the bucket name.
+  </Step>
+  <Step title="Change resource group">
+    Choose **Bucket Settings > Basic Settings**. In the **Resource Group** section, click **Modify**, select the target group, and click **Save**.
+  </Step>
+</Steps>
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="resource_groups.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Move bucket to a resource group
+    result = client.put_bucket_resource_group(oss.PutBucketResourceGroupRequest(
+        bucket="examplebucket",
+        bucket_resource_group_configuration=oss.BucketResourceGroupConfiguration(
+            resource_group_id="rg-aek27tc****"
+        )
+    ))
+
+    print(f"Resource group updated. Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="ResourceGroups.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+
+    public class ResourceGroups {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                // Query current resource group
+                String resourceGroupId = ossClient
+                    .getBucketResourceGroup("examplebucket")
+                    .getResourceGroupId();
+                System.out.println("Current group: " + resourceGroupId);
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="resource_groups.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        result, err := client.GetBucketResourceGroup(context.TODO(),
+            &oss.GetBucketResourceGroupRequest{
+                Bucket: oss.Ptr("examplebucket"),
+            })
+        if err != nil {
+            log.Fatalf("Failed: %v", err)
+        }
+
+        log.Printf("Resource Group: %v", oss.ToString(result.ResourceGroupId))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="resourceGroups.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    // List buckets in a specific resource group
+    async function listByResourceGroup() {
+      try {
+        const result = await client.listBuckets({
+          'resource-group-id': 'rg-aek27tc****',
+        });
+        result.buckets.forEach(b => console.log(b.name));
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    listByResourceGroup();
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Bucket tagging](/guides/buckets/bucket-tagging)
+- [RAM policies](/guides/access-control/ram-policies)
+- [List buckets](/guides/buckets/list-buckets)

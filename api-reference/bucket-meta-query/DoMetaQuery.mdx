@@ -1,0 +1,52 @@
+---
+title: 'DoMetaQuery'
+description: 'Query objects using SQL-like conditions on metadata'
+---
+
+Queries objects that meet specified conditions and lists object information based on specified fields and sorting methods.
+
+## Request
+
+```
+POST /?metaQuery HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaQuery>
+  <NextToken></NextToken>
+  <MaxResults>100</MaxResults>
+  <Query>{"Field":"Size","Value":"1048576","Operation":"gt"}</Query>
+  <Sort>Size</Sort>
+  <Order>asc</Order>
+</MetaQuery>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Query` | String | JSON query expression with Field, Value, and Operation. |
+| `Sort` | String | Field to sort by (`Filename`, `Size`, `LastModifiedTime`). |
+| `Order` | String | `asc` or `desc`. |
+| `MaxResults` | Integer | Maximum results (1-200). |
+| `NextToken` | String | Token for pagination. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaQuery>
+  <NextToken>...</NextToken>
+  <Files>
+    <File>
+      <Filename>images/photo.jpg</Filename>
+      <Size>2048000</Size>
+      <ObjectACL>default</ObjectACL>
+      <OSSObjectType>Normal</OSSObjectType>
+      <OSSStorageClass>Standard</OSSStorageClass>
+    </File>
+  </Files>
+</MetaQuery>
+```

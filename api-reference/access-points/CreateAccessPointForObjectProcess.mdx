@@ -1,0 +1,24 @@
+---
+title: 'CreateAccessPointForObjectProcess'
+description: 'Creates an Object FC access point for custom data processing using Function Compute.'
+---
+
+Creates an Object FC access point for custom data processing using Function Compute.
+
+## Request
+
+```
+PUT /?accessPointForObjectProcess HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPointForObjectProcess` | 404 | The Object FC access point does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

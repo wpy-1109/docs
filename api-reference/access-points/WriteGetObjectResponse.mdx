@@ -1,0 +1,39 @@
+---
+title: 'WriteGetObjectResponse'
+description: 'Customize returned data and response headers via Object FC access points'
+---
+
+Used within a Function Compute function to customize the data and response headers returned when an object is accessed through an Object FC access point.
+
+## Request
+
+```
+POST /WriteGetObjectResponse HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-request-route: {route-token}
+x-oss-request-token: {request-token}
+```
+
+### Headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-oss-request-route` | String | Yes | Route token from the Function Compute event. |
+| `x-oss-request-token` | String | Yes | Request token from the Function Compute event. |
+| `x-oss-fwd-status` | Integer | No | HTTP status code to return to the client. |
+| `x-oss-fwd-header-*` | String | No | Custom response headers forwarded to the client. |
+
+### Request body
+
+The processed object data to return to the client.
+
+## Response
+
+**Success:** HTTP 200.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `InvalidArgument` | 400 | Missing or invalid route/request tokens. |
+| `AccessDenied` | 403 | Insufficient permissions. |

@@ -1,0 +1,324 @@
+# User Guide / Product Introduction
+/help/en/oss/user-guide/what-is-oss
+/help/en/oss/user-guide/product-function-node-oss
+/help/en/oss/user-guide/selection-guidance-selection-guidance
+/help/en/oss/user-guide/get-started-with-oss/
+/help/en/oss/user-guide/regions-and-endpoints
+/help/en/oss/user-guide/limits
+# Access and Network
+/help/en/oss/user-guide/access-and-network-overview
+/help/en/oss/user-guide/access-oss-via-bucket-domain-name
+/help/en/oss/user-guide/access-buckets-via-custom-domain-names
+/help/en/oss/user-guide/access-oss-by-https-protocol
+/help/en/oss/user-guide/access-oss-through-ecs-reverse-proxy
+/help/en/oss/user-guide/access-oss-via-privatelink-network
+# Buckets
+/help/en/oss/user-guide/oss-bucket-overview
+/help/en/oss/user-guide/create-a-bucket-4
+/help/en/oss/user-guide/bucket-naming-conventions
+/help/en/oss/user-guide/list-buckets-11
+/help/en/oss/user-guide/delete-buckets
+/help/en/oss/user-guide/query-the-regions-of-buckets-2
+/help/en/oss/user-guide/enable-hierarchical-namespace
+/help/en/oss/user-guide/configure-a-resource-group
+/help/en/oss/user-guide/manage-bucket-tags
+/help/en/oss/user-guide/view-the-resource-usage-of-a-bucket
+# Objects
+/help/en/oss/user-guide/object-overview
+/help/en/oss/user-guide/upload-objects-to-oss/
+/help/en/oss/user-guide/uploading-objects-to-oss-directly-from-clients/
+/help/en/oss/user-guide/download-files/
+/help/en/oss/user-guide/manage-files/
+/help/en/oss/user-guide/manage-directories
+/help/en/oss/user-guide/batch-operations
+# Vector Bucket
+/help/en/oss/user-guide/overview-vector-bucket
+/help/en/oss/user-guide/vector-bucket-quickstart
+/help/en/oss/user-guide/vector-bucket
+/help/en/oss/user-guide/vector-index
+/help/en/oss/user-guide/vector-vectors
+/help/en/oss/user-guide/access-control-and-logging
+/help/en/oss/user-guide/oss-vectors-embed-cli
+/help/en/oss/user-guide/best-practices-for-building-a-semantic-retrieval-platform
+# Permissions and Access Control
+/help/en/oss/user-guide/permissions-and-access-control-overview
+/help/en/oss/user-guide/authentication
+/help/en/oss/user-guide/authorization-syntax-and-elements
+/help/en/oss/user-guide/block-public-access
+/help/en/oss/user-guide/oss-bucket-acl
+/help/en/oss/user-guide/object-acl
+/help/en/oss/user-guide/oss-bucket-policy/
+/help/en/oss/user-guide/ram-policy/
+/help/en/oss/user-guide/access-point/
+/help/en/oss/user-guide/hotlink-protection
+/help/en/oss/user-guide/cors-settings
+# Security and Compliance
+/help/en/oss/user-guide/security-and-compliance-overview
+/help/en/oss/user-guide/data-encryption/
+/help/en/oss/user-guide/data-verification/
+/help/en/oss/user-guide/content-detection/
+/help/en/oss/user-guide/prevent-file-overwrite
+/help/en/oss/user-guide/oss-sandbox
+/help/en/oss/user-guide/oss-ddos-protection
+/help/en/oss/user-guide/compliance-certifications
+/help/en/oss/user-guide/sdk-compliance-guide
+/help/en/oss/user-guide/security-best-practices/
+# Cost Optimization and Storage
+/help/en/oss/user-guide/cost-optimization
+/help/en/oss/user-guide/overview-53/
+/help/en/oss/user-guide/overview-54/
+/help/en/oss/user-guide/archive-direct-reading
+/help/en/oss/user-guide/enable-pay-by-requester-1
+# Acceleration and QoS
+/help/en/oss/user-guide/acceleration-and-qos-overview
+/help/en/oss/user-guide/cdn-acceleration
+/help/en/oss/user-guide/transfer-acceleration
+/help/en/oss/user-guide/user-global-accelerated-access-to-oss
+/help/en/oss/user-guide/overview-77/
+/help/en/oss/user-guide/accelerate-oss-access-by-using-the-efc-cache-consolidated-version
+/help/en/oss/user-guide/single-connection-bandwidth-throttling-4
+/help/en/oss/user-guide/oss-resource-pool-qos
+/help/en/oss/user-guide/oss-performance-best-practices/
+# Data Protection
+/help/en/oss/user-guide/data-protection-overview
+/help/en/oss/user-guide/overview-of-storage-redundancy-types/
+/help/en/oss/user-guide/data-replication-2/
+/help/en/oss/user-guide/overview-78/
+/help/en/oss/user-guide/configure-scheduled-backup
+/help/en/oss/user-guide/oss-retention-policies
+# Metadata and Discovery
+/help/en/oss/user-guide/metadata-and-data-discovery-overview
+/help/en/oss/user-guide/manage-object-metadata-10/
+/help/en/oss/user-guide/data-indexing-overview/
+/help/en/oss/user-guide/ai-content-awareness
+/help/en/oss/user-guide/bucket-inventory
+/help/en/oss/user-guide/query-objects
+# Data Processing
+/help/en/oss/user-guide/data-processing-overview
+/help/en/oss/user-guide/overview-17/
+/help/en/oss/user-guide/introduction-2/
+/help/en/oss/user-guide/overview-65/
+/help/en/oss/user-guide/file-handling-overview/
+/help/en/oss/user-guide/object-fc-access-point-management/
+# Data Migration
+/help/en/oss/user-guide/data-migration-overview
+/help/en/oss/user-guide/migrate-data-from-hdfs-to-oss
+/help/en/oss/user-guide/migrate-data-from-hdfs-to-oss-hdfs
+/help/en/oss/user-guide/migrate-data-across-multiple-buckets-in-oss-hdfs
+/help/en/oss/user-guide/migrate-data-from-a-semi-hosted-jindofs-cluster-to-oss-hdfs
+/help/en/oss/user-guide/use-the-jindotable-moveto-command-to-migrate-hive-tables-and-partitions-to-oss-hdfs
+# Logging and Monitoring
+/help/en/oss/user-guide/logging-and-monitoring
+/help/en/oss/user-guide/manage-logs/
+/help/en/oss/user-guide/overview-72/
+# Static Website Hosting
+/help/en/oss/user-guide/hosting-static-websites
+# Data Lake
+/help/en/oss/user-guide/data-lake
+/help/en/oss/user-guide/connect-oss-to-data-lake-ecosystems/
+# Back-to-Origin
+/help/en/oss/user-guide/mirroring-based-back-to-origin
+/help/en/oss/user-guide/redirection
+# CloudBox
+/help/en/oss/user-guide/oss-deployed-in-cloudbox-overview
+/help/en/oss/user-guide/getting-started-with-oss-deployed-in-cloudbox
+# Billing
+/help/en/oss/product-overview/what-is-oss
+/help/en/oss/product-overview/basic-billing-item
+/help/en/oss/product-overview/value-added-billing-item
+/help/en/oss/product-overview/pay-as-you-go
+/help/en/oss/product-overview/resource-plan
+/help/en/oss/product-overview/query-bills
+/help/en/oss/billing-overview
+# FAQ
+/help/en/oss/faq-15
+# Release Notes
+/help/en/oss/release-notes
+# Developer Reference - API Overview
+/help/en/oss/developer-reference/list-of-operations-by-function
+/help/en/oss/developer-reference/list-of-supported-api-operations
+/help/en/oss/developer-reference/common-http-headers
+/help/en/oss/developer-reference/recommend-to-use-signature-version-4
+# Developer Reference - Bucket API
+/help/en/oss/developer-reference/putbucket
+/help/en/oss/developer-reference/deletebucket
+/help/en/oss/developer-reference/listbuckets
+/help/en/oss/developer-reference/listobjects
+/help/en/oss/developer-reference/listobjects-v2
+/help/en/oss/developer-reference/getbucketinfo
+/help/en/oss/developer-reference/getbucketlocation
+/help/en/oss/developer-reference/getbucketstat
+# Developer Reference - Bucket Config API
+/help/en/oss/developer-reference/putbucketacl
+/help/en/oss/developer-reference/getbucketacl
+/help/en/oss/developer-reference/putbucketlifecycle
+/help/en/oss/developer-reference/getbucketlifecycle
+/help/en/oss/developer-reference/deletebucketlifecycle
+/help/en/oss/developer-reference/putbuckettransferacceleration
+/help/en/oss/developer-reference/getbuckettransferacceleration
+/help/en/oss/developer-reference/putbucketversioning
+/help/en/oss/developer-reference/getbucketversioning
+/help/en/oss/developer-reference/listobjectversions
+/help/en/oss/developer-reference/putbucketreplication
+/help/en/oss/developer-reference/getbucketreplication
+/help/en/oss/developer-reference/deletebucketreplication
+/help/en/oss/developer-reference/putbucketpolicy
+/help/en/oss/developer-reference/getbucketpolicy
+/help/en/oss/developer-reference/deletebucketpolicy
+/help/en/oss/developer-reference/putbucketinventory
+/help/en/oss/developer-reference/getbucketinventory
+/help/en/oss/developer-reference/listbucketinventory
+/help/en/oss/developer-reference/deletebucketinventory
+/help/en/oss/developer-reference/putbucketlogging
+/help/en/oss/developer-reference/getbucketlogging
+/help/en/oss/developer-reference/deletebucketlogging
+/help/en/oss/developer-reference/putbucketwebsite
+/help/en/oss/developer-reference/getbucketwebsite
+/help/en/oss/developer-reference/deletebucketwebsite
+/help/en/oss/developer-reference/putbucketreferer
+/help/en/oss/developer-reference/getbucketreferer
+/help/en/oss/developer-reference/putbuckettags
+/help/en/oss/developer-reference/getbuckettags
+/help/en/oss/developer-reference/deletebuckettags
+/help/en/oss/developer-reference/putbucketencryption
+/help/en/oss/developer-reference/getbucketencryption
+/help/en/oss/developer-reference/deletebucketencryption
+/help/en/oss/developer-reference/putbucketrequestpayment
+/help/en/oss/developer-reference/getbucketrequestpayment
+/help/en/oss/developer-reference/putbucketcors
+/help/en/oss/developer-reference/getbucketcors
+/help/en/oss/developer-reference/deletebucketcors
+/help/en/oss/developer-reference/options
+# Developer Reference - Object API
+/help/en/oss/developer-reference/putobject
+/help/en/oss/developer-reference/getobject
+/help/en/oss/developer-reference/copyobject
+/help/en/oss/developer-reference/appendobject
+/help/en/oss/developer-reference/deleteobject
+/help/en/oss/developer-reference/deletemultipleobjects
+/help/en/oss/developer-reference/headobject
+/help/en/oss/developer-reference/getobjectmeta
+/help/en/oss/developer-reference/postobject
+/help/en/oss/developer-reference/callback
+/help/en/oss/developer-reference/restoreobject
+/help/en/oss/developer-reference/selectobject
+# Developer Reference - Multipart Upload API
+/help/en/oss/developer-reference/initiatemultipartupload
+/help/en/oss/developer-reference/uploadpart
+/help/en/oss/developer-reference/uploadpartcopy
+/help/en/oss/developer-reference/completemultipartupload
+/help/en/oss/developer-reference/abortmultipartupload
+/help/en/oss/developer-reference/listmultipartuploads
+/help/en/oss/developer-reference/listparts
+# Developer Reference - Object ACL/Tagging/Symlink
+/help/en/oss/developer-reference/putobjectacl
+/help/en/oss/developer-reference/getobjectacl
+/help/en/oss/developer-reference/putsymlink
+/help/en/oss/developer-reference/getsymlink
+/help/en/oss/developer-reference/putobjecttagging
+/help/en/oss/developer-reference/getobjecttagging
+/help/en/oss/developer-reference/deleteobjecttagging
+# Developer Reference - S3 Compatibility
+/help/en/oss/developer-reference/compatibility-with-amazon-s3
+/help/en/oss/developer-reference/use-aws-sdks-to-access-oss
+/help/en/oss/developer-reference/migrate-data-from-amazon-s3-to-alibaba-cloud-oss-1
+# Developer Reference - Signature
+/help/en/oss/developer-reference/overview-24
+/help/en/oss/developer-reference/guidelines-for-upgrading-v1-signatures-to-v4-signatures
+/help/en/oss/developer-reference/faq-24
+# Developer Reference - Tools
+/help/en/oss/developer-reference/oss-tools
+# Developer Reference - Access Point
+/help/en/oss/developer-reference/createaccesspoint
+/help/en/oss/developer-reference/getaccesspoint
+/help/en/oss/developer-reference/deleteaccesspoint
+/help/en/oss/developer-reference/listaccesspoints
+/help/en/oss/developer-reference/putaccesspointpolicy
+/help/en/oss/developer-reference/getaccesspointpolicy
+/help/en/oss/developer-reference/deleteaccesspointpolicy
+# Developer Reference - WORM
+/help/en/oss/developer-reference/initiatebucketworm
+/help/en/oss/developer-reference/abortbucketworm
+/help/en/oss/developer-reference/completebucketworm
+/help/en/oss/developer-reference/extendbucketworm
+/help/en/oss/developer-reference/getbucketworm
+# Developer Reference - Other APIs
+/help/en/oss/developer-reference/describeregions
+/help/en/oss/developer-reference/getbucketpolicystatus
+/help/en/oss/developer-reference/putbucketarchivedirectread
+/help/en/oss/developer-reference/getbucketarchivedirectread
+/help/en/oss/developer-reference/putpublicaccessblock
+/help/en/oss/developer-reference/getpublicaccessblock
+/help/en/oss/developer-reference/deletepublicaccessblock
+/help/en/oss/developer-reference/putbucketpublicaccessblock
+/help/en/oss/developer-reference/getbucketpublicaccessblock
+/help/en/oss/developer-reference/deletebucketpublicaccessblock
+/help/en/oss/developer-reference/putbuckethttpsconfig
+/help/en/oss/developer-reference/getbuckethttpsconfig
+/help/en/oss/developer-reference/putbucketaccessmonitor
+/help/en/oss/developer-reference/getbucketaccessmonitor
+/help/en/oss/developer-reference/openmetaquery
+/help/en/oss/developer-reference/getmetaquerystatus
+/help/en/oss/developer-reference/dometaquery
+/help/en/oss/developer-reference/closemetaquery
+/help/en/oss/developer-reference/createdirectory
+/help/en/oss/developer-reference/rename
+/help/en/oss/developer-reference/deletedirectory
+/help/en/oss/developer-reference/sealappendobject
+/help/en/oss/developer-reference/cleanrestoredobject
+/help/en/oss/developer-reference/createselectobjectmeta
+/help/en/oss/developer-reference/putuserdefinedlogfieldsconfig
+/help/en/oss/developer-reference/getuserdefinedlogfieldsconfig
+/help/en/oss/developer-reference/deleteuserdefinedlogfieldsconfig
+/help/en/oss/developer-reference/putbucketrtc
+/help/en/oss/developer-reference/getbucketreplicationlocation
+/help/en/oss/developer-reference/getbucketreplicationprogress
+/help/en/oss/developer-reference/putbucketresourcegroup
+/help/en/oss/developer-reference/getbucketresourcegroup
+/help/en/oss/developer-reference/createcnametoken
+/help/en/oss/developer-reference/getcnametoken
+/help/en/oss/developer-reference/putcname
+/help/en/oss/developer-reference/listcname
+/help/en/oss/developer-reference/deletecname
+/help/en/oss/developer-reference/putstyle
+/help/en/oss/developer-reference/getstyle
+/help/en/oss/developer-reference/liststyle
+/help/en/oss/developer-reference/deletestyle
+/help/en/oss/developer-reference/createbucketdataredundancytransition
+/help/en/oss/developer-reference/getbucketdataredundancytransition
+/help/en/oss/developer-reference/deletebucketdataredundancytransition
+/help/en/oss/developer-reference/listbucketdataredundancytransition
+/help/en/oss/developer-reference/listuserdataredundancytransition
+/help/en/oss/developer-reference/mount-oss-buckets-to-local-file-systems-by-using-amazon-s3-protocols
+# Developer Reference - Anti-DDoS
+/help/en/oss/developer-reference/inituserantiddosinfo
+/help/en/oss/developer-reference/updateuserantiddosinfo
+/help/en/oss/developer-reference/getuserantiddosinfo
+/help/en/oss/developer-reference/initbucketantiddosinfo
+/help/en/oss/developer-reference/updatebucketantiddosinfo
+/help/en/oss/developer-reference/listbucketantiddosinfo
+# Developer Reference - Data Accelerator
+/help/en/oss/developer-reference/putbucketdataaccelerator
+/help/en/oss/developer-reference/getbucketdataaccelerator
+/help/en/oss/developer-reference/deletebucketdataaccelerator
+# Developer Reference - Object FC Access Point
+/help/en/oss/developer-reference/createaccesspointforobjectprocess
+/help/en/oss/developer-reference/getaccesspointforobjectprocess
+/help/en/oss/developer-reference/deleteaccesspointforobjectprocess
+/help/en/oss/developer-reference/listaccesspointsforobjectprocess
+/help/en/oss/developer-reference/putaccesspointconfigforobjectprocess
+/help/en/oss/developer-reference/getaccesspointconfigforobjectprocess
+/help/en/oss/developer-reference/putaccesspointpolicyforobjectprocess
+/help/en/oss/developer-reference/getaccesspointpolicyforobjectprocess
+/help/en/oss/developer-reference/deleteaccesspointpolicyforobjectprocess
+/help/en/oss/developer-reference/write-get-object-response
+# Developer Reference - Access Point Public Access Block
+/help/en/oss/developer-reference/putaccesspointpublicaccessblock
+/help/en/oss/developer-reference/getaccesspointpublicaccessblock
+/help/en/oss/developer-reference/deleteaccesspointpublicaccessblock
+# Developer Reference - MCP Server
+/help/en/oss/developer-reference/oss-mcp-server-alpha
+# Developer Reference - Best Practices
+/help/en/oss/developer-reference/best-practice-of-coordination-and-optimization-based-on-hadoop-oss-connector-client-and-oss-accelerator
+# User Guide - Overview pages (misc)
+/help/en/oss/user-guide/overview-14

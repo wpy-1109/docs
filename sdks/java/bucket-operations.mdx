@@ -1,0 +1,96 @@
+---
+title: "Bucket Operations - Java SDK"
+sidebarTitle: "Bucket Operations"
+description: "Create, list, query, and delete buckets using the Alibaba Cloud OSS SDK for Java."
+"og:title": "Bucket Operations with OSS Java SDK"
+---
+
+# Bucket Operations
+
+## Create a bucket
+
+<Tabs>
+  <Tab title="V1 SDK">
+    ```java title="CreateBucket.java"
+    // Simple creation
+    ossClient.createBucket(bucketName);
+
+    // With storage class, ACL, and redundancy type
+    CreateBucketRequest request = new CreateBucketRequest(bucketName);
+    request.setStorageClass(StorageClass.Standard);
+    request.setCannedACL(CannedAccessControlList.Private);
+    request.setDataRedundancyType(DataRedundancyType.LRS);
+    ossClient.createBucket(request);
+    ```
+  </Tab>
+  <Tab title="V2 SDK">
+    ```java title="CreateBucketV2.java"
+    PutBucketResult result = client.putBucket(
+        PutBucketRequest.newBuilder()
+            .bucket(bucketName)
+            .build());
+    System.out.printf("Bucket created: statusCode=%d%n", result.statusCode());
+    ```
+  </Tab>
+</Tabs>
+
+## List buckets
+
+```java title="ListBuckets.java"
+List<Bucket> buckets = ossClient.listBuckets();
+for (Bucket bucket : buckets) {
+    System.out.println("Bucket: " + bucket.getName());
+}
+```
+
+## Check if a bucket exists
+
+```java title="BucketExists.java"
+boolean exists = ossClient.doesBucketExist(bucketName);
+System.out.println("Bucket exists: " + exists);
+```
+
+## Get bucket info
+
+```java title="GetBucketInfo.java"
+BucketInfo info = ossClient.getBucketInfo(bucketName);
+System.out.println("Location: " + info.getBucketLocation());
+System.out.println("CreationDate: " + info.getBucket().getCreationDate());
+System.out.println("StorageClass: " + info.getBucket().getStorageClass());
+```
+
+## Set bucket ACL
+
+```java title="SetBucketAcl.java"
+ossClient.setBucketACL(bucketName, CannedAccessControlList.PublicRead);
+```
+
+## Get bucket ACL
+
+```java title="GetBucketAcl.java"
+AccessControlList acl = ossClient.getBucketAcl(bucketName);
+System.out.println("ACL: " + acl.getCannedACL());
+```
+
+## Delete a bucket
+
+```java title="DeleteBucket.java"
+ossClient.deleteBucket(bucketName);
+```
+
+<Note>
+A bucket must be empty before deletion. Delete all objects and abort incomplete multipart uploads first.
+</Note>
+
+## Method reference
+
+| Method | Description | Return Type |
+|--------|-------------|-------------|
+| `createBucket(name)` | Creates a new bucket | `Bucket` |
+| `listBuckets()` | Lists all buckets | `List<Bucket>` |
+| `doesBucketExist(name)` | Checks bucket existence | `boolean` |
+| `getBucketInfo(name)` | Gets bucket metadata | `BucketInfo` |
+| `getBucketLocation(name)` | Gets bucket region | `String` |
+| `setBucketAcl(name, acl)` | Sets bucket ACL | `void` |
+| `getBucketAcl(name)` | Gets bucket ACL | `AccessControlList` |
+| `deleteBucket(name)` | Deletes a bucket | `void` |

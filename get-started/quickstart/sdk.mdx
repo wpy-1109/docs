@@ -1,0 +1,304 @@
+---
+title: "Quickstart: SDK"
+sidebarTitle: "SDK"
+description: "Upload your first file to OSS using the Python, Java, Go, or Node.js SDK in 5 minutes."
+icon: "code"
+"og:title": "Quickstart: SDK - Alibaba Cloud OSS"
+"og:description": "Upload your first file to OSS using the Python, Java, Go, or Node.js SDK in 5 minutes."
+---
+
+# Quickstart: SDK
+
+<Info>
+This quickstart takes approximately 5 minutes to complete.
+</Info>
+
+Alibaba Cloud provides OSS SDKs for 12+ programming languages. This guide covers Python, Java, Go, and Node.js.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- An [Alibaba Cloud account](https://account.alibabacloud.com/register/intl_register.htm) with [OSS activated](https://www.alibabacloud.com/product/oss).
+- An [AccessKey pair](https://ram.console.alibabacloud.com/manage/ak) (AccessKey ID and AccessKey Secret).
+- A [bucket created](/get-started/quickstart/console) in the OSS Console (or create one programmatically below).
+
+## Steps
+
+<Steps>
+  <Step title="Install the SDK">
+    <Tabs>
+      <Tab title="Python">
+        ```bash
+        pip install oss2
+        ```
+      </Tab>
+      <Tab title="Java">
+        Add the dependency to your `pom.xml`:
+
+        ```xml
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.18.1</version>
+        </dependency>
+        ```
+      </Tab>
+      <Tab title="Go">
+        ```bash
+        go get github.com/aliyun/aliyun-oss-go-sdk/oss
+        ```
+      </Tab>
+      <Tab title="Node.js">
+        ```bash
+        npm install ali-oss
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Configure credentials">
+    Set your credentials as environment variables:
+
+    ```bash
+    export OSS_ACCESS_KEY_ID=your-access-key-id
+    export OSS_ACCESS_KEY_SECRET=your-access-key-secret
+    ```
+
+    <Warning>
+    Never hardcode credentials in your source code. Use environment variables, configuration files, or STS temporary credentials for production applications.
+    </Warning>
+  </Step>
+
+  <Step title="Upload a file">
+    <Tabs>
+      <Tab title="Python">
+        ```python title="quickstart.py"
+        import os
+        import oss2
+
+        # Initialize the client
+        auth = oss2.Auth(
+            os.getenv('OSS_ACCESS_KEY_ID'),
+            os.getenv('OSS_ACCESS_KEY_SECRET')
+        )
+        bucket = oss2.Bucket(
+            auth,
+            'https://oss-cn-hangzhou.aliyuncs.com',
+            'my-first-bucket-2024'
+        )
+
+        # Upload a string
+        bucket.put_object('hello.txt', b'Hello, OSS!')
+        print('Uploaded hello.txt')
+
+        # Upload a local file
+        bucket.put_object_from_file('example.jpg', '/path/to/local/file.jpg')
+        print('Uploaded example.jpg')
+        ```
+      </Tab>
+      <Tab title="Java">
+        ```java title="Quickstart.java"
+        import com.aliyun.oss.OSS;
+        import com.aliyun.oss.OSSClientBuilder;
+        import java.io.ByteArrayInputStream;
+
+        public class Quickstart {
+            public static void main(String[] args) {
+                String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+                String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
+                String accessKeySecret = System.getenv("OSS_ACCESS_KEY_SECRET");
+                String bucketName = "my-first-bucket-2024";
+
+                // Initialize the client
+                OSS ossClient = new OSSClientBuilder()
+                    .build(endpoint, accessKeyId, accessKeySecret);
+
+                try {
+                    // Upload a string
+                    ossClient.putObject(
+                        bucketName,
+                        "hello.txt",
+                        new ByteArrayInputStream("Hello, OSS!".getBytes())
+                    );
+                    System.out.println("Uploaded hello.txt");
+                } finally {
+                    ossClient.shutdown();
+                }
+            }
+        }
+        ```
+      </Tab>
+      <Tab title="Go">
+        ```go title="quickstart.go"
+        package main
+
+        import (
+            "fmt"
+            "os"
+            "strings"
+            "github.com/aliyun/aliyun-oss-go-sdk/oss"
+        )
+
+        func main() {
+            // Initialize the client
+            client, err := oss.New(
+                "https://oss-cn-hangzhou.aliyuncs.com",
+                os.Getenv("OSS_ACCESS_KEY_ID"),
+                os.Getenv("OSS_ACCESS_KEY_SECRET"),
+            )
+            if err != nil {
+                fmt.Println("Error:", err)
+                return
+            }
+
+            // Get the bucket
+            bucket, err := client.Bucket("my-first-bucket-2024")
+            if err != nil {
+                fmt.Println("Error:", err)
+                return
+            }
+
+            // Upload a string
+            err = bucket.PutObject("hello.txt", strings.NewReader("Hello, OSS!"))
+            if err != nil {
+                fmt.Println("Error:", err)
+                return
+            }
+            fmt.Println("Uploaded hello.txt")
+        }
+        ```
+      </Tab>
+      <Tab title="Node.js">
+        ```javascript title="quickstart.js"
+        const OSS = require('ali-oss');
+
+        async function main() {
+          // Initialize the client
+          const client = new OSS({
+            region: 'oss-cn-hangzhou',
+            accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+            accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+            bucket: 'my-first-bucket-2024',
+          });
+
+          // Upload a string
+          const result = await client.put(
+            'hello.txt',
+            Buffer.from('Hello, OSS!')
+          );
+          console.log('Uploaded hello.txt:', result.url);
+
+          // Upload a local file
+          const fileResult = await client.put(
+            'example.jpg',
+            '/path/to/local/file.jpg'
+          );
+          console.log('Uploaded example.jpg:', fileResult.url);
+        }
+
+        main().catch(console.error);
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Download and verify">
+    <Tabs>
+      <Tab title="Python">
+        ```python title="download.py"
+        # Download the object
+        result = bucket.get_object('hello.txt')
+        content = result.read().decode('utf-8')
+        print(f'Content: {content}')
+        # Output: Content: Hello, OSS!
+        ```
+      </Tab>
+      <Tab title="Java">
+        ```java title="Download.java"
+        import com.aliyun.oss.model.OSSObject;
+        import java.io.BufferedReader;
+        import java.io.InputStreamReader;
+
+        OSSObject ossObject = ossClient.getObject(bucketName, "hello.txt");
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(ossObject.getObjectContent())
+        );
+        System.out.println("Content: " + reader.readLine());
+        reader.close();
+        ossObject.close();
+        // Output: Content: Hello, OSS!
+        ```
+      </Tab>
+      <Tab title="Go">
+        ```go title="download.go"
+        body, err := bucket.GetObject("hello.txt")
+        if err != nil {
+            fmt.Println("Error:", err)
+            return
+        }
+        defer body.Close()
+
+        buf := new(bytes.Buffer)
+        buf.ReadFrom(body)
+        fmt.Println("Content:", buf.String())
+        // Output: Content: Hello, OSS!
+        ```
+      </Tab>
+      <Tab title="Node.js">
+        ```javascript title="download.js"
+        const getResult = await client.get('hello.txt');
+        console.log('Content:', getResult.content.toString());
+        // Output: Content: Hello, OSS!
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Clean up (optional)">
+    <Tabs>
+      <Tab title="Python">
+        ```python
+        # Delete the object
+        bucket.delete_object('hello.txt')
+        print('Deleted hello.txt')
+        ```
+      </Tab>
+      <Tab title="Java">
+        ```java
+        ossClient.deleteObject(bucketName, "hello.txt");
+        System.out.println("Deleted hello.txt");
+        ```
+      </Tab>
+      <Tab title="Go">
+        ```go
+        err = bucket.DeleteObject("hello.txt")
+        fmt.Println("Deleted hello.txt")
+        ```
+      </Tab>
+      <Tab title="Node.js">
+        ```javascript
+        await client.delete('hello.txt');
+        console.log('Deleted hello.txt');
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" icon="upload" href="/guides/objects/upload-objects">
+    Learn about simple, multipart, and resumable uploads.
+  </Card>
+  <Card title="Download Objects" icon="download" href="/guides/objects/download-objects">
+    Download objects with range requests and resumable downloads.
+  </Card>
+  <Card title="SDK Reference" icon="book" href="/sdks/overview">
+    Explore the full SDK documentation for your language.
+  </Card>
+  <Card title="Access Control" icon="shield-halved" href="/get-started/concepts/access-control-overview">
+    Secure your data with RAM policies and STS credentials.
+  </Card>
+</CardGroup>

@@ -1,0 +1,86 @@
+---
+title: "Bucket Operations - Node.js SDK"
+sidebarTitle: "Bucket Operations"
+description: "Create, list, query, and delete buckets using the Alibaba Cloud OSS SDK for Node.js."
+"og:title": "Bucket Operations with OSS Node.js SDK"
+---
+
+# Bucket Operations
+
+## List buckets
+
+```javascript title="listBuckets.js"
+const result = await client.listBuckets();
+result.buckets.forEach(bucket => {
+  console.log('Bucket:', bucket.name, 'Region:', bucket.region);
+});
+```
+
+## Create a bucket
+
+```javascript title="createBucket.js"
+await client.putBucket('my-new-bucket', {
+  storageClass: 'Standard',
+  acl: 'private',
+  dataRedundancyType: 'LRS',
+});
+```
+
+## Check if a bucket exists
+
+```javascript title="bucketExists.js"
+try {
+  const result = await client.getBucketInfo('my-bucket');
+  console.log('Bucket exists:', result.bucket.name);
+} catch (err) {
+  if (err.code === 'NoSuchBucket') {
+    console.log('Bucket does not exist');
+  }
+}
+```
+
+## Get bucket info
+
+```javascript title="getBucketInfo.js"
+const result = await client.getBucketInfo('my-bucket');
+console.log('Name:', result.bucket.name);
+console.log('Location:', result.bucket.Location);
+console.log('StorageClass:', result.bucket.StorageClass);
+console.log('CreationDate:', result.bucket.CreationDate);
+```
+
+## Set bucket ACL
+
+```javascript title="setBucketAcl.js"
+await client.putBucketACL('my-bucket', 'private');
+// Options: 'private', 'public-read', 'public-read-write'
+```
+
+## Delete a bucket
+
+```javascript title="deleteBucket.js"
+await client.deleteBucket('my-bucket');
+```
+
+<Note>
+A bucket must be empty before deletion.
+</Note>
+
+## Bucket tagging
+
+```javascript title="bucketTagging.js"
+// Set tags
+await client.putBucketTagging('my-bucket', {
+  tag: [
+    { key: 'environment', value: 'production' },
+    { key: 'team', value: 'engineering' },
+  ],
+});
+
+// Get tags
+const tags = await client.getBucketTagging('my-bucket');
+console.log('Tags:', tags.tag);
+
+// Delete tags
+await client.deleteBucketTagging('my-bucket');
+```

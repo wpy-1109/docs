@@ -1,0 +1,40 @@
+---
+title: 'OSS-HDFS Limitations'
+description: 'Usage notes and limitations for OSS-HDFS'
+---
+
+## General limitations
+
+- OSS-HDFS is only available in [specific regions](https://www.alibabacloud.com/help/en/oss/user-guide/enable-and-configure-oss-hdfs)
+- Once enabled, OSS-HDFS cannot be disabled for the bucket
+- The `.dlsdata/` directory is reserved -- do not modify it via standard OSS APIs
+- Maximum file size: 48.8 TB
+- Maximum path depth: 1000 levels
+- Maximum filename length: 255 characters
+
+## Interoperability notes
+
+- Objects written via OSS-HDFS are visible through standard OSS APIs (read-only recommended)
+- Objects written via standard OSS APIs are **not** visible through OSS-HDFS
+- Do not mix write operations between OSS-HDFS and standard OSS on the same paths
+
+## Feature compatibility
+
+| Feature | Supported |
+|---------|-----------|
+| Directory rename (atomic) | Yes |
+| File permissions (POSIX) | Yes |
+| Extended attributes (XAttrs) | Yes |
+| ACLs | Yes |
+| Symlinks | No |
+| Hard links | No |
+| File append | Yes (with JindoSDK 4.x+) |
+| Truncate | Yes |
+| Snapshots | No |
+
+## Performance considerations
+
+- Rename operations are atomic and O(1), unlike standard OSS which requires copy + delete
+- List operations benefit from the hierarchical namespace index
+- For optimal throughput, use the JindoSDK with connection pooling and caching enabled
+- Place compute nodes in the same region as the OSS bucket to minimize latency

@@ -1,0 +1,41 @@
+---
+title: 'GetBucketReplicationProgress'
+description: 'Query the replication progress of a bucket'
+---
+
+Queries the data replication progress of a bucket.
+
+## Request
+
+```
+GET /?replicationProgress&rule-id={RuleId} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `rule-id` | String | Yes | The replication rule ID. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ReplicationProgress>
+  <Rule>
+    <ID>rule-1</ID>
+    <Status>doing</Status>
+    <Progress>
+      <HistoricalObject>0.85</HistoricalObject>
+      <NewObject>2025-04-17T03:15:40.000Z</NewObject>
+    </Progress>
+  </Rule>
+</ReplicationProgress>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Status` | String | `starting`, `doing`, or `closing`. |
+| `HistoricalObject` | Float | Progress of historical object replication (0 to 1). |
+| `NewObject` | String | Timestamp of the most recently replicated new object. |

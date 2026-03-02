@@ -1,0 +1,26 @@
+---
+title: 'API Request Fees'
+description: 'OSS API operation pricing'
+---
+
+## Request categories
+
+| Category | Operations | Typical Pricing |
+|----------|-----------|----------------|
+| **Write (PUT/POST)** | PutObject, PostObject, CopyObject, InitiateMultipartUpload, UploadPart, CompleteMultipartUpload, AppendObject | Per 10,000 requests |
+| **Read (GET)** | GetObject, HeadObject, GetObjectMeta | Per 10,000 requests |
+| **List** | ListObjects, ListObjectsV2, ListBuckets | Per 10,000 requests |
+| **Delete** | DeleteObject, DeleteMultipleObjects | Free |
+| **Lifecycle** | Transition, expiration operations | Per 10,000 operations |
+
+## Cost optimization
+
+- **Batch small files**: Reduce the number of PUT/GET operations
+- **Use ListObjectsV2**: More efficient pagination than ListObjects
+- **Avoid unnecessary HEAD requests**: Cache metadata locally
+- **Use OSS Select**: Query data in-place instead of downloading entire files
+- **Delete operations are free**: No cost for cleanup
+
+<Note>
+Deep Cold Archive PUT requests are significantly more expensive than Standard. Upload as Standard and use lifecycle rules to transition.
+</Note>

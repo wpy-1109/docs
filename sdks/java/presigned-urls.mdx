@@ -1,0 +1,76 @@
+---
+title: "Presigned URLs - Java SDK"
+sidebarTitle: "Presigned URLs"
+description: "Generate presigned URLs for secure, temporary access to Alibaba Cloud OSS objects using the Java SDK."
+"og:title": "Presigned URLs with OSS Java SDK"
+---
+
+# Presigned URLs
+
+Generate time-limited URLs that grant temporary access to OSS objects without sharing your credentials.
+
+## Generate a download URL
+
+```java title="PresignedDownload.java"
+import com.aliyun.oss.model.GeneratePresignedUrlRequest;
+import java.net.URL;
+import java.util.Date;
+
+// Set expiration to 1 hour from now
+Date expiration = new Date(System.currentTimeMillis() + 3600 * 1000);
+
+URL signedUrl = ossClient.generatePresignedUrl(bucketName, objectName, expiration);
+System.out.println("Download URL: " + signedUrl.toString());
+```
+
+## Generate an upload URL
+
+```java title="PresignedUpload.java"
+import com.aliyun.oss.HttpMethod;
+
+GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(
+    bucketName, objectName, HttpMethod.PUT);
+request.setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000));
+request.setContentType("application/octet-stream");
+
+URL signedUrl = ossClient.generatePresignedUrl(request);
+System.out.println("Upload URL: " + signedUrl.toString());
+```
+
+## Presigned URL with custom headers
+
+```java title="PresignedHeaders.java"
+GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(
+    bucketName, objectName);
+request.setMethod(HttpMethod.PUT);
+request.setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000));
+
+Map<String, String> headers = new HashMap<>();
+headers.put("Content-Type", "text/plain");
+request.setHeaders(headers);
+
+URL signedUrl = ossClient.generatePresignedUrl(request);
+```
+
+## Use a presigned URL with an HTTP client
+
+```java title="UsePresignedUrl.java"
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
+CloseableHttpClient httpClient = HttpClients.createDefault();
+HttpPut httpPut = new HttpPut(signedUrl.toString());
+httpPut.setEntity(new FileEntity(new File(filePath)));
+httpPut.setHeader("Content-Type", "application/octet-stream");
+
+var response = httpClient.execute(httpPut);
+System.out.println("Status: " + response.getStatusLine().getStatusCode());
+httpClient.close();
+```
+
+## Next steps
+
+- [Upload objects](/sdks/java/upload-objects)
+- [Presigned URLs (Guide)](/guides/access-control/presigned-urls)

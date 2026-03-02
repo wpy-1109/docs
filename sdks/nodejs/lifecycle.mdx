@@ -1,0 +1,49 @@
+---
+title: "Lifecycle Rules - Node.js SDK"
+sidebarTitle: "Lifecycle"
+description: "Configure lifecycle rules to automatically transition or expire objects using the Alibaba Cloud OSS SDK for Node.js."
+"og:title": "Lifecycle Rules with OSS Node.js SDK"
+---
+
+# Lifecycle Rules
+
+## Set lifecycle rules
+
+```javascript title="setLifecycle.js"
+const rules = [
+  {
+    id: 'expire-logs',
+    prefix: 'logs/',
+    status: 'Enabled',
+    expiration: { days: 30 },
+  },
+  {
+    id: 'transition-to-ia',
+    prefix: 'data/',
+    status: 'Enabled',
+    transition: { days: 60, storageClass: 'IA' },
+  },
+];
+
+await client.putBucketLifecycle('my-bucket', rules);
+```
+
+## Get lifecycle rules
+
+```javascript title="getLifecycle.js"
+const result = await client.getBucketLifecycle('my-bucket');
+result.rules.forEach(rule => {
+  console.log('Rule:', rule.id, 'Prefix:', rule.prefix, 'Status:', rule.status);
+});
+```
+
+## Delete lifecycle rules
+
+```javascript title="deleteLifecycle.js"
+await client.deleteBucketLifecycle('my-bucket');
+```
+
+## Next steps
+
+- [Versioning](/sdks/nodejs/versioning)
+- [Lifecycle rules (Guide)](/guides/data-management/lifecycle-rules)

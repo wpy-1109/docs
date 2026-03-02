@@ -1,0 +1,59 @@
+---
+title: "Initialization - Browser.js SDK"
+sidebarTitle: "Initialization"
+description: "Initialize the OSS client in the browser using STS temporary credentials."
+"og:title": "Initialize OSS Browser.js SDK Client"
+---
+
+# Initialization
+
+## Create an OSS client with STS
+
+The Browser.js SDK requires STS temporary credentials for security:
+
+```javascript title="init.js"
+const OSS = require('ali-oss');
+
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: 'your-sts-access-key-id',
+  accessKeySecret: 'your-sts-access-key-secret',
+  stsToken: 'your-sts-token',
+  bucket: 'my-bucket',
+  authorizationV4: true
+});
+```
+
+## Refresh STS token
+
+STS tokens expire. Refresh them automatically:
+
+```javascript title="refreshToken.js"
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: '',
+  accessKeySecret: '',
+  stsToken: '',
+  bucket: 'my-bucket',
+  authorizationV4: true,
+  refreshSTSToken: async () => {
+    const response = await fetch('/api/sts-token');
+    const data = await response.json();
+    return {
+      accessKeyId: data.AccessKeyId,
+      accessKeySecret: data.AccessKeySecret,
+      stsToken: data.SecurityToken
+    };
+  },
+  refreshSTSTokenInterval: 300000 // Refresh every 5 minutes
+});
+```
+
+<Warning>
+  Never expose long-term AccessKey credentials in browser code. Always use STS tokens obtained from your backend server.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/sdks/browser-js/upload-objects)
+- [Download objects](/sdks/browser-js/download-objects)

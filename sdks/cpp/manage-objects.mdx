@@ -1,0 +1,141 @@
+---
+title: "Manage Objects - C++ SDK"
+sidebarTitle: "Manage Objects"
+description: "List, copy, delete, and manage objects using the Alibaba Cloud OSS SDK for C++."
+"og:title": "Manage Objects with OSS C++ SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+```cpp title="listObjects.cpp"
+#include <alibabacloud/oss/OssClient.h>
+using namespace AlibabaCloud::OSS;
+
+// ... (initialization) ...
+
+ListObjectsRequest request("my-bucket");
+request.setPrefix("photos/");
+request.setMaxKeys(100);
+
+auto outcome = client.ListObjects(request);
+
+if (outcome.isSuccess()) {
+    for (const auto& obj : outcome.result().ObjectSummarys()) {
+        std::cout << "Key: " << obj.Key()
+                  << ", Size: " << obj.Size()
+                  << ", Modified: " << obj.LastModified() << std::endl;
+    }
+}
+```
+
+## List with pagination
+
+```cpp title="listPaginated.cpp"
+std::string marker = "";
+bool isTruncated = true;
+
+while (isTruncated) {
+    ListObjectsRequest request("my-bucket");
+    request.setMaxKeys(100);
+    if (!marker.empty()) {
+        request.setMarker(marker);
+    }
+
+    auto outcome = client.ListObjects(request);
+    if (outcome.isSuccess()) {
+        for (const auto& obj : outcome.result().ObjectSummarys()) {
+            std::cout << "Key: " << obj.Key() << std::endl;
+        }
+        isTruncated = outcome.result().IsTruncated();
+        marker = outcome.result().NextMarker();
+    } else {
+        break;
+    }
+}
+```
+
+## Copy objects
+
+```cpp title="copyObject.cpp"
+CopyObjectRequest request("dest-bucket", "dest-key.txt");
+request.setCopySource("source-bucket", "source-key.txt");
+
+auto outcome = client.CopyObject(request);
+
+if (outcome.isSuccess()) {
+    std::cout << "Copied. ETag: " << outcome.result().ETag() << std::endl;
+}
+```
+
+## Delete a single object
+
+```cpp title="deleteObject.cpp"
+auto outcome = client.DeleteObject("my-bucket", "example.txt");
+
+if (outcome.isSuccess()) {
+    std::cout << "Object deleted." << std::endl;
+}
+```
+
+## Delete multiple objects
+
+```cpp title="deleteMultiple.cpp"
+DeleteObjectsRequest request("my-bucket");
+request.addKey("file1.txt");
+request.addKey("file2.txt");
+request.addKey("file3.txt");
+
+auto outcome = client.DeleteObjects(request);
+
+if (outcome.isSuccess()) {
+    std::cout << "Batch delete complete." << std::endl;
+}
+```
+
+## Check if an object exists
+
+```cpp title="objectExists.cpp"
+auto exists = client.DoesObjectExist("my-bucket", "example.txt");
+
+if (exists) {
+    std::cout << "Object exists." << std::endl;
+} else {
+    std::cout << "Object does not exist." << std::endl;
+}
+```
+
+## Get object metadata
+
+```cpp title="objectMetadata.cpp"
+auto outcome = client.HeadObject("my-bucket", "example.txt");
+
+if (outcome.isSuccess()) {
+    auto meta = outcome.result();
+    std::cout << "Content-Type: " << meta.ContentType() << std::endl;
+    std::cout << "Content-Length: " << meta.ContentLength() << std::endl;
+    std::cout << "ETag: " << meta.ETag() << std::endl;
+    std::cout << "Last-Modified: " << meta.LastModified() << std::endl;
+}
+```
+
+## Manage symbolic links
+
+```cpp title="symlinks.cpp"
+// Create a symbolic link
+CreateSymlinkRequest request("my-bucket", "link.txt");
+request.SetSymlinkTarget("target.txt");
+client.CreateSymlink(request);
+
+// Get the target of a symbolic link
+auto outcome = client.GetSymlink("my-bucket", "link.txt");
+if (outcome.isSuccess()) {
+    std::cout << "Target: " << outcome.result().SymlinkTarget() << std::endl;
+}
+```
+
+## Next steps
+
+- [Upload objects](/sdks/cpp/upload-objects)
+- [Download objects](/sdks/cpp/download-objects)

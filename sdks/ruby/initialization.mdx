@@ -1,0 +1,75 @@
+---
+title: "Initialization - Ruby SDK"
+sidebarTitle: "Initialization"
+description: "Initialize the OSS client using the Alibaba Cloud OSS SDK for Ruby."
+"og:title": "Initialize OSS Ruby SDK Client"
+---
+
+# Initialization
+
+## Create a client
+
+```ruby title="basicClient.rb"
+require 'aliyun/oss'
+
+client = Aliyun::OSS::Client.new(
+  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+  access_key_id: ENV['OSS_ACCESS_KEY_ID'],
+  access_key_secret: ENV['OSS_ACCESS_KEY_SECRET']
+)
+```
+
+## STS token authentication
+
+Use temporary credentials from STS for enhanced security:
+
+```ruby title="stsClient.rb"
+require 'aliyun/oss'
+
+client = Aliyun::OSS::Client.new(
+  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+  access_key_id: '<STS_ACCESS_KEY_ID>',
+  access_key_secret: '<STS_ACCESS_KEY_SECRET>',
+  sts_token: '<SECURITY_TOKEN>'
+)
+```
+
+## Custom domain (CNAME)
+
+```ruby title="cnameClient.rb"
+require 'aliyun/oss'
+
+client = Aliyun::OSS::Client.new(
+  endpoint: 'http://example.com',
+  access_key_id: ENV['OSS_ACCESS_KEY_ID'],
+  access_key_secret: ENV['OSS_ACCESS_KEY_SECRET'],
+  cname: true
+)
+```
+
+## Get a bucket reference
+
+Most operations use a `Bucket` object obtained from the client:
+
+```ruby title="getBucket.rb"
+bucket = client.get_bucket('my-bucket')
+```
+
+## Configuration parameters
+
+| Parameter | Description | Default |
+| --- | --- | --- |
+| `endpoint` | OSS region endpoint URL | Required |
+| `access_key_id` | AccessKey ID | Required |
+| `access_key_secret` | AccessKey Secret | Required |
+| `sts_token` | STS security token | `nil` |
+| `cname` | Use CNAME as endpoint | `false` |
+| `open_timeout` | Connection timeout (seconds) | `10` |
+| `read_timeout` | Response timeout (seconds) | `120` |
+| `upload_crc_enable` | CRC check on upload | `true` |
+| `download_crc_enable` | CRC check on download | `false` |
+
+## Next steps
+
+- [Upload objects](/sdks/ruby/upload-objects)
+- [Download objects](/sdks/ruby/download-objects)

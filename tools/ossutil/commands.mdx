@@ -1,0 +1,313 @@
+---
+title: 'ossutil Command Reference'
+description: 'Complete reference for all ossutil 2.0 commands'
+---
+
+## Command structure
+
+```bash
+ossutil <command> [arguments] [flags]
+ossutil <command> <subcommand> [arguments] [flags]
+```
+
+## Global flags
+
+These flags work with all commands:
+
+| Flag | Description |
+|------|-------------|
+| `--access-key-id` | AccessKey ID |
+| `--access-key-secret` | AccessKey Secret |
+| `--sts-token` | STS security token |
+| `--region` | Region ID |
+| `--endpoint` | Custom endpoint |
+| `--config-file` | Path to configuration file |
+| `--profile` | Configuration profile name |
+| `--sign-version` | Signature version (`v4` or `v1`) |
+| `--log-level` | Log level (`debug`, `info`, `warn`, `error`) |
+
+---
+
+## cp - upload, download, and copy
+
+The unified command for transferring objects.
+
+```bash
+ossutil cp <source> <destination> [flags]
+```
+
+### Upload (local to OSS)
+
+```bash
+# Single file
+ossutil cp localfile.txt oss://bucket/path/
+
+# Directory (recursive)
+ossutil cp -r /local/dir/ oss://bucket/path/
+
+# With specific storage class
+ossutil cp file.txt oss://bucket/ --storage-class IA
+
+# Include only certain files
+ossutil cp -r /photos/ oss://bucket/photos/ --include "*.jpg"
+
+# Bandwidth-limited upload
+ossutil cp -r /data/ oss://bucket/data/ --bandwidth-limit 10240
+```
+
+### Download (OSS to local)
+
+```bash
+# Single file
+ossutil cp oss://bucket/file.txt ./local/
+
+# With resumable download
+ossutil cp oss://bucket/large.zip ./local/ --enable-resume-download
+```
+
+### Copy (OSS to OSS)
+
+```bash
+# Cross-bucket copy
+ossutil cp oss://src-bucket/obj oss://dest-bucket/obj
+
+# Change storage class during copy
+ossutil cp oss://bucket/obj oss://bucket/obj --storage-class Archive
+```
+
+### Transfer options
+
+| Flag | Description |
+|------|-------------|
+| `-r, --recursive` | Process directories recursively |
+| `-f, --force` | Overwrite without confirmation |
+| `-u, --update` | Only copy when source is newer |
+| `--include <pattern>` | Include files matching pattern |
+| `--exclude <pattern>` | Exclude files matching pattern |
+| `--part-size <bytes>` | Multipart upload part size |
+| `--parallel <num>` | Concurrent parts per file |
+| `--jobs <num>` | Concurrent file transfers |
+| `--bandwidth-limit <KB/s>` | Bandwidth limit |
+| `--enable-resume-upload` | Enable resumable upload |
+| `--enable-resume-download` | Enable resumable download |
+| `--storage-class <class>` | Set storage class |
+| `--acl <acl>` | Set object ACL |
+| `--meta <key:value>` | Set custom metadata |
+| `--tagging <key=value>` | Set object tags |
+| `--dry-run` | Simulate without transferring |
+
+---
+
+## ls - list buckets or objects
+
+```bash
+ossutil ls [oss://bucket[/prefix]] [flags]
+```
+
+### Examples
+
+```bash
+# List all buckets
+ossutil ls oss://
+
+# List objects in a bucket
+ossutil ls oss://bucket-name
+
+# List with prefix filter
+ossutil ls oss://bucket-name/images/
+
+# Show detailed information
+ossutil ls oss://bucket-name --all
+
+# List directories only
+ossutil ls oss://bucket-name --directory
+```
+
+| Flag | Description |
+|------|-------------|
+| `--all` | Show detailed information |
+| `--directory` | List directories only |
+| `-r, --recursive` | List recursively |
+| `--limit <num>` | Limit results |
+
+---
+
+## rm - delete objects
+
+```bash
+ossutil rm oss://bucket/object [flags]
+```
+
+### Examples
+
+```bash
+# Delete a single object
+ossutil rm oss://bucket/file.txt
+
+# Delete all objects with prefix
+ossutil rm oss://bucket/logs/ -r
+
+# Delete incomplete multipart uploads
+ossutil rm oss://bucket -m -r
+
+# Force delete without confirmation
+ossutil rm oss://bucket/file.txt -f
+```
+
+| Flag | Description |
+|------|-------------|
+| `-r, --recursive` | Delete recursively |
+| `-f, --force` | Skip confirmation |
+| `-m` | Delete multipart uploads |
+| `--include/--exclude` | Pattern matching |
+| `--version-id` | Delete specific version |
+
+---
+
+## mb - create bucket
+
+```bash
+ossutil mb oss://bucket-name [flags]
+```
+
+```bash
+# Create with defaults
+ossutil mb oss://my-bucket
+
+# Create with options
+ossutil mb oss://my-bucket --storage-class IA --acl private --region cn-hangzhou
+```
+
+| Flag | Description |
+|------|-------------|
+| `--storage-class` | `Standard`, `IA`, `Archive`, `ColdArchive`, `DeepColdArchive` |
+| `--acl` | `private`, `public-read`, `public-read-write` |
+| `--region` | Region ID |
+| `--redundancy-type` | `LRS` or `ZRS` |
+
+---
+
+## rb - delete bucket
+
+```bash
+ossutil rb oss://bucket-name [flags]
+```
+
+| Flag | Description |
+|------|-------------|
+| `-f, --force` | Force delete (deletes all objects first) |
+
+<Warning>
+Using `rb -f` permanently deletes all objects in the bucket. This cannot be undone.
+</Warning>
+
+---
+
+## sync - synchronize files
+
+```bash
+ossutil sync <source> <destination> [flags]
+```
+
+Synchronizes files between local and OSS or between two OSS locations. Only transfers new and changed files.
+
+```bash
+# Sync local directory to OSS
+ossutil sync /local/dir/ oss://bucket/dir/
+
+# Sync OSS to local
+ossutil sync oss://bucket/dir/ /local/dir/
+
+# Sync between OSS locations
+ossutil sync oss://src-bucket/ oss://dest-bucket/
+
+# Delete files in destination that don't exist in source
+ossutil sync /local/ oss://bucket/ --delete
+```
+
+---
+
+## stat - view object or bucket details
+
+```bash
+ossutil stat oss://bucket[/object]
+```
+
+```bash
+# Bucket statistics
+ossutil stat oss://my-bucket
+
+# Object metadata
+ossutil stat oss://my-bucket/file.txt
+```
+
+---
+
+## cat - display object content
+
+```bash
+ossutil cat oss://bucket/object
+```
+
+Outputs the content of a text object to stdout.
+
+---
+
+## sign - generate presigned URL
+
+```bash
+ossutil sign oss://bucket/object [flags]
+```
+
+```bash
+# Generate URL valid for 1 hour (default)
+ossutil sign oss://bucket/file.txt
+
+# Generate URL valid for 24 hours
+ossutil sign oss://bucket/file.txt --timeout 86400
+```
+
+| Flag | Description |
+|------|-------------|
+| `--timeout <seconds>` | URL expiration time in seconds |
+
+---
+
+## restore - restore archive objects
+
+```bash
+ossutil restore oss://bucket/object [flags]
+```
+
+```bash
+# Restore an archive object
+ossutil restore oss://bucket/archived-file.txt
+
+# Restore with retrieval tier
+ossutil restore oss://bucket/cold-file.txt --days 2 --tier Standard
+```
+
+---
+
+## du - calculate storage usage
+
+```bash
+ossutil du oss://bucket[/prefix]
+```
+
+Calculates total storage usage for a bucket or prefix.
+
+---
+
+## bucket-tagging - manage bucket tags
+
+```bash
+# Set tags
+ossutil bucket-tagging --method put oss://bucket key1=value1 key2=value2
+
+# Get tags
+ossutil bucket-tagging --method get oss://bucket
+
+# Delete tags
+ossutil bucket-tagging --method delete oss://bucket
+```

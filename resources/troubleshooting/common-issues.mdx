@@ -1,0 +1,100 @@
+---
+title: 'Common Issues'
+description: 'Solutions for frequently encountered OSS problems'
+---
+
+## AccessDenied (403)
+
+**Possible causes:**
+1. Incorrect or expired AccessKey pair
+2. Missing RAM policy for the required action
+3. Bucket policy deny rules
+4. STS token expired
+5. Unsigned request to private resource
+6. IP restriction in bucket policy
+7. Block Public Access enabled
+
+**Troubleshooting:**
+1. Verify AccessKey ID and Secret are correct and active
+2. Check RAM policy grants the specific action (e.g., `oss:PutObject`) on the resource ARN
+3. Review bucket policy for explicit deny rules
+4. For STS credentials, confirm the token has not expired
+5. Use RAM Policy Simulator to debug authorization
+
+## SignatureDoesNotMatch (403)
+
+**Possible causes:**
+1. Incorrect string-to-sign construction
+2. Wrong URL encoding of parameters
+3. Mismatch between V1 and V4 signature
+4. Proxy or CDN modifying request headers
+5. Special characters in object key not properly encoded
+
+**Troubleshooting:**
+1. Log your canonical request and compare with the expected format
+2. Ensure correct URL encoding (do not encode `/` in paths)
+3. Verify you are using the correct signature version for the endpoint
+4. Check if a proxy is adding or modifying headers
+
+## NoSuchKey (404)
+
+**Possible causes:**
+1. Object key is incorrect (keys are case-sensitive)
+2. Lifecycle rules deleted the object
+3. Delete marker exists (versioning enabled)
+4. Wrong bucket or region
+
+**Troubleshooting:**
+1. Verify the exact key with `ListObjectsV2`
+2. Check lifecycle rules for expiration policies
+3. If versioning is enabled, list versions to find delete markers
+4. Confirm bucket name and endpoint region
+
+## Upload failures
+
+### Large file upload fails
+
+- Use multipart upload for files over 100 MB
+- Enable resumable upload to recover from interruptions
+- Check network stability for long-running uploads
+- Verify Content-Length matches actual body size
+
+### Timeout errors
+
+- Increase client-side timeout settings
+- Use Transfer Acceleration for cross-region uploads
+- Check if firewall or proxy is dropping long-lived connections
+
+## Download failures
+
+### InvalidObjectState (403)
+
+The object is in Archive, Cold Archive, or Deep Cold Archive and has not been restored:
+
+1. Call `RestoreObject` to initiate restoration
+2. Wait for the restore to complete (1 minute to 48 hours depending on class)
+3. Retry the download
+
+### Slow downloads
+
+- Use internal endpoints from same-region ECS instances
+- Enable Transfer Acceleration for international access
+- Use CDN for frequently accessed content
+- Use Range requests for parallel downloads
+
+## CORS errors
+
+**Symptom**: Browser shows "Access-Control-Allow-Origin" error.
+
+1. Verify CORS rules are configured on the bucket
+2. Check that the origin, method, and headers are allowed
+3. Ensure the preflight (OPTIONS) request succeeds
+4. Check if a CDN layer is stripping CORS headers
+
+## Clock skew (RequestTimeTooSkewed)
+
+OSS requires the request timestamp to be within 15 minutes of the server time.
+
+1. Sync your system clock with NTP: `sudo ntpdate pool.ntp.org`
+2. Use `x-oss-date` header with ISO 8601 format
+3. If behind a proxy, ensure it does not cache/modify the Date header

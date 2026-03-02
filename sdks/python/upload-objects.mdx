@@ -1,0 +1,110 @@
+---
+title: "Upload Objects - Python SDK"
+sidebarTitle: "Upload Objects"
+description: "Upload objects to Alibaba Cloud OSS using the Python SDK. Covers simple upload, streaming upload, and upload with metadata."
+"og:title": "Upload Objects with OSS Python SDK"
+---
+
+# Upload Objects
+
+Upload data to OSS using simple upload (PutObject). For files larger than 5 GB, use [multipart upload](/sdks/python/multipart-upload).
+
+<Info>
+Maximum object size for simple upload (PutObject) is **5 GB**. For larger files, use multipart upload which supports objects up to **48.8 TB**.
+</Info>
+
+## Upload a string
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="upload_string_v2.py"
+    import alibabacloud_oss_v2 as oss
+
+    result = client.put_object(oss.PutObjectRequest(
+        bucket='my-bucket',
+        key='example.txt',
+        body=b'Hello, Alibaba Cloud OSS!',
+    ))
+    print(f'ETag: {result.etag}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="upload_string_v1.py"
+    bucket.put_object('example.txt', 'Hello, Alibaba Cloud OSS!')
+    ```
+  </Tab>
+</Tabs>
+
+## Upload a local file
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="upload_file_v2.py"
+    with open('/path/to/local/file.txt', 'rb') as f:
+        result = client.put_object(oss.PutObjectRequest(
+            bucket='my-bucket',
+            key='documents/file.txt',
+            body=f,
+        ))
+    print(f'File uploaded, ETag: {result.etag}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="upload_file_v1.py"
+    bucket.put_object_from_file('documents/file.txt', '/path/to/local/file.txt')
+    ```
+  </Tab>
+</Tabs>
+
+## Upload from a stream
+
+```python title="upload_stream.py"
+with open('/path/to/file.txt', 'rb') as f:
+    bucket.put_object('example.txt', f)
+```
+
+## Upload with metadata
+
+```python title="upload_metadata.py"
+headers = {
+    'Content-Type': 'text/plain',
+    'x-oss-object-acl': 'public-read',
+    'x-oss-meta-author': 'your-name',
+    'x-oss-meta-version': '1.0',
+}
+bucket.put_object('example.txt', 'content', headers=headers)
+```
+
+## Append upload
+
+Append upload creates an Appendable object that you can append data to over time.
+
+```python title="append_upload.py"
+# First append (position must start at 0)
+result = bucket.append_object('append-example.txt', 0, 'First part of content. ')
+
+# Subsequent appends (use next_position from previous result)
+result = bucket.append_object('append-example.txt', result.next_position, 'Second part.')
+```
+
+<Note>
+Appendable objects cannot be copied and do not support versioning. Use normal upload for most use cases.
+</Note>
+
+## Upload parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `key` / object name | `str` | Full object path in OSS (e.g., `photos/2025/image.jpg`) |
+| `body` / data | `bytes`, `str`, file-like | The data to upload |
+| `Content-Type` | `str` | MIME type (auto-detected if not set) |
+| `x-oss-object-acl` | `str` | Object ACL: `private`, `public-read`, `public-read-write` |
+| `x-oss-meta-*` | `str` | Custom metadata headers |
+| `x-oss-server-side-encryption` | `str` | `AES256` or `KMS` |
+
+## Next steps
+
+- [Multipart upload](/sdks/python/multipart-upload)
+- [Download objects](/sdks/python/download-objects)
+- [Manage objects](/sdks/python/manage-objects)
+- [API reference: putObject](/api-reference/object-basic/PutObject)

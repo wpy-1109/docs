@@ -1,0 +1,232 @@
+---
+title: "Multipart Upload"
+sidebarTitle: "Multipart Upload"
+description: "Learn how to upload large files using multipart upload in Alibaba Cloud OSS."
+"og:title": "Multipart Upload - Alibaba Cloud OSS"
+---
+
+Multipart upload splits a large file into smaller parts, uploads them in parallel, and assembles them into a single object. This method supports files up to **48.8 TB** and improves upload speed and reliability for large files.
+
+<Tip>
+Use multipart upload for files larger than **100 MB**. For files under 5 GB, [simple upload](/guides/objects/upload-objects) is simpler.
+</Tip>
+
+## How it works
+
+1. **InitiateMultipartUpload** -- Start the upload and get an upload ID.
+2. **UploadPart** -- Upload each part (minimum 100 KB per part, except the last).
+3. **CompleteMultipartUpload** -- Combine all parts into a single object.
+
+If the upload fails, you can retry individual parts without re-uploading the entire file. Use **AbortMultipartUpload** to cancel and clean up.
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:PutObject` permission
+
+## Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| Part size | Minimum 100 KB (except last part). Recommended: 1--10 MB for most use cases. |
+| Max parts | Up to 10,000 parts per upload. |
+| Max object size | 48.8 TB |
+| Parallel uploads | Upload multiple parts concurrently for faster throughput. |
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="multipart_upload.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Use the uploader for automatic multipart upload management
+    uploader = client.uploader
+
+    result = uploader.upload_file(oss.PutObjectRequest(
+        bucket="examplebucket",
+        key="large-file.zip",
+    ), filepath="/path/to/large-file.zip",
+       part_size=10 * 1024 * 1024,  # 10 MB parts
+       parallel_num=5,
+    )
+
+    print(f"Upload complete. ETag: {result.etag}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="MultipartUpload.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.*;
+    import java.io.*;
+    import java.util.*;
+
+    public class MultipartUpload {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            String bucketName = "examplebucket";
+            String objectName = "large-file.zip";
+
+            try {
+                // Step 1: Initiate multipart upload
+                InitiateMultipartUploadRequest initRequest =
+                    new InitiateMultipartUploadRequest(bucketName, objectName);
+                InitiateMultipartUploadResult initResult =
+                    ossClient.initiateMultipartUpload(initRequest);
+                String uploadId = initResult.getUploadId();
+
+                // Step 2: Upload parts
+                File file = new File("/path/to/large-file.zip");
+                long partSize = 10 * 1024 * 1024L; // 10 MB
+                long fileLength = file.length();
+                int partCount = (int) (fileLength / partSize);
+                if (fileLength % partSize != 0) partCount++;
+
+                List<PartETag> partETags = new ArrayList<>();
+                for (int i = 0; i < partCount; i++) {
+                    long startPos = i * partSize;
+                    long curPartSize = Math.min(partSize, fileLength - startPos);
+                    InputStream instream = new FileInputStream(file);
+                    instream.skip(startPos);
+
+                    UploadPartRequest uploadPartRequest = new UploadPartRequest();
+                    uploadPartRequest.setBucketName(bucketName);
+                    uploadPartRequest.setKey(objectName);
+                    uploadPartRequest.setUploadId(uploadId);
+                    uploadPartRequest.setInputStream(instream);
+                    uploadPartRequest.setPartSize(curPartSize);
+                    uploadPartRequest.setPartNumber(i + 1);
+
+                    UploadPartResult uploadPartResult =
+                        ossClient.uploadPart(uploadPartRequest);
+                    partETags.add(uploadPartResult.getPartETag());
+                }
+
+                // Step 3: Complete multipart upload
+                CompleteMultipartUploadRequest completeRequest =
+                    new CompleteMultipartUploadRequest(
+                        bucketName, objectName, uploadId, partETags);
+                ossClient.completeMultipartUpload(completeRequest);
+                System.out.println("Multipart upload completed.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="multipart_upload.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        // Use the built-in Uploader for automatic multipart upload
+        u := client.NewUploader()
+
+        result, err := u.UploadFile(context.TODO(), &oss.PutObjectRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            Key:    oss.Ptr("large-file.zip"),
+        }, "/path/to/large-file.zip")
+
+        if err != nil {
+            log.Fatalf("Upload failed: %v", err)
+        }
+
+        log.Printf("Upload complete. ETag: %v", oss.ToString(result.ETag))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="multipartUpload.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function multipartUpload() {
+      try {
+        const result = await client.multipartUpload(
+          'large-file.zip',
+          '/path/to/large-file.zip',
+          {
+            partSize: 10 * 1024 * 1024, // 10 MB
+            parallel: 5,
+            progress: (p) => console.log(`Progress: ${(p * 100).toFixed(1)}%`),
+          }
+        );
+        console.log('Upload complete:', result);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    multipartUpload();
+    ```
+  </Tab>
+</Tabs>
+
+## Clean up incomplete uploads
+
+Incomplete multipart uploads consume storage. Clean them up periodically:
+
+```bash
+# List incomplete uploads
+ossutil api list-multipart-uploads --bucket examplebucket
+
+# Abort a specific upload
+ossutil api abort-multipart-upload --bucket examplebucket --key large-file.zip --upload-id <upload-id>
+
+# Remove all incomplete uploads
+ossutil rm oss://examplebucket -m -r -f
+```
+
+<Tip>
+Configure [lifecycle rules](/guides/data-management/lifecycle-rules) to automatically delete incomplete multipart uploads after a specified number of days.
+</Tip>
+
+## Next steps
+
+- [Upload objects](/guides/objects/upload-objects)
+- [Resumable upload](/guides/objects/resumable-upload)
+- [Progress bars](/guides/objects/progress-bars)

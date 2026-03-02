@@ -1,0 +1,101 @@
+---
+title: "Presigned URLs"
+sidebarTitle: "Presigned URLs"
+description: "Learn how to generate presigned URLs for temporary access to Alibaba Cloud OSS objects."
+"og:title": "Presigned URLs - Alibaba Cloud OSS"
+---
+
+Presigned URLs let you grant temporary access to private objects without sharing credentials. You can generate presigned URLs for both downloading (GET) and uploading (PUT) with configurable expiration times.
+
+<Info>
+Presigned URLs support a maximum validity period of **7 days** (604,800 seconds).
+</Info>
+
+## Prerequisites
+
+- An AccessKey pair or STS temporary credentials
+- The `oss:GetObject` or `oss:PutObject` permission
+
+## Generate a download URL
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="presigned_download.py"
+    import alibabacloud_oss_v2 as oss
+    from datetime import timedelta
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.presign(oss.GetObjectRequest(
+        bucket="examplebucket",
+        key="example.txt",
+    ), expires=timedelta(hours=1))
+
+    print(f"Download URL: {result.url}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="PresignedDownload.java"
+    import java.util.Date;
+    import java.net.URL;
+
+    Date expiration = new Date(System.currentTimeMillis() + 3600 * 1000);
+    URL url = ossClient.generatePresignedUrl("examplebucket", "example.txt", expiration);
+    System.out.println("Download URL: " + url.toString());
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="presigned_download.go"
+    result, err := client.Presign(context.TODO(), &oss.GetObjectRequest{
+        Bucket: oss.Ptr("examplebucket"),
+        Key:    oss.Ptr("example.txt"),
+    }, oss.PresignExpires(time.Hour))
+
+    log.Printf("Download URL: %v", result.URL)
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="presignedDownload.js"
+    const url = client.signatureUrl('example.txt', {
+      expires: 3600, // 1 hour
+      method: 'GET',
+    });
+    console.log('Download URL:', url);
+    ```
+  </Tab>
+</Tabs>
+
+## Generate an upload URL
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="presigned_upload.py"
+    result = client.presign(oss.PutObjectRequest(
+        bucket="examplebucket",
+        key="uploads/user-file.txt",
+    ), expires=timedelta(hours=1))
+
+    print(f"Upload URL: {result.url}")
+    # The client can use HTTP PUT to this URL to upload a file
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(
+        "examplebucket", "uploads/user-file.txt", HttpMethod.PUT);
+    request.setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000));
+    URL url = ossClient.generatePresignedUrl(request);
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [STS temporary credentials](/guides/access-control/sts-temporary-credentials)
+- [Direct client upload](/guides/advanced/direct-client-upload)
+- [CORS](/guides/access-control/cors)

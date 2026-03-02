@@ -1,0 +1,25 @@
+---
+title: 'GetCnameToken'
+description: 'Query a CNAME token for domain verification'
+---
+
+Queries an existing CNAME token used for domain ownership verification.
+
+## Request
+
+```
+GET /?comp=token&cname={Domain} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CnameToken>
+  <Token>be1d49e863dea27****</Token>
+  <ExpireTime>2025-04-18T03:15:40.000Z</ExpireTime>
+  <Bucket>my-bucket</Bucket>
+  <Cname>cdn.example.com</Cname>
+</CnameToken>
+```

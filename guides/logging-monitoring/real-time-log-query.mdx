@@ -1,0 +1,50 @@
+---
+title: "Real-Time Log Query"
+sidebarTitle: "Real-Time Log Query"
+description: "Learn how to use real-time log query to analyze OSS access logs with Simple Log Service."
+"og:title": "Real-Time Log Query - Alibaba Cloud OSS"
+---
+
+Real-time log query integrates OSS with Simple Log Service (SLS) to deliver access logs in real time. You can query, analyze, and visualize logs directly in the OSS console without waiting for hourly log file delivery.
+
+## Use cases
+
+- **Security auditing**: Identify unauthorized access attempts and anomalous behavior.
+- **Troubleshooting**: Trace specific requests using request IDs and error codes.
+- **Access analytics**: Analyze traffic patterns, popular objects, and geographic distribution.
+- **Batch operation tracking**: Monitor bulk deletion and hourly metering operations.
+
+## Enable real-Time log query
+
+<Steps>
+  <Step title="Enable the feature">
+    Navigate to your bucket, choose **Logging > Real-Time Log Query**, and click **Enable**. This creates a dedicated SLS project and logstore.
+  </Step>
+  <Step title="Query logs">
+    Use the built-in query interface in the OSS console to search logs by time range, request ID, operation type, HTTP status code, and other fields.
+  </Step>
+</Steps>
+
+## Common queries
+
+| Query | Description |
+|-------|-------------|
+| `request_uri: "example.jpg"` | Find all requests for a specific object |
+| `http_status >= 400` | Find all failed requests |
+| `operation: "PutObject"` | Find all upload operations |
+| `client_ip: "203.0.113.0"` | Find requests from a specific IP |
+
+## Real-Time vs Access logging
+
+| Feature | Access Logging | Real-Time Log Query |
+|---------|---------------|-------------------|
+| Delivery latency | Hours | Seconds |
+| Query capability | Manual log file analysis | Built-in SQL-like queries |
+| Retention | Configurable | SLS retention policy |
+| Cost | Free (storage costs for log files) | SLS billing applies |
+
+## Next steps
+
+- [Access logging](/guides/logging-monitoring/access-logging)
+- [Custom log fields](/guides/logging-monitoring/custom-log-fields)
+- [Monitoring alerts](/guides/logging-monitoring/monitoring-alerts)

@@ -1,0 +1,90 @@
+---
+title: 'ListBuckets'
+description: 'List all buckets owned by the authenticated user'
+---
+
+Returns all buckets owned by the requester. Also known as `GetService`.
+
+## Request
+
+```
+GET / HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prefix` | String | No | Filter buckets by name prefix. |
+| `marker` | String | No | Bucket name to start listing from (for pagination). |
+| `max-keys` | Integer | No | Maximum number of buckets to return. Default: 100. Max: 1000. |
+| `resource-group-id` | String | No | Filter by resource group ID. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListAllMyBucketsResult>
+  <Owner>
+    <ID>51264</ID>
+    <DisplayName>51264</DisplayName>
+  </Owner>
+  <Prefix>my-</Prefix>
+  <Marker></Marker>
+  <MaxKeys>100</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Buckets>
+    <Bucket>
+      <Name>my-bucket-1</Name>
+      <CreationDate>2025-01-15T08:30:00.000Z</CreationDate>
+      <Location>oss-cn-hangzhou</Location>
+      <ExtranetEndpoint>oss-cn-hangzhou.aliyuncs.com</ExtranetEndpoint>
+      <IntranetEndpoint>oss-cn-hangzhou-internal.aliyuncs.com</IntranetEndpoint>
+      <StorageClass>Standard</StorageClass>
+      <ResourceGroupId>rg-aek27tc****</ResourceGroupId>
+    </Bucket>
+  </Buckets>
+</ListAllMyBucketsResult>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Owner.ID` | String | Account ID of the bucket owner. |
+| `Prefix` | String | Prefix filter applied in the request. |
+| `Marker` | String | The marker used for pagination. |
+| `MaxKeys` | Integer | Maximum number of results per page. |
+| `IsTruncated` | Boolean | `true` if more results are available. Use the last bucket name as `marker` for the next request. |
+| `Bucket.Name` | String | Bucket name. |
+| `Bucket.CreationDate` | String | Bucket creation time in ISO 8601 format. |
+| `Bucket.Location` | String | Region where the bucket is located. |
+| `Bucket.StorageClass` | String | Default storage class (`Standard`, `IA`, `Archive`, `ColdArchive`, `DeepColdArchive`). |
+| `Bucket.ResourceGroupId` | String | Resource group ID the bucket belongs to. |
+
+## Examples
+
+### List all buckets
+
+```http
+GET / HTTP/1.1
+Host: oss-cn-hangzhou.aliyuncs.com
+Date: Thu, 17 Apr 2025 03:15:40 GMT
+Authorization: OSS4-HMAC-SHA256 Credential=LTAI****/20250417/cn-hangzhou/oss/aliyun_v4_request,Signature=****
+```
+
+### List buckets with prefix
+
+```http
+GET /?prefix=prod-&max-keys=10 HTTP/1.1
+Host: oss-cn-hangzhou.aliyuncs.com
+Date: Thu, 17 Apr 2025 03:15:40 GMT
+Authorization: OSS4-HMAC-SHA256 Credential=LTAI****/20250417/cn-hangzhou/oss/aliyun_v4_request,Signature=****
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `AccessDenied` | 403 | You do not have permission to list buckets. |

@@ -1,0 +1,17 @@
+---
+title: 'GetBucketLogging'
+description: 'Query the access logging configuration of a bucket'
+---
+
+Queries the access log configuration of a bucket.
+
+## Request
+
+```
+GET /?logging HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+Returns the logging configuration XML including target bucket and prefix.

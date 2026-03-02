@@ -1,0 +1,46 @@
+---
+title: 'General FAQ'
+description: 'Frequently asked questions about Alibaba Cloud OSS'
+---
+
+<AccordionGroup>
+  <Accordion title="What is the maximum object size in OSS?">
+    A single object can be up to 48.8 TB. For uploads, the maximum size per PutObject request is 5 GB. For larger files, use multipart upload which supports up to 10,000 parts of up to 5 GB each.
+  </Accordion>
+
+  <Accordion title="Are bucket names globally unique?">
+    Yes. Bucket names are globally unique across all OSS users. Once a bucket is created, no other user can create a bucket with the same name until the original is deleted.
+  </Accordion>
+
+  <Accordion title="Can I change the region of an existing bucket?">
+    No. The region is set when the bucket is created and cannot be changed. To move data to a different region, create a new bucket in the target region and use cross-region replication or ossutil to transfer data.
+  </Accordion>
+
+  <Accordion title="What is the maximum number of buckets per account?">
+    The default limit is 100 buckets per account. You can request a quota increase through the Alibaba Cloud console.
+  </Accordion>
+
+  <Accordion title="How does OSS ensure data durability?">
+    OSS provides 99.9999999999% (12 nines) designed durability. Data is redundantly stored across multiple facilities. With ZRS (zone-redundant storage), data is replicated across three availability zones.
+  </Accordion>
+
+  <Accordion title="Does OSS support versioning?">
+    Yes. Once enabled, versioning preserves every version of every object (including deletions as delete markers). Versioning can be suspended but not disabled once enabled.
+  </Accordion>
+
+  <Accordion title="Can I rename an object?">
+    Standard OSS does not support renaming. You must copy the object to the new key and delete the original. Buckets with hierarchical namespace enabled support atomic rename via the Rename API.
+  </Accordion>
+
+  <Accordion title="What is the difference between internal and internet endpoints?">
+    Internal endpoints (e.g., `oss-cn-hangzhou-internal.aliyuncs.com`) are used from ECS instances in the same region and incur no traffic fees. Internet endpoints are for access from outside Alibaba Cloud and incur standard traffic fees.
+  </Accordion>
+
+  <Accordion title="Is OSS compatible with Amazon S3?">
+    OSS provides S3-compatible API endpoints. Most S3 operations (PUT, GET, DELETE, multipart upload, presigned URLs) work with OSS. You can use AWS SDKs by changing the endpoint URL.
+  </Accordion>
+
+  <Accordion title="How do I make an object publicly accessible?">
+    You can set the object ACL to `public-read`, or create a bucket policy that allows public GetObject. For temporary access, generate a presigned URL. Consider security implications before making data public.
+  </Accordion>
+</AccordionGroup>

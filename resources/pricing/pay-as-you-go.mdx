@@ -1,0 +1,34 @@
+---
+title: 'Pay-As-You-Go'
+description: 'Default billing model for OSS usage'
+---
+
+## How it works
+
+- No upfront commitment required
+- Billed hourly for storage, per-request for API calls, per-GB for traffic
+- Charges appear on your monthly bill
+- Suitable for variable or unpredictable workloads
+
+## Billing cycle
+
+| Component | Billing Frequency |
+|-----------|------------------|
+| Storage | Hourly (average daily, billed monthly) |
+| Traffic | Hourly |
+| API requests | Hourly |
+| Data retrieval | Hourly |
+| Data processing | Per operation |
+
+## Cost estimation
+
+Estimate your monthly costs:
+
+```
+Monthly cost =
+  (Storage GB * storage rate/GB/month) +
+  (Outbound GB * traffic rate/GB) +
+  (PUT requests / 10000 * PUT rate) +
+  (GET requests / 10000 * GET rate) +
+  (Retrieval GB * retrieval rate/GB)
+```

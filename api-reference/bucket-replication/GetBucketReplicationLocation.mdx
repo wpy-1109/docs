@@ -1,0 +1,24 @@
+---
+title: 'GetBucketReplicationLocation'
+description: 'Query available destination regions for replication'
+---
+
+Queries the regions to which data can be replicated from the current bucket.
+
+## Request
+
+```
+GET /?replicationLocation HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ReplicationLocation>
+  <Location>oss-cn-shanghai</Location>
+  <Location>oss-cn-beijing</Location>
+  <Location>oss-us-west-1</Location>
+</ReplicationLocation>
+```

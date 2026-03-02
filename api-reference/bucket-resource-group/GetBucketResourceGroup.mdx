@@ -1,0 +1,22 @@
+---
+title: 'GetBucketResourceGroup'
+description: 'Query the resource group of a bucket'
+---
+
+Queries the resource group ID that a bucket belongs to.
+
+## Request
+
+```
+GET /?resourceGroup HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketResourceGroupConfiguration>
+  <ResourceGroupId>rg-aek27tc****</ResourceGroupId>
+</BucketResourceGroupConfiguration>
+```

@@ -1,0 +1,137 @@
+---
+title: "Multipart Upload - Java SDK"
+sidebarTitle: "Multipart Upload"
+description: "Upload large files to Alibaba Cloud OSS using multipart upload and resumable upload with the Java SDK."
+"og:title": "Multipart Upload with OSS Java SDK"
+---
+
+# Multipart Upload
+
+Multipart upload splits large files into parts uploaded independently and combined into a single object. Recommended for files larger than 100 MB, supports objects up to 48.8 TB.
+
+<Tip>
+For most use cases, use **resumable upload** which handles part management, parallelism, and resume-on-failure automatically.
+</Tip>
+
+## Resumable upload (Recommended)
+
+```java title="ResumableUpload.java"
+UploadFileRequest uploadRequest = new UploadFileRequest(bucketName, objectName);
+uploadRequest.setUploadFile("/path/to/large-file.zip");
+uploadRequest.setPartSize(1024 * 1024);     // 1MB per part
+uploadRequest.setTaskNum(10);                // 10 concurrent threads
+uploadRequest.setEnableCheckpoint(true);     // Enable checkpoint for resume
+uploadRequest.setCheckpointFile("/tmp/upload-checkpoint");
+
+UploadFileResult result = ossClient.uploadFile(uploadRequest);
+```
+
+## Manual multipart upload (V1 SDK)
+
+```java title="MultipartUpload.java"
+import com.aliyun.oss.*;
+import com.aliyun.oss.model.*;
+import java.io.*;
+import java.util.*;
+
+String bucketName = "my-bucket";
+String objectName = "large-files/video.mp4";
+String filePath = "/path/to/video.mp4";
+
+// Step 1: Initiate multipart upload
+InitiateMultipartUploadRequest initRequest =
+    new InitiateMultipartUploadRequest(bucketName, objectName);
+InitiateMultipartUploadResult initResult =
+    ossClient.initiateMultipartUpload(initRequest);
+String uploadId = initResult.getUploadId();
+
+// Step 2: Upload parts
+List<PartETag> partETags = new ArrayList<>();
+long partSize = 5 * 1024 * 1024L; // 5MB per part
+File file = new File(filePath);
+long fileLength = file.length();
+int partCount = (int) (fileLength / partSize);
+if (fileLength % partSize != 0) partCount++;
+
+for (int i = 0; i < partCount; i++) {
+    long startPos = i * partSize;
+    long curPartSize = (i + 1 == partCount) ? (fileLength - startPos) : partSize;
+
+    InputStream inStream = new FileInputStream(filePath);
+    inStream.skip(startPos);
+
+    UploadPartRequest uploadPartRequest = new UploadPartRequest();
+    uploadPartRequest.setBucketName(bucketName);
+    uploadPartRequest.setKey(objectName);
+    uploadPartRequest.setUploadId(uploadId);
+    uploadPartRequest.setInputStream(inStream);
+    uploadPartRequest.setPartSize(curPartSize);
+    uploadPartRequest.setPartNumber(i + 1);
+
+    UploadPartResult uploadPartResult = ossClient.uploadPart(uploadPartRequest);
+    partETags.add(uploadPartResult.getPartETag());
+    inStream.close();
+}
+
+// Step 3: Complete multipart upload
+CompleteMultipartUploadRequest completeRequest =
+    new CompleteMultipartUploadRequest(bucketName, objectName, uploadId, partETags);
+ossClient.completeMultipartUpload(completeRequest);
+```
+
+## Multipart upload (V2 SDK)
+
+```java title="MultipartUploadV2.java"
+// Step 1: Initiate
+InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(
+    InitiateMultipartUploadRequest.newBuilder()
+        .bucket(bucketName).key(objectName).build());
+String uploadId = initResult.initiateMultipartUpload().uploadId();
+
+// Step 2: Upload parts
+List<Part> parts = new ArrayList<>();
+// ... upload each part using client.uploadPart() ...
+
+// Step 3: Complete
+client.completeMultipartUpload(CompleteMultipartUploadRequest.newBuilder()
+    .bucket(bucketName).key(objectName).uploadId(uploadId)
+    .completeMultipartUpload(CompleteMultipartUpload.newBuilder()
+        .parts(parts).build())
+    .build());
+```
+
+## Abort a multipart upload
+
+```java title="AbortMultipart.java"
+AbortMultipartUploadRequest abortRequest =
+    new AbortMultipartUploadRequest(bucketName, objectName, uploadId);
+ossClient.abortMultipartUpload(abortRequest);
+```
+
+## List multipart uploads
+
+```java title="ListMultipart.java"
+// List parts for a specific upload
+ListPartsRequest listPartsRequest = new ListPartsRequest(bucketName, objectName, uploadId);
+PartListing partListing = ossClient.listParts(listPartsRequest);
+for (PartSummary part : partListing.getParts()) {
+    System.out.printf("Part: %d, Size: %d, ETag: %s%n",
+        part.getPartNumber(), part.getSize(), part.getETag());
+}
+
+// List all ongoing multipart uploads
+ListMultipartUploadsRequest listRequest = new ListMultipartUploadsRequest(bucketName);
+MultipartUploadListing listing = ossClient.listMultipartUploads(listRequest);
+for (MultipartUpload upload : listing.getMultipartUploads()) {
+    System.out.printf("Key: %s, UploadId: %s%n", upload.getKey(), upload.getUploadId());
+}
+```
+
+## Multipart upload limits
+
+| Constraint | Value |
+|------------|-------|
+| Minimum part size | 100 KB (except last part) |
+| Maximum part size | 5 GB |
+| Maximum parts | 10,000 |
+| Maximum object size | 48.8 TB |

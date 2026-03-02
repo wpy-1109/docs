@@ -1,0 +1,46 @@
+---
+title: 'PutBucketReplication'
+description: 'Configure cross-region replication rules for a bucket'
+---
+
+Sets data replication rules for a bucket to replicate objects to a destination bucket in another region.
+
+## Request
+
+```
+PUT /?replication HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ReplicationConfiguration>
+  <Rule>
+    <PrefixSet>
+      <Prefix>images/</Prefix>
+    </PrefixSet>
+    <Action>ALL</Action>
+    <Destination>
+      <Bucket>dest-bucket</Bucket>
+      <Location>oss-cn-shanghai</Location>
+    </Destination>
+    <HistoricalObjectReplication>enabled</HistoricalObjectReplication>
+  </Rule>
+</ReplicationConfiguration>
+```
+
+### Rule elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `PrefixSet.Prefix` | String | Object key prefix to replicate. Empty for all objects. |
+| `Action` | String | `ALL` (replicate all operations) or `PUT` (new objects only). |
+| `Destination.Bucket` | String | Destination bucket name. |
+| `Destination.Location` | String | Destination region. |
+| `HistoricalObjectReplication` | String | `enabled` or `disabled`. Whether to replicate existing objects. |
+
+## Response
+
+**Success:** HTTP 200 with empty body.

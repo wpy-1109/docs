@@ -1,0 +1,92 @@
+---
+title: "Upload Objects - Ruby SDK"
+sidebarTitle: "Upload Objects"
+description: "Upload objects using the Alibaba Cloud OSS SDK for Ruby."
+"og:title": "Upload Objects with OSS Ruby SDK"
+---
+
+# Upload Objects
+
+## Upload a local file
+
+```ruby title="fileUpload.rb"
+require 'aliyun/oss'
+
+client = Aliyun::OSS::Client.new(
+  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+  access_key_id: ENV['OSS_ACCESS_KEY_ID'],
+  access_key_secret: ENV['OSS_ACCESS_KEY_SECRET']
+)
+
+bucket = client.get_bucket('my-bucket')
+bucket.put_object('documents/report.pdf', :file => '/path/to/report.pdf')
+```
+
+## Streaming upload
+
+Upload data in chunks using a block:
+
+```ruby title="streamingUpload.rb"
+bucket.put_object('logs/output.txt') do |stream|
+  100.times { |i| stream << "Line #{i}\n" }
+end
+```
+
+## Resumable upload
+
+For large files, use resumable upload with automatic checkpointing:
+
+```ruby title="resumableUpload.rb"
+bucket.resumable_upload(
+  'videos/large-video.mp4',
+  '/path/to/large-video.mp4'
+) do |p|
+  puts "Progress: #{p}"
+end
+```
+
+With custom part size and checkpoint file:
+
+```ruby title="resumableUploadCustom.rb"
+bucket.resumable_upload(
+  'videos/large-video.mp4',
+  '/path/to/large-video.mp4',
+  :part_size => 100 * 1024,
+  :cpt_file => '/tmp/large-video.mp4.cpt'
+) { |p| puts "Progress: #{p}" }
+```
+
+### Resumable upload parameters
+
+| Parameter | Description | Default |
+| --- | --- | --- |
+| `key` | Object key in OSS | Required |
+| `file` | Local file path | Required |
+| `:part_size` | Size of each part (bytes) | 4 MB |
+| `:cpt_file` | Checkpoint file path | `file.cpt` |
+| `:disable_cpt` | Disable checkpointing | `false` |
+
+## Append upload
+
+Append content to an existing appendable object:
+
+```ruby title="appendUpload.rb"
+# First append (position 0)
+next_pos = bucket.append_object('log.txt', 0, :file => 'part1.txt')
+
+# Subsequent append
+next_pos = bucket.append_object('log.txt', next_pos, :file => 'part2.txt')
+```
+
+Append with streaming:
+
+```ruby title="appendStreaming.rb"
+next_pos = bucket.append_object('log.txt', 0) do |stream|
+  stream << "First entry.\n"
+end
+```
+
+## Next steps
+
+- [Download objects](/sdks/ruby/download-objects)
+- [Manage objects](/sdks/ruby/manage-objects)

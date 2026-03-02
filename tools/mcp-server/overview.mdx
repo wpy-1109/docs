@@ -1,0 +1,64 @@
+---
+title: 'MCP Server for OSS'
+description: 'Model Context Protocol server for AI-powered OSS operations'
+---
+
+The OSS MCP Server enables AI assistants and LLM-powered tools to interact with OSS through the [Model Context Protocol](https://modelcontextprotocol.io/). This allows AI applications to read, write, and manage OSS resources.
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Bucket operations** | List, create, and manage buckets |
+| **Object operations** | Upload, download, list, and delete objects |
+| **Search** | Search objects by prefix, tags, or metadata |
+| **Presigned URLs** | Generate temporary access URLs |
+
+## Setup
+
+### Installation
+
+```bash
+npm install -g @alicloud/oss-mcp-server
+```
+
+### Configuration
+
+Add the OSS MCP server to your AI tool's configuration:
+
+```json
+{
+  "mcpServers": {
+    "oss": {
+      "command": "oss-mcp-server",
+      "env": {
+        "OSS_ACCESS_KEY_ID": "your-access-key-id",
+        "OSS_ACCESS_KEY_SECRET": "your-access-key-secret",
+        "OSS_REGION": "cn-hangzhou"
+      }
+    }
+  }
+}
+```
+
+## Available tools
+
+| Tool | Description |
+|------|-------------|
+| `list_buckets` | List all buckets |
+| `list_objects` | List objects in a bucket |
+| `get_object` | Read object content |
+| `put_object` | Upload an object |
+| `delete_object` | Delete an object |
+| `generate_presigned_url` | Create a temporary access URL |
+| `get_bucket_info` | Get bucket metadata |
+
+## Example usage
+
+Once configured, your AI assistant can interact with OSS:
+
+> "List all objects in my-bucket with the prefix 'reports/'"
+
+> "Upload this JSON data to my-bucket/config/settings.json"
+
+> "Generate a presigned URL for my-bucket/private-doc.pdf that expires in 1 hour"

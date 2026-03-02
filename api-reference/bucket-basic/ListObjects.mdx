@@ -1,0 +1,71 @@
+---
+title: 'ListObjects'
+description: 'List objects in a bucket using the V1 API'
+---
+
+Returns up to 1,000 objects in a bucket. Also known as `GetBucket`.
+
+<Note>
+Use [ListObjectsV2](/api-reference/bucket-basic/ListObjectsV2) for new applications. This V1 API is maintained for backward compatibility.
+</Note>
+
+## Request
+
+```
+GET / HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prefix` | String | No | Filter objects by key prefix. |
+| `delimiter` | String | No | Character to group keys. |
+| `marker` | String | No | List objects after this key (for pagination). |
+| `max-keys` | Integer | No | Maximum objects to return. Default: 100. Max: 1000. |
+| `encoding-type` | String | No | Set to `url` to URL-encode keys. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult>
+  <Name>my-bucket</Name>
+  <Prefix></Prefix>
+  <Marker></Marker>
+  <MaxKeys>100</MaxKeys>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>myobject.txt</Key>
+    <LastModified>2025-04-17T03:15:40.000Z</LastModified>
+    <ETag>"D41D8CD98F00B204E9800998ECF8****"</ETag>
+    <Size>344606</Size>
+    <StorageClass>Standard</StorageClass>
+    <Owner>
+      <ID>51264</ID>
+      <DisplayName>51264</DisplayName>
+    </Owner>
+  </Contents>
+</ListBucketResult>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `IsTruncated` | Boolean | `true` if more results are available. |
+| `NextMarker` | String | Marker for the next page. Use as `marker` in the next request. |
+| `Contents.Key` | String | Object key. |
+| `Contents.LastModified` | String | Last modified time. |
+| `Contents.ETag` | String | Object ETag. |
+| `Contents.Size` | Long | Object size in bytes. |
+| `Contents.StorageClass` | String | Storage class. |
+| `CommonPrefixes.Prefix` | String | Common prefix (directory simulation with delimiter). |
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The specified bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to list objects. |

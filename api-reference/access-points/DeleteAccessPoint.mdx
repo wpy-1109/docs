@@ -1,0 +1,25 @@
+---
+title: 'DeleteAccessPoint'
+description: 'Delete a bucket access point'
+---
+
+Deletes a bucket access point.
+
+## Request
+
+```
+DELETE /?accessPoint HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-access-point-name: {AccessPointName}
+```
+
+## Response
+
+**Success:** HTTP 204 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPoint` | 404 | The access point does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

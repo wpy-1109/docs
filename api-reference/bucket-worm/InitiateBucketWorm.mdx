@@ -1,0 +1,33 @@
+---
+title: 'InitiateBucketWorm'
+description: 'Create a retention policy for a bucket'
+---
+
+Creates a Write Once Read Many (WORM) retention policy for a bucket. The policy is unlocked for 24 hours, during which it must be locked with CompleteBucketWorm or it expires automatically.
+
+## Request
+
+```
+POST /?worm HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<InitiateWormConfiguration>
+  <RetentionPeriodInDays>365</RetentionPeriodInDays>
+</InitiateWormConfiguration>
+```
+
+## Response
+
+```http
+HTTP/1.1 200 OK
+x-oss-worm-id: 1666E2CFB2B3418****
+```
+
+| Header | Description |
+|--------|-------------|
+| `x-oss-worm-id` | WORM ID required for CompleteBucketWorm. |

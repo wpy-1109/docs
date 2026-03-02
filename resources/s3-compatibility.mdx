@@ -1,0 +1,153 @@
+---
+title: 'S3 Compatibility'
+description: 'Amazon S3 API compatibility reference for Alibaba Cloud OSS'
+---
+
+Alibaba Cloud OSS provides compatibility with a subset of the Amazon S3 API, allowing many S3-compatible tools and applications to work with OSS with minimal changes.
+
+<Note>
+For S3 API calls, the `x-oss-process` parameter is limited to `image/` and `style/` types. Other processing types such as `video/` are not supported via the S3 protocol.
+</Note>
+
+## Compatible S3 API operations
+
+### Bucket operations
+
+| S3 Operation | OSS Equivalent | Notes |
+|-------------|----------------|-------|
+| PutBucket | PutBucket | Supported |
+| DeleteBucket | DeleteBucket | Supported |
+| GetBucket (ListObjects) | ListObjects | Supported |
+| GetBucketV2 (ListObjectsV2) | ListObjectsV2 | Supported |
+| GetBucketACL | GetBucketAcl | Supported |
+| GetBucketLifecycle | GetBucketLifecycle | Supported |
+| GetBucketLocation | GetBucketLocation | Supported |
+| GetBucketLogging | GetBucketLogging | Supported |
+| HeadBucket | HeadBucket | Supported |
+| PutBucketACL | PutBucketAcl | Limited ACL modes |
+| PutBucketLifecycle | PutBucketLifecycle | Supported |
+| PutBucketLogging | PutBucketLogging | Supported |
+
+### Object operations
+
+| S3 Operation | OSS Equivalent | Notes |
+|-------------|----------------|-------|
+| DeleteObject | DeleteObject | Supported |
+| DeleteObjects | DeleteMultipleObjects | Supported |
+| GetObject | GetObject | Supported |
+| GetObjectACL | GetObjectAcl | Supported |
+| HeadObject | HeadObject | Supported |
+| PostObject | PostObject | Supported |
+| PutObject | PutObject | Supported |
+| PutObjectCopy | CopyObject | Supported |
+| PutObjectACL | PutObjectAcl | Limited ACL modes |
+
+### Multipart upload operations
+
+| S3 Operation | OSS Equivalent | Notes |
+|-------------|----------------|-------|
+| InitiateMultipartUpload | InitiateMultipartUpload | Supported |
+| AbortMultipartUpload | AbortMultipartUpload | Supported |
+| CompleteMultipartUpload | CompleteMultipartUpload | Supported |
+| ListParts | ListParts | Supported |
+| UploadPart | UploadPart | Supported |
+| UploadPartCopy | UploadPartCopy | Supported |
+
+## Key differences
+
+### Request style
+
+S3 supports both virtual-hosted and path-style request addressing. OSS supports **only virtual-hosted style** requests, where the bucket name is a subdomain in the endpoint.
+
+```
+# S3 path-style (NOT supported by OSS)
+https://s3.amazonaws.com/my-bucket/my-object
+
+# Virtual-hosted style (supported by both S3 and OSS)
+https://my-bucket.oss-cn-hangzhou.aliyuncs.com/my-object
+```
+
+<Warning>
+After migrating from S3 to OSS, all client applications and S3-compatible tools must be configured to use virtual-hosted style requests. Path-style requests will be denied.
+</Warning>
+
+### ACL differences
+
+OSS supports only three ACL modes from S3: `private`, `public-read`, and `public-read-write`.
+
+| Level | Permission | S3 Behavior | OSS Behavior |
+|-------|-----------|-------------|--------------|
+| Bucket | READ | List buckets | Read objects (if no object ACL is set) |
+| Bucket | WRITE | Write or overwrite objects | Create or overwrite objects; uses InitiateMultipartUpload |
+| Bucket | READ_ACP | Read bucket ACL | Owner and authorized RAM users only |
+| Bucket | WRITE_ACP | Configure bucket ACL | Owner and authorized RAM users only |
+| Object | READ | Read an object | Read an object |
+| Object | WRITE | N/A | Overwrite an object |
+| Object | READ_ACP | Read object ACL | Owner and authorized RAM users only |
+| Object | WRITE_ACP | Configure object ACL | Owner and authorized RAM users only |
+
+### Storage class mapping
+
+| S3 Storage Class | OSS Storage Class | Notes |
+|-----------------|-------------------|-------|
+| STANDARD | Standard | Direct equivalent |
+| STANDARD_IA | IA (Infrequent Access) | Direct equivalent |
+| GLACIER | Archive | Restore required before access (unless real-time access is enabled) |
+| DEEP_ARCHIVE | Cold Archive / Deep Cold Archive | OSS has two tiers for deep archival |
+
+<Note>
+OSS ignores the restoration duration configured in S3 API operations. By default, the restored state lasts one day and can be extended up to seven days, after which the object returns to the frozen state.
+</Note>
+
+### ETag differences
+
+- **PUT uploads**: OSS returns ETags in **uppercase** letters; S3 returns ETags in **lowercase** letters. Configure your client to perform case-insensitive ETag comparison.
+- **Multipart uploads**: OSS calculates ETag values using a different method than S3.
+
+## Using AWS SDKs with OSS
+
+You can use AWS SDKs to access OSS by configuring the endpoint to point to OSS:
+
+```python
+import boto3
+
+client = boto3.client(
+    's3',
+    endpoint_url='https://oss-cn-hangzhou.aliyuncs.com',
+    aws_access_key_id='your-oss-access-key-id',
+    aws_secret_access_key='your-oss-access-key-secret',
+    region_name='oss-cn-hangzhou'
+)
+
+# List buckets
+response = client.list_buckets()
+for bucket in response['Buckets']:
+    print(bucket['Name'])
+```
+
+```javascript
+const { S3Client, ListBucketsCommand } = require('@aws-sdk/client-s3');
+
+const client = new S3Client({
+  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+  region: 'oss-cn-hangzhou',
+  credentials: {
+    accessKeyId: 'your-oss-access-key-id',
+    secretAccessKey: 'your-oss-access-key-secret',
+  },
+  forcePathStyle: false, // Must use virtual-hosted style
+});
+
+const response = await client.send(new ListBucketsCommand({}));
+```
+
+## Migration considerations
+
+When migrating from S3 to OSS:
+
+1. **Switch to virtual-hosted style** requests in all client applications
+2. **Update ACL configurations** -- OSS supports only `private`, `public-read`, and `public-read-write`
+3. **Handle ETag case differences** -- ensure case-insensitive comparison
+4. **Map storage classes** -- update any storage class references to OSS equivalents
+5. **Update endpoints** -- replace S3 endpoints with the appropriate OSS regional endpoint
+6. **Review unsupported operations** -- verify that your application does not rely on S3 operations not listed above

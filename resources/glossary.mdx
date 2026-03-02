@@ -1,0 +1,204 @@
+---
+title: 'Glossary'
+description: 'Terms and definitions used in Alibaba Cloud OSS documentation'
+---
+
+## A
+
+**Access Control List (ACL)**
+A set of permissions attached to a bucket or object that defines who can access it. OSS supports three ACL modes: `private`, `public-read`, and `public-read-write`.
+
+**AccessKey**
+A pair of credentials (AccessKey ID and AccessKey Secret) used to authenticate API requests. Created for RAM users or the Alibaba Cloud account.
+
+**Access Point**
+A network endpoint attached to a bucket that provides fine-grained access control. Supports dedicated policies and public access block settings.
+
+**ActionTrail**
+Alibaba Cloud's audit logging service that records API calls for compliance and security monitoring.
+
+**AppendObject**
+An API operation that appends data to the end of an existing Appendable object, enabling incremental writes.
+
+**Archive**
+A storage class for infrequently accessed data that requires long-term retention. Objects must be restored before access (unless real-time access is enabled). Minimum storage duration is 60 days.
+
+## B
+
+**Block Public Access**
+A security feature that overrides all public ACLs and bucket policies to prevent public access to a bucket or account.
+
+**Bucket**
+The top-level container for objects in OSS. Each bucket has a globally unique name, belongs to a specific region, and has its own access control settings.
+
+**Bucket Policy**
+A JSON-based access policy attached to a bucket that provides fine-grained control over who can access the bucket and its objects. Supports conditions like IP address, VPC, HTTPS, and time-based restrictions.
+
+## C
+
+**Callback**
+A mechanism where OSS sends an HTTP request to a user-specified server after an upload completes, enabling server-side post-processing.
+
+**CDN (Content Delivery Network)**
+A distributed network of edge servers that caches and delivers content to users from the nearest location, reducing latency and bandwidth costs.
+
+**CMK (Customer Master Key)**
+A key managed in Key Management Service (KMS) used for server-side encryption (SSE-KMS).
+
+**CNAME**
+A DNS record that maps a custom domain name to an OSS bucket endpoint.
+
+**Cold Archive**
+A storage class for rarely accessed data with long-term retention requirements. Lower cost than Archive with minimum storage duration of 180 days and minimum billable size of 64 KB.
+
+**CopyObject**
+An API operation that creates a copy of an object within OSS, optionally changing metadata, storage class, or encryption.
+
+**CORS (Cross-Origin Resource Sharing)**
+A mechanism that allows web applications running on one domain to make requests to OSS resources on a different domain.
+
+**CRR (Cross-Region Replication)**
+Automatic, asynchronous replication of objects from a source bucket to a destination bucket in a different region for disaster recovery.
+
+## D
+
+**Deep Cold Archive**
+The lowest-cost storage class for extremely cold data. Minimum storage duration is 180 days and minimum billable size is 64 KB.
+
+**Delete Marker**
+A placeholder object created when a versioned object is deleted, making the object appear deleted while preserving previous versions.
+
+## E
+
+**ECS (Elastic Compute Service)**
+Alibaba Cloud's virtual server service. ECS instances can access OSS over the internal network for faster, free data transfer.
+
+**Endpoint**
+The domain name used to access OSS. Each region has a public endpoint and an internal endpoint (for traffic within the same region).
+
+**ETag**
+An identifier assigned to each object, typically an MD5 hash of the object content (for non-multipart uploads).
+
+## H
+
+**Hotlink Protection**
+A feature that restricts access to objects based on the HTTP Referer header, preventing unauthorized embedding of OSS content on external websites.
+
+## I
+
+**IA (Infrequent Access)**
+A storage class for data that is accessed less frequently but requires immediate access when needed. Lower storage cost than Standard with minimum storage duration of 30 days and minimum billable size of 64 KB.
+
+**IMG (Image Processing)**
+Built-in image processing capabilities of OSS, including resizing, cropping, watermarking, format conversion, and quality adjustment via URL parameters.
+
+## J
+
+**JindoFS / JindoSDK**
+An HDFS-compatible file system layer on OSS, optimized for big data and data lake workloads. JindoSDK is the client library for accessing OSS-HDFS.
+
+## K
+
+**KMS (Key Management Service)**
+Alibaba Cloud's managed key service used for server-side encryption (SSE-KMS) of OSS objects.
+
+## L
+
+**Lifecycle Rule**
+A configuration that automates object management actions such as transitioning objects to cheaper storage classes, expiring objects, or cleaning up incomplete multipart uploads.
+
+**Live Channel**
+An OSS feature that supports RTMP-based live video streaming by ingesting streams and storing them as objects.
+
+## M
+
+**Meta Query (Data Indexing)**
+A feature that enables SQL-like queries across object metadata within a bucket for efficient data management.
+
+**Multipart Upload**
+A method for uploading large objects in parts, enabling parallel uploads, resumable uploads, and uploads of objects whose total size is not known in advance.
+
+## O
+
+**Object**
+The fundamental data entity stored in OSS. Each object consists of a key (name), data (content), and metadata (headers).
+
+**Object FC Access Point**
+An access point that triggers a Function Compute function to process objects on-the-fly during GetObject requests.
+
+**Object Key**
+The unique identifier (name) of an object within a bucket. Can include path-like prefixes (e.g., `images/photo.jpg`).
+
+**OSS-HDFS**
+An HDFS-compatible data lake storage service built on OSS, supporting directory-level operations and native big data engine integration.
+
+**ossutil**
+The official command-line tool for managing OSS buckets and objects. Version 2.0 is the current recommended version.
+
+**ossbrowser**
+The official graphical (GUI) tool for managing OSS buckets and objects through a desktop application.
+
+## P
+
+**PostObject**
+An API operation that uploads objects using HTML form-based (multipart/form-data) POST requests, commonly used for browser-based direct uploads.
+
+**Prefix**
+A string at the beginning of an object key used to organize objects in a directory-like hierarchy and to filter listing results.
+
+## R
+
+**RAM (Resource Access Management)**
+Alibaba Cloud's identity and access management service for creating users, groups, roles, and policies.
+
+**Region**
+A geographic area where OSS stores bucket data. Each region has its own endpoint. Data does not leave a region unless cross-region replication is configured.
+
+**Restore**
+The process of making an archived object (Archive, Cold Archive, or Deep Cold Archive) accessible for reading. Restore time varies by storage class.
+
+**RTC (Replication Time Control)**
+A feature that guarantees 99.99% of objects are replicated within 10 minutes for cross-region replication, with near real-time monitoring.
+
+## S
+
+**SCU (Storage Capacity Unit)**
+A prepaid resource plan that can offset storage fees across multiple Alibaba Cloud storage services including OSS.
+
+**Signature V4**
+The recommended request signing algorithm for OSS API authentication, using HMAC-SHA256. Provides improved security over Signature V1 (HMAC-SHA1).
+
+**SRR (Same-Region Replication)**
+Automatic, asynchronous replication of objects between buckets within the same region.
+
+**SSE-KMS**
+Server-side encryption using keys managed by Key Management Service. Supports customer-managed keys (CMK) with automatic rotation.
+
+**SSE-OSS (AES256)**
+Server-side encryption fully managed by OSS using AES-256. No key management required.
+
+**STS (Security Token Service)**
+A service that issues temporary security credentials (AccessKey ID, AccessKey Secret, and Security Token) with limited permissions and expiration time.
+
+**Symlink**
+A lightweight reference (symbolic link) to another object in the same bucket, enabling multiple names for a single object.
+
+## T
+
+**Transfer Acceleration**
+A feature that uses optimized network paths to accelerate data transfer between clients and OSS, particularly effective for cross-region or international transfers.
+
+## V
+
+**Versioning**
+A feature that keeps multiple variants of an object in a bucket. When enabled, overwritten or deleted objects are preserved as previous versions and can be recovered.
+
+## W
+
+**WORM (Write Once Read Many)**
+A compliance feature that prevents objects from being deleted or modified during a configurable retention period. Supports SEC, FINRA, and other regulatory requirements.
+
+## Z
+
+**ZRS (Zone-Redundant Storage)**
+A redundancy type that stores data across multiple availability zones within a region, providing higher availability and durability than locally redundant storage (LRS).

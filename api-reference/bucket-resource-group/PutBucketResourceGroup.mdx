@@ -1,0 +1,26 @@
+---
+title: 'PutBucketResourceGroup'
+description: 'Assign a bucket to a resource group'
+---
+
+Assigns a bucket to a resource group for unified resource management and billing.
+
+## Request
+
+```
+PUT /?resourceGroup HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketResourceGroupConfiguration>
+  <ResourceGroupId>rg-aek27tc****</ResourceGroupId>
+</BucketResourceGroupConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

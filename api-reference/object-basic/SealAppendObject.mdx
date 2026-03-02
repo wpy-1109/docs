@@ -1,0 +1,17 @@
+---
+title: 'SealAppendObject'
+description: 'Prevent further appends to an appendable object'
+---
+
+Seals an appendable object, preventing any further data from being appended. The object type changes from `Appendable` to `Normal`.
+
+## Request
+
+```
+POST /{ObjectName}?seal HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

@@ -1,0 +1,36 @@
+---
+title: 'CreateCnameToken'
+description: 'Create a CNAME token for domain ownership verification'
+---
+
+Creates a CNAME token required to verify ownership of a custom domain name before binding.
+
+## Request
+
+```
+POST /?comp=token HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketCnameConfiguration>
+  <Cname>
+    <Domain>cdn.example.com</Domain>
+  </Cname>
+</BucketCnameConfiguration>
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CnameToken>
+  <Token>be1d49e863dea27****</Token>
+  <ExpireTime>2025-04-18T03:15:40.000Z</ExpireTime>
+</CnameToken>
+```
+
+Add the token as a TXT record to your DNS with the name `_dnsauth.{domain}`.

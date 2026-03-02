@@ -1,0 +1,33 @@
+---
+title: 'PutBucketPublicAccessBlock'
+description: 'Enable Block Public Access for a specific bucket'
+---
+
+Enables Block Public Access for a specific bucket.
+
+## Request
+
+```
+PUT /?publicAccessBlock HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<PublicAccessBlockConfiguration>
+  <BlockPublicAccess>true</BlockPublicAccess>
+</PublicAccessBlockConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

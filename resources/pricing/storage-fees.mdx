@@ -1,0 +1,38 @@
+---
+title: 'Storage Fees'
+description: 'OSS storage pricing by storage class'
+---
+
+## Storage class pricing
+
+Storage fees are calculated based on the average daily storage amount, billed monthly.
+
+| Storage Class | Typical Price Range | Min Duration | Notes |
+|---------------|-------------------|--------------|-------|
+| **Standard** | Lowest per-GB for hot data | None | No retrieval fee |
+| **Infrequent Access** | ~40% less than Standard | 30 days | Per-GB retrieval fee |
+| **Archive** | ~70% less than Standard | 60 days | Restore required before access |
+| **Cold Archive** | ~80% less than Standard | 180 days | Restore time: 1-12 hours |
+| **Deep Cold Archive** | ~90% less than Standard | 180 days | Restore time: 12-48 hours |
+
+## Minimum storage duration
+
+If you delete or transition an object before its minimum storage duration, you are charged for the full minimum period:
+
+- Delete an IA object after 10 days: charged for 30 days of IA storage
+- Delete a Cold Archive object after 30 days: charged for 180 days
+
+## Storage size calculation
+
+- Object data size
+- Object metadata overhead (approximately 256 bytes per object)
+- Incomplete multipart upload parts (clean up with lifecycle rules)
+- Previous versions (if versioning is enabled)
+- Delete markers (count toward object count but minimal storage)
+
+## Redundancy type
+
+| Type | Description | Price Impact |
+|------|-------------|-------------|
+| **LRS** | Locally redundant (single AZ) | Base price |
+| **ZRS** | Zone-redundant (3 AZs) | ~30% higher than LRS |

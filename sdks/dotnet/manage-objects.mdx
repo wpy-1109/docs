@@ -1,0 +1,160 @@
+---
+title: "Manage Objects - .NET SDK"
+sidebarTitle: "Manage Objects"
+description: "List, copy, delete, and manage objects using the Alibaba Cloud OSS SDK for .NET (C#)."
+"og:title": "Manage Objects with OSS .NET SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="listObjects.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    var paginator = client.ListObjectsV2Paginator(new OSS.Models.ListObjectsV2Request()
+    {
+        Bucket = "my-bucket",
+        Prefix = "photos/",
+        MaxKeys = 100
+    });
+
+    await foreach (var page in paginator.IterPageAsync())
+    {
+        foreach (var obj in page.Contents ?? [])
+        {
+            Console.WriteLine($"Key: {obj.Key}, Size: {obj.Size}, Modified: {obj.LastModified}");
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="listObjectsV1.cs"
+    using Aliyun.OSS;
+
+    var listing = ossClient.ListObjects(new ListObjectsRequest("my-bucket")
+    {
+        Prefix = "photos/",
+        MaxKeys = 100
+    });
+
+    foreach (var obj in listing.ObjectSummaries)
+    {
+        Console.WriteLine($"Key: {obj.Key}, Size: {obj.Size}");
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Copy objects
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="copyObject.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var result = await client.CopyObjectAsync(new OSS.Models.CopyObjectRequest()
+    {
+        Bucket = "dest-bucket",
+        Key = "dest-key.txt",
+        SourceBucket = "source-bucket",
+        SourceKey = "source-key.txt"
+    });
+
+    Console.WriteLine($"Copied. ETag: {result.ETag}");
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="copyObjectV1.cs"
+    var request = new CopyObjectRequest("source-bucket", "source-key.txt", "dest-bucket", "dest-key.txt");
+    ossClient.CopyObject(request);
+    ```
+  </Tab>
+</Tabs>
+
+## Delete a single object
+
+```csharp title="deleteObject.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var result = await client.DeleteObjectAsync(new OSS.Models.DeleteObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "example.txt"
+});
+
+Console.WriteLine($"Deleted. Status: {result.StatusCode}");
+```
+
+## Delete multiple objects
+
+```csharp title="deleteMultiple.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var result = await client.DeleteMultipleObjectsAsync(new OSS.Models.DeleteMultipleObjectsRequest()
+{
+    Bucket = "my-bucket",
+    Delete = new OSS.Models.Delete()
+    {
+        Objects = new List<OSS.Models.DeleteObject>
+        {
+            new() { Key = "file1.txt" },
+            new() { Key = "file2.txt" },
+            new() { Key = "file3.txt" }
+        },
+        Quiet = true
+    }
+});
+
+Console.WriteLine($"Batch delete done. Status: {result.StatusCode}");
+```
+
+## Check if an object exists
+
+```csharp title="objectExists.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+try
+{
+    var result = await client.HeadObjectAsync(new OSS.Models.HeadObjectRequest()
+    {
+        Bucket = "my-bucket",
+        Key = "example.txt"
+    });
+    Console.WriteLine($"Object exists. Size: {result.ContentLength}");
+}
+catch (OSS.ServiceException ex) when (ex.StatusCode == 404)
+{
+    Console.WriteLine("Object does not exist.");
+}
+```
+
+## Get object metadata
+
+```csharp title="objectMetadata.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var result = await client.HeadObjectAsync(new OSS.Models.HeadObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "example.txt"
+});
+
+Console.WriteLine($"Content-Type: {result.ContentType}");
+Console.WriteLine($"Content-Length: {result.ContentLength}");
+Console.WriteLine($"ETag: {result.ETag}");
+Console.WriteLine($"Last-Modified: {result.LastModified}");
+```
+
+## Next steps
+
+- [Upload objects](/sdks/dotnet/upload-objects)
+- [Download objects](/sdks/dotnet/download-objects)

@@ -1,0 +1,109 @@
+---
+title: "Delete Objects"
+sidebarTitle: "Delete Objects"
+description: "Learn how to delete one or more objects from Alibaba Cloud OSS."
+"og:title": "Delete Objects - Alibaba Cloud OSS"
+---
+
+You can delete individual objects or batch-delete up to 1,000 objects per request. In versioned buckets, deleting an object adds a delete marker rather than permanently removing the data. To permanently delete a versioned object, specify its version ID.
+
+<Warning>
+Deleted objects cannot be recovered unless versioning is enabled. Always verify object names before deletion.
+</Warning>
+
+## Prerequisites
+
+- The `oss:DeleteObject` permission
+
+## Delete a single object
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="delete_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.delete_object(oss.DeleteObjectRequest(
+        bucket="examplebucket",
+        key="example.txt",
+    ))
+
+    print(f"Deleted. Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="DeleteObject.java"
+    ossClient.deleteObject("examplebucket", "example.txt");
+    System.out.println("Object deleted.");
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="delete_object.go"
+    _, err := client.DeleteObject(context.TODO(), &oss.DeleteObjectRequest{
+        Bucket: oss.Ptr("examplebucket"),
+        Key:    oss.Ptr("example.txt"),
+    })
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="deleteObject.js"
+    await client.delete('example.txt');
+    ```
+  </Tab>
+</Tabs>
+
+## Batch delete objects
+
+Delete up to 1,000 objects in a single request:
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="batch_delete.py"
+    result = client.delete_multiple_objects(oss.DeleteMultipleObjectsRequest(
+        bucket="examplebucket",
+        delete=oss.Delete(
+            objects=[
+                oss.DeleteObject(key="file1.txt"),
+                oss.DeleteObject(key="file2.txt"),
+                oss.DeleteObject(key="file3.txt"),
+            ],
+            quiet=True,  # Only report errors
+        )
+    ))
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="BatchDelete.java"
+    List<String> keys = Arrays.asList("file1.txt", "file2.txt", "file3.txt");
+    DeleteObjectsRequest request = new DeleteObjectsRequest("examplebucket")
+        .withKeys(keys)
+        .withQuiet(true);
+    ossClient.deleteObjects(request);
+    ```
+  </Tab>
+</Tabs>
+
+## Using ossutil CLI
+
+```bash
+# Delete a single object
+ossutil rm oss://examplebucket/example.txt
+
+# Delete all objects in a directory
+ossutil rm oss://examplebucket/dir/ -r
+
+# Delete all objects (including all versions)
+ossutil rm oss://examplebucket/ -r --all-versions
+```
+
+## Next steps
+
+- [Versioning](/guides/data-management/versioning)
+- [Lifecycle rules](/guides/data-management/lifecycle-rules)
+- [Restore archived objects](/guides/objects/restore-objects)

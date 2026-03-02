@@ -1,0 +1,62 @@
+---
+title: "Quick Start - Ruby SDK"
+sidebarTitle: "Quick Start"
+description: "Upload, download, and manage objects using the Alibaba Cloud OSS SDK for Ruby."
+"og:title": "Quick Start with OSS Ruby SDK"
+---
+
+# Quick Start
+
+## Upload a file
+
+```ruby title="upload.rb"
+require 'aliyun/oss'
+
+client = Aliyun::OSS::Client.new(
+  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+  access_key_id: ENV['OSS_ACCESS_KEY_ID'],
+  access_key_secret: ENV['OSS_ACCESS_KEY_SECRET']
+)
+
+bucket = client.get_bucket('my-bucket')
+bucket.put_object('uploads/report.pdf', :file => '/path/to/report.pdf')
+```
+
+## Download a file
+
+```ruby title="download.rb"
+bucket.get_object('uploads/report.pdf', :file => '/path/to/local/report.pdf')
+```
+
+## List objects
+
+```ruby title="listObjects.rb"
+objects = bucket.list_objects
+objects.each { |o| puts o.key }
+```
+
+## Delete an object
+
+```ruby title="deleteObject.rb"
+bucket.delete_object('uploads/report.pdf')
+```
+
+## Error handling
+
+```ruby title="errorHandling.rb"
+begin
+  bucket.get_object('nonexistent.txt', :file => '/tmp/out.txt')
+rescue Aliyun::OSS::ServerError => e
+  puts "Server Error: #{e.error_code}"
+  puts "Message: #{e.message}"
+  puts "Request ID: #{e.request_id}"
+rescue Aliyun::OSS::ClientError => e
+  puts "Client Error: #{e.message}"
+end
+```
+
+## Next steps
+
+- [Installation](/sdks/ruby/installation)
+- [Initialization](/sdks/ruby/initialization)
+- [Upload objects](/sdks/ruby/upload-objects)

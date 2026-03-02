@@ -1,0 +1,92 @@
+---
+title: "Query Objects (Select)"
+sidebarTitle: "Query Objects"
+description: "Learn how to query structured data within objects using SQL-like expressions in Alibaba Cloud OSS."
+"og:title": "Query Objects (Select) - Alibaba Cloud OSS"
+---
+
+OSS Select lets you run SQL-like queries directly on CSV and JSON objects stored in OSS, returning only the data you need. This avoids downloading and processing entire files, reducing bandwidth and processing time.
+
+<Info>
+OSS Select supports CSV and JSON formats. The maximum object size for Select is **256 GB** (Standard storage class only).
+</Info>
+
+## Prerequisites
+
+- The `oss:GetObject` permission
+- Objects stored in Standard storage class
+- Objects in CSV or JSON format
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="select_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Query a CSV file
+    result = client.select_object(oss.SelectObjectRequest(
+        bucket="examplebucket",
+        key="data.csv",
+        select_request=oss.SelectRequest(
+            expression="SELECT * FROM ossobject WHERE _3 > 100",
+            input_serialization=oss.InputSerialization(
+                csv=oss.CSVInput(
+                    file_header_info="USE",
+                    record_delimiter="\n",
+                    field_delimiter=",",
+                )
+            ),
+            output_serialization=oss.OutputSerialization(
+                csv=oss.CSVOutput(
+                    record_delimiter="\n",
+                    field_delimiter=",",
+                )
+            ),
+        )
+    ))
+
+    print(result.body.read().decode())
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="SelectObject.java"
+    SelectObjectRequest request = new SelectObjectRequest("examplebucket", "data.csv")
+        .withExpression("SELECT * FROM ossobject WHERE _3 > 100")
+        .withInputSerialization(
+            new InputSerialization()
+                .withCsvInputFormat(new CSVFormat()
+                    .withHeaderInfo(CSVFormat.Header.Use)
+                    .withRecordDelimiter('\n')
+                    .withFieldDelimiter(',')))
+        .withOutputSerialization(
+            new OutputSerialization()
+                .withCsvOutputFormat(new CSVFormat()
+                    .withRecordDelimiter('\n')
+                    .withFieldDelimiter(',')));
+
+    OSSObject result = ossClient.selectObject(request);
+    ```
+  </Tab>
+</Tabs>
+
+## SQL syntax
+
+| Feature | Example |
+|---------|---------|
+| Select columns | `SELECT _1, _3 FROM ossobject` |
+| WHERE clause | `SELECT * FROM ossobject WHERE _1 = 'value'` |
+| Aggregations | `SELECT COUNT(*), AVG(_2) FROM ossobject` |
+| LIKE | `SELECT * FROM ossobject WHERE _1 LIKE 'prefix%'` |
+
+## Next steps
+
+- [Download objects](/guides/objects/download-objects)
+- [Data indexing (MetaQuery)](/guides/data-processing/data-indexing)

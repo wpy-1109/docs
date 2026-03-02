@@ -1,0 +1,27 @@
+---
+title: 'GetBucketTags'
+description: 'Query tags for a bucket'
+---
+
+Queries the tags of a bucket.
+
+## Request
+
+```
+GET /?tagging HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Tagging>
+  <TagSet>
+    <Tag>
+      <Key>environment</Key>
+      <Value>production</Value>
+    </Tag>
+  </TagSet>
+</Tagging>
+```

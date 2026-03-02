@@ -1,0 +1,49 @@
+---
+title: 'PutBucketInventory'
+description: 'Configure an inventory task for a bucket'
+---
+
+Sets an inventory rule for a bucket. Inventory generates CSV reports listing objects and their metadata at scheduled intervals.
+
+## Request
+
+```
+PUT /?inventory&inventoryId={InventoryId} HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<InventoryConfiguration>
+  <Id>my-inventory</Id>
+  <IsEnabled>true</IsEnabled>
+  <Filter>
+    <Prefix>images/</Prefix>
+  </Filter>
+  <Destination>
+    <OSSBucketDestination>
+      <Format>CSV</Format>
+      <AccountId>111111</AccountId>
+      <RoleArn>acs:ram::111111:role/AliyunOSSRole</RoleArn>
+      <Bucket>acs:oss:::inventory-bucket</Bucket>
+      <Prefix>inventory-reports/</Prefix>
+    </OSSBucketDestination>
+  </Destination>
+  <Schedule>
+    <Frequency>Weekly</Frequency>
+  </Schedule>
+  <IncludedObjectVersions>Current</IncludedObjectVersions>
+  <OptionalFields>
+    <Field>Size</Field>
+    <Field>StorageClass</Field>
+    <Field>LastModifiedDate</Field>
+    <Field>ETag</Field>
+  </OptionalFields>
+</InventoryConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.

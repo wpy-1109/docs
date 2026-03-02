@@ -1,0 +1,148 @@
+---
+title: "Quick Start - .NET SDK"
+sidebarTitle: "Quick Start"
+description: "Upload, download, and list objects with the Alibaba Cloud OSS SDK for .NET (C#)."
+"og:title": "Quick Start with OSS .NET SDK"
+---
+
+# Quick Start
+
+This guide walks you through the essential OSS operations using the .NET SDK.
+
+## Prerequisites
+
+- .NET 5.0+ or .NET Framework 4.7.1+
+- `AlibabaCloud.OSS.V2` NuGet package installed
+- Environment variables `OSS_ACCESS_KEY_ID` and `OSS_ACCESS_KEY_SECRET` configured
+- An existing OSS bucket
+
+## Upload an object
+
+```csharp title="upload.cs"
+using System.Text;
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+// Upload a string as an object
+var content = "Hello, Alibaba Cloud OSS!";
+var bodyStream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+
+var result = await client.PutObjectAsync(new OSS.Models.PutObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "greeting.txt",
+    Body = bodyStream
+});
+
+Console.WriteLine($"Upload successful. Request ID: {result.RequestId}");
+```
+
+## Upload a local file
+
+```csharp title="uploadFile.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.PutObjectFromFileAsync(new()
+{
+    Bucket = "my-bucket",
+    Key = "documents/report.pdf"
+}, "/path/to/local/report.pdf");
+
+Console.WriteLine($"File uploaded. Status: {result.StatusCode}");
+```
+
+## Download an object
+
+```csharp title="download.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.GetObjectAsync(new OSS.Models.GetObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "greeting.txt"
+});
+
+// Read the content stream
+using var reader = new StreamReader(result.Body);
+var content = await reader.ReadToEndAsync();
+Console.WriteLine($"Content: {content}");
+```
+
+## List objects
+
+```csharp title="listObjects.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var paginator = client.ListObjectsV2Paginator(new OSS.Models.ListObjectsV2Request()
+{
+    Bucket = "my-bucket"
+});
+
+await foreach (var page in paginator.IterPageAsync())
+{
+    foreach (var obj in page.Contents ?? [])
+    {
+        Console.WriteLine($"Key: {obj.Key}, Size: {obj.Size}");
+    }
+}
+```
+
+## Delete an object
+
+```csharp title="deleteObject.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.DeleteObjectAsync(new OSS.Models.DeleteObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "greeting.txt"
+});
+
+Console.WriteLine($"Deleted. Request ID: {result.RequestId}");
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Bucket Operations" icon="folder" href="/sdks/dotnet/bucket-operations">
+    Create, list, and manage buckets.
+  </Card>
+  <Card title="Upload Objects" icon="upload" href="/sdks/dotnet/upload-objects">
+    Simple upload, streaming, and metadata options.
+  </Card>
+  <Card title="Multipart Upload" icon="layer-group" href="/sdks/dotnet/multipart-upload">
+    Upload large files in parts.
+  </Card>
+  <Card title="Presigned URLs" icon="link" href="/sdks/dotnet/presigned-urls">
+    Generate temporary access URLs.
+  </Card>
+</CardGroup>

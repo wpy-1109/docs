@@ -1,0 +1,56 @@
+---
+title: "Quick Start - PHP SDK"
+sidebarTitle: "Quick Start"
+description: "Get started with Alibaba Cloud OSS using the PHP SDK."
+"og:title": "Quickstart: PHP SDK - Alibaba Cloud OSS"
+---
+
+# Quick Start
+
+```php title="quickstart.php"
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
+use OSS\OssClient;
+
+$accessKeyId = getenv('OSS_ACCESS_KEY_ID');
+$accessKeySecret = getenv('OSS_ACCESS_KEY_SECRET');
+$endpoint = 'https://oss-cn-hangzhou.aliyuncs.com';
+$bucket = 'your-bucket-name';
+
+$ossClient = new OssClient($accessKeyId, $accessKeySecret, $endpoint);
+
+try {
+    // Upload an object
+    $ossClient->putObject($bucket, 'example.txt', 'Hello, OSS!');
+    echo "Object uploaded\n";
+
+    // Download an object
+    $content = $ossClient->getObject($bucket, 'example.txt');
+    echo "Content: " . $content . "\n";
+
+    // List objects
+    $listInfo = $ossClient->listObjects($bucket);
+    foreach ($listInfo->getObjectList() as $obj) {
+        echo "Object: " . $obj->getKey() . "\n";
+    }
+
+    // Delete an object
+    $ossClient->deleteObject($bucket, 'example.txt');
+    echo "Object deleted\n";
+
+} catch (\Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" icon="upload" href="/sdks/php/upload-objects">
+    Upload files, strings, and streams.
+  </Card>
+  <Card title="Bucket Operations" icon="folder" href="/sdks/php/bucket-operations">
+    Create, list, and manage buckets.
+  </Card>
+</CardGroup>

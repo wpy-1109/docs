@@ -1,0 +1,27 @@
+---
+title: 'ListStyle'
+description: 'List all image styles in a bucket'
+---
+
+Lists all image styles created in a bucket.
+
+## Request
+
+```
+GET /?style HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<StyleList>
+  <Style>
+    <Name>thumbnail</Name>
+    <Content>image/resize,w_200,h_200</Content>
+    <CreateTime>2025-04-17T03:15:40.000Z</CreateTime>
+    <LastModifyTime>2025-04-17T03:15:40.000Z</LastModifyTime>
+  </Style>
+</StyleList>
+```

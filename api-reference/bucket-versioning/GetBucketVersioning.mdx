@@ -1,0 +1,24 @@
+---
+title: 'GetBucketVersioning'
+description: 'Query the versioning state of a bucket'
+---
+
+Queries the versioning state of a bucket.
+
+## Request
+
+```
+GET /?versioning HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<VersioningConfiguration>
+  <Status>Enabled</Status>
+</VersioningConfiguration>
+```
+
+If versioning has never been enabled, the `Status` element is empty.

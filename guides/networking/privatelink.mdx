@@ -1,0 +1,100 @@
+---
+title: "PrivateLink"
+sidebarTitle: "PrivateLink"
+description: "Learn how to access Alibaba Cloud OSS securely over PrivateLink with network-layer traffic isolation."
+"og:title": "PrivateLink - Alibaba Cloud OSS"
+---
+
+PrivateLink creates a dedicated private endpoint in your VPC that connects to OSS. All traffic remains within the Alibaba Cloud backbone network and is never exposed to the public internet, providing native network-layer isolation.
+
+## PrivateLink vs internal endpoints
+
+| Capability | Internal Endpoint | PrivateLink |
+|-----------|-------------------|-------------|
+| Security group control | Not supported | Supported |
+| VPC flow log auditing | Not supported | Supported |
+| IP conflict avoidance | May conflict with 100.64.0.0/10 | Uses your VPC CIDR |
+| Network isolation | Shared endpoint | Dedicated endpoint in your VPC |
+
+## Supported regions
+
+Japan (Tokyo), Indonesia (Jakarta), Thailand (Bangkok), Germany (Frankfurt), US (Silicon Valley), US (Virginia).
+
+<Note>
+PrivateLink for OSS requires activation through [technical support](https://smartservice.console.alibabacloud.com/#/ticket/createIndex).
+</Note>
+
+## Prerequisites
+
+- A VPC and vSwitch in a supported region.
+- An ECS instance for connectivity verification.
+
+## Create an endpoint
+
+<Steps>
+  <Step title="Create the endpoint">
+    Go to the [VPC Endpoints](https://vpc.console.alibabacloud.com/endpoint) page and click **Create Endpoint**. Select **Interface Endpoint**, choose the OSS endpoint service (ending with `oss`), and assign a VPC, security group, zone, and vSwitch.
+  </Step>
+  <Step title="Copy the endpoint domain">
+    After creation, copy the **Domain Name of Endpoint Service** from the endpoint details page. Use this domain for all OSS access.
+  </Step>
+  <Step title="Verify connectivity">
+    From an ECS instance in the same VPC, test connectivity:
+    ```bash
+    ping -c 4 ep-bp1i.oss.cn-hangzhou.privatelink.aliyuncs.com
+    ```
+  </Step>
+</Steps>
+
+## Using SDKs with PrivateLink
+
+When accessing OSS over PrivateLink, enable **path-style access** in your SDK configuration.
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import oss2
+    from oss2.credentials import EnvironmentVariableCredentialsProvider
+
+    auth = oss2.ProviderAuth(EnvironmentVariableCredentialsProvider())
+    endpoint = "https://ep-bp1i.oss.cn-hangzhou.privatelink.aliyuncs.com"
+
+    bucket = oss2.Bucket(auth, endpoint, "examplebucket", is_path_style=True)
+    bucket.get_object_to_file("example.jpg", "local.jpg")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    ClientBuilderConfiguration conf = new ClientBuilderConfiguration();
+    conf.setSLDEnabled(true);  // Enable path-style access
+    conf.setSignatureVersion(SignVersion.V4);
+
+    OSS ossClient = OSSClientBuilder.create()
+        .endpoint("https://ep-bp1i.oss.cn-hangzhou.privatelink.aliyuncs.com")
+        .credentialsProvider(credentialsProvider)
+        .clientConfiguration(conf)
+        .region("cn-hangzhou")
+        .build();
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go
+    client, _ := oss.New(
+        "https://ep-bp1i.oss.cn-hangzhou.privatelink.aliyuncs.com",
+        "", "",
+        oss.SetCredentialsProvider(&provider),
+        oss.ForcePathStyle(true),
+    )
+    ```
+  </Tab>
+</Tabs>
+
+## Enhance security
+
+After verifying connectivity, restrict bucket access to only the PrivateLink VPC using a bucket policy with the condition `VPC != <your-vpc-id>` set to **Reject**.
+
+## Next steps
+
+- [Block public access](/guides/access-control/block-public-access)
+- [Bucket policies](/guides/access-control/bucket-policies)
+- [ECS reverse proxy](/guides/networking/ecs-reverse-proxy)

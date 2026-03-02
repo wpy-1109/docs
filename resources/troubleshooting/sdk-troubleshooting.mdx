@@ -1,0 +1,116 @@
+---
+title: 'SDK Troubleshooting'
+description: 'Common SDK issues and solutions'
+---
+
+## Connection issues
+
+### ConnectionError / timeout
+
+**Causes:**
+- Network connectivity issues
+- Incorrect endpoint
+- Firewall blocking outbound HTTPS (port 443)
+- DNS resolution failure
+
+**Solutions:**
+1. Verify network connectivity: `curl -I https://oss-cn-hangzhou.aliyuncs.com`
+2. Check the endpoint matches your bucket's region
+3. Ensure port 443 is open in your firewall
+4. Try the internal endpoint from an ECS instance
+
+### SSL certificate errors
+
+**Causes:**
+- Outdated CA certificates on the client
+- Proxy performing SSL interception
+- Clock skew affecting certificate validation
+
+**Solutions:**
+1. Update CA certificates: `pip install certifi` (Python)
+2. Check if a corporate proxy is intercepting SSL
+3. Sync system clock
+
+## Authentication issues
+
+### InvalidAccessKeyId
+
+- Verify the AccessKey ID is correct (no extra spaces or characters)
+- Check the key is active in the RAM console
+- Ensure you are using the correct key pair (not a different account)
+
+### SecurityTokenExpired
+
+STS credentials have a maximum lifetime. Request fresh credentials:
+
+```python
+# Check token expiration before making requests
+if is_token_expired(credentials):
+    credentials = refresh_sts_credentials()
+```
+
+## Upload issues
+
+### RequestTimeout during large uploads
+
+Increase the timeout in your SDK client:
+
+<CodeGroup>
+```python Python
+import oss2
+bucket = oss2.Bucket(auth, endpoint, bucket_name,
+    connect_timeout=30,  # Connection timeout
+    timeout=300          # Read timeout
+)
+```
+
+```java Java
+ClientBuilderConfiguration config = new ClientBuilderConfiguration();
+config.setConnectionTimeout(30000);  // 30 seconds
+config.setSocketTimeout(300000);     // 5 minutes
+```
+
+```javascript Node.js
+const client = new OSS({
+  timeout: 300000,  // 5 minutes
+  // ...
+});
+```
+</CodeGroup>
+
+### Memory issues with large files
+
+Use streaming upload instead of loading entire files into memory:
+
+```python
+# Bad: loads entire file into memory
+with open('large-file.bin', 'rb') as f:
+    bucket.put_object('key', f.read())
+
+# Good: streams the file
+with open('large-file.bin', 'rb') as f:
+    bucket.put_object('key', f)
+```
+
+## Debug logging
+
+Enable SDK debug logging to diagnose issues:
+
+<CodeGroup>
+```python Python
+import logging
+logging.getLogger('oss2').setLevel(logging.DEBUG)
+```
+
+```java Java
+// Add to log4j configuration
+log4j.logger.com.aliyun.oss=DEBUG
+```
+
+```javascript Node.js
+const client = new OSS({
+  // Enable debug logging
+  // Check request/response details in console
+});
+```
+</CodeGroup>

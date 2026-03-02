@@ -1,0 +1,129 @@
+---
+title: "Initialization - C++ SDK"
+sidebarTitle: "Initialization"
+description: "Initialize and configure the OssClient using the Alibaba Cloud OSS SDK for C++."
+"og:title": "Initialize OSS C++ SDK Client"
+---
+
+# Initialization
+
+## SDK lifecycle
+
+The C++ SDK requires explicit initialization and shutdown of global resources:
+
+```cpp title="lifecycle.cpp"
+#include <alibabacloud/oss/OssClient.h>
+using namespace AlibabaCloud::OSS;
+
+int main() {
+    // Initialize global resources (call once at program start)
+    InitializeSdk();
+
+    // ... use OssClient ...
+
+    // Release global resources (call once at program exit)
+    ShutdownSdk();
+    return 0;
+}
+```
+
+<Note>
+  `InitializeSdk()` and `ShutdownSdk()` are global operations -- call each only once during the program lifecycle. `OssClient` is thread-safe and can be shared across threads.
+</Note>
+
+## Create an ossClient (V4 signature)
+
+```cpp title="initV4.cpp"
+#include <alibabacloud/oss/OssClient.h>
+using namespace AlibabaCloud::OSS;
+
+int main() {
+    std::string Endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+    std::string Region = "cn-hangzhou";
+
+    InitializeSdk();
+
+    ClientConfiguration conf;
+    conf.signatureVersion = SignatureVersionType::V4;
+
+    auto credentialsProvider = std::make_shared<EnvironmentVariableCredentialsProvider>();
+    OssClient client(Endpoint, credentialsProvider, conf);
+    client.SetRegion(Region);
+
+    // Use client...
+
+    ShutdownSdk();
+    return 0;
+}
+```
+
+## Credential providers
+
+<Tabs>
+  <Tab title="Environment Variables">
+    Reads `OSS_ACCESS_KEY_ID` and `OSS_ACCESS_KEY_SECRET` from environment variables:
+
+    ```cpp
+    auto credentialsProvider = std::make_shared<EnvironmentVariableCredentialsProvider>();
+    OssClient client(Endpoint, credentialsProvider, conf);
+    ```
+  </Tab>
+  <Tab title="Static Credentials">
+    ```cpp
+    std::string AccessKeyId = "your-access-key-id";
+    std::string AccessKeySecret = "your-access-key-secret";
+
+    OssClient client(Endpoint, AccessKeyId, AccessKeySecret, conf);
+    ```
+
+    <Warning>Never hard-code credentials in production. Use environment variables instead.</Warning>
+  </Tab>
+  <Tab title="STS Token">
+    ```cpp
+    std::string AccessKeyId = "sts-access-key-id";
+    std::string AccessKeySecret = "sts-access-key-secret";
+    std::string SecurityToken = "sts-security-token";
+
+    OssClient client(Endpoint, AccessKeyId, AccessKeySecret, SecurityToken, conf);
+    ```
+  </Tab>
+</Tabs>
+
+## Client configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `maxConnections` | Maximum concurrent connections | 16 |
+| `requestTimeoutMs` | Request timeout (milliseconds) | 10000 |
+| `connectTimeoutMs` | Connection timeout (milliseconds) | 5000 |
+| `enableCrc64` | Enable CRC64 integrity check | `true` |
+| `isCname` | Use custom domain (CNAME) | `false` |
+| `signatureVersion` | Signature version (`V1` or `V4`) | `V1` |
+| `proxyHost` | Proxy server hostname | empty |
+| `proxyPort` | Proxy server port | 0 |
+
+```cpp title="clientConfig.cpp"
+ClientConfiguration conf;
+conf.maxConnections = 32;
+conf.requestTimeoutMs = 30000;
+conf.connectTimeoutMs = 10000;
+conf.enableCrc64 = true;
+conf.signatureVersion = SignatureVersionType::V4;
+```
+
+## Use a custom domain (CNAME)
+
+```cpp title="cname.cpp"
+ClientConfiguration conf;
+conf.isCname = true;
+conf.signatureVersion = SignatureVersionType::V4;
+
+auto credentialsProvider = std::make_shared<EnvironmentVariableCredentialsProvider>();
+OssClient client("https://your-custom-domain.com", credentialsProvider, conf);
+client.SetRegion("cn-hangzhou");
+```
+
+## Next steps
+
+- [Upload objects](/sdks/cpp/upload-objects)
+- [Download objects](/sdks/cpp/download-objects)

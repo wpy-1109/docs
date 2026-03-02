@@ -1,0 +1,151 @@
+---
+title: 'Signature Version 4'
+description: 'How to sign OSS API requests using the V4 signature algorithm'
+---
+
+All authenticated OSS API requests must include a signature in the `Authorization` header. OSS uses Signature Version 4 (V4) with HMAC-SHA256.
+
+<Note>
+If you use an OSS SDK, the SDK handles signing automatically. Implement V4 signing manually only when you cannot use an SDK.
+</Note>
+
+## Authorization header format
+
+```
+Authorization: OSS4-HMAC-SHA256 Credential={AccessKeyId}/{Date}/{Region}/oss/aliyun_v4_request,
+  AdditionalHeaders={headers},
+  Signature={signature}
+```
+
+| Component | Description |
+|-----------|-------------|
+| `OSS4-HMAC-SHA256` | Algorithm identifier. Fixed value. |
+| `Credential` | AccessKey ID and scope: `{AccessKeyId}/{YYYYMMDD}/{Region}/oss/aliyun_v4_request` |
+| `AdditionalHeaders` | Optional headers included in signing, lowercase and semicolon-separated (e.g., `content-disposition;content-length`). |
+| `Signature` | 64-character lowercase hex string produced by the signing process. |
+
+## Signing process
+
+The signature is calculated in three steps:
+
+<Steps>
+  <Step title="Construct the canonical request">
+    ```
+    HTTP Verb + "\n" +
+    Canonical URI + "\n" +
+    Canonical Query String + "\n" +
+    Canonical Headers + "\n" +
+    Additional Headers + "\n" +
+    Hashed Payload
+    ```
+
+    | Field | Description |
+    |-------|-------------|
+    | **HTTP Verb** | `PUT`, `GET`, `POST`, `HEAD`, `DELETE`, or `OPTIONS` |
+    | **Canonical URI** | URI-encoded resource path. Do not encode `/`. Examples: `/` (service), `/mybucket/` (bucket), `/mybucket/myobject` (object) |
+    | **Canonical Query String** | URI-encoded query parameters sorted lexicographically. Use `=` between name/value and `&` between parameters. Empty string if no query params. |
+    | **Canonical Headers** | Required and optional headers in `lowercase(name):trim(value)\n` format, sorted by name. Must include `x-oss-content-sha256`. |
+    | **Additional Headers** | Lowercase names of optional headers, semicolon-separated and sorted. |
+    | **Hashed Payload** | `UNSIGNED-PAYLOAD` (only supported value). |
+  </Step>
+  <Step title="Construct the string to sign">
+    ```
+    OSS4-HMAC-SHA256 + "\n" +
+    Timestamp + "\n" +
+    Scope + "\n" +
+    Hex(SHA256(CanonicalRequest))
+    ```
+
+    | Field | Description |
+    |-------|-------------|
+    | **Timestamp** | ISO 8601 UTC time (e.g., `20250411T064124Z`) |
+    | **Scope** | `{YYYYMMDD}/{Region}/oss/aliyun_v4_request` |
+  </Step>
+  <Step title="Calculate the signature">
+    Derive the signing key, then sign the string:
+
+    ```
+    DateKey          = HMAC-SHA256("aliyun_v4" + AccessKeySecret, Date)
+    DateRegionKey    = HMAC-SHA256(DateKey, Region)
+    DateRegionSvcKey = HMAC-SHA256(DateRegionKey, "oss")
+    SigningKey       = HMAC-SHA256(DateRegionSvcKey, "aliyun_v4_request")
+
+    Signature = Hex(HMAC-SHA256(SigningKey, StringToSign))
+    ```
+  </Step>
+</Steps>
+
+## Headers that participate in signing
+
+**Always included** (must be present):
+- `x-oss-content-sha256`
+
+**Included when present**:
+- `Content-Type`
+- `Content-MD5`
+- All `x-oss-*` headers (e.g., `x-oss-date`, `x-oss-security-token`)
+
+**Optionally included** (via `AdditionalHeaders`):
+- Any other headers you want to sign (e.g., `Content-Disposition`, `Content-Length`)
+
+## Example
+
+Using PutObject with the following parameters:
+
+| Parameter | Value |
+|-----------|-------|
+| AccessKey ID | `LTAI****************` |
+| Bucket | `examplebucket` |
+| Object | `exampleobject` |
+| Region | `cn-hangzhou` |
+| Timestamp | `20250411T064124Z` |
+
+**Canonical Request:**
+
+```
+PUT
+/examplebucket/exampleobject
+
+content-disposition:attachment
+content-length:3
+content-md5:ICy5YqxZB1uWSwcVLSNLcA==
+content-type:text/plain
+x-oss-content-sha256:UNSIGNED-PAYLOAD
+x-oss-date:20250411T064124Z
+
+content-disposition;content-length
+UNSIGNED-PAYLOAD
+```
+
+**String to Sign:**
+
+```
+OSS4-HMAC-SHA256
+20250411T064124Z
+20250411/cn-hangzhou/oss/aliyun_v4_request
+c46d96390bdbc2d739ac9363293ae9d710b14e48081fcb22cd8ad54b63136eca
+```
+
+**Final Authorization Header:**
+
+```
+Authorization: OSS4-HMAC-SHA256 Credential=LTAI***/20250411/cn-hangzhou/oss/aliyun_v4_request,
+  AdditionalHeaders=content-disposition;content-length,
+  Signature=053edbf550ebd239b32a9cdfd93b0b2b3f2d223083aa61f75e9ac16856d61f23
+```
+
+## SDK signature implementations
+
+If implementing the signing algorithm yourself, reference these SDK source files:
+
+| SDK | Source File |
+|-----|------------|
+| Java | `OSSV4Signer.java` |
+| Python | `v4.py` |
+| Go | `v4.go` |
+| Node.js | `client.js` |
+| PHP | `SignerV4.php` |
+| .NET | `SignerV4.cs` |
+| C++ | `SignerV4.cc` |
+| Android | `OSSV4Signer.java` |
+| iOS (Swift) | `SignerV4.swift` |

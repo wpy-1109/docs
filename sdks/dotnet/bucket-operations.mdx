@@ -1,0 +1,142 @@
+---
+title: "Bucket Operations - .NET SDK"
+sidebarTitle: "Bucket Operations"
+description: "Create, list, query, and delete buckets using the Alibaba Cloud OSS SDK for .NET (C#)."
+"og:title": "Bucket Operations with OSS .NET SDK"
+---
+
+# Bucket Operations
+
+## Create a bucket
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="createBucket.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    var result = await client.PutBucketAsync(new OSS.Models.PutBucketRequest()
+    {
+        Bucket = "my-new-bucket"
+    });
+
+    Console.WriteLine($"Bucket created. Status: {result.StatusCode}");
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="createBucketV1.cs"
+    using Aliyun.OSS;
+
+    var ossClient = new OssClient(endpoint, accessKeyId, accessKeySecret);
+    ossClient.CreateBucket("my-new-bucket");
+    ```
+  </Tab>
+</Tabs>
+
+## List buckets
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="listBuckets.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    var result = await client.ListBucketsAsync(new OSS.Models.ListBucketsRequest());
+
+    foreach (var bucket in result.Buckets ?? [])
+    {
+        Console.WriteLine($"Bucket: {bucket.Name}, Region: {bucket.Location}, Created: {bucket.CreationDate}");
+    }
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="listBucketsV1.cs"
+    var buckets = ossClient.ListBuckets();
+    foreach (var bucket in buckets)
+    {
+        Console.WriteLine($"Bucket: {bucket.Name}");
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Check if a bucket exists
+
+```csharp title="bucketExists.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+try
+{
+    var result = await client.GetBucketInfoAsync(new OSS.Models.GetBucketInfoRequest()
+    {
+        Bucket = "my-bucket"
+    });
+    Console.WriteLine($"Bucket exists. Location: {result.BucketInfo?.Bucket?.Location}");
+}
+catch (OSS.ServiceException ex) when (ex.Code == "NoSuchBucket")
+{
+    Console.WriteLine("Bucket does not exist.");
+}
+```
+
+## Get bucket info
+
+```csharp title="bucketInfo.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.GetBucketInfoAsync(new OSS.Models.GetBucketInfoRequest()
+{
+    Bucket = "my-bucket"
+});
+
+var info = result.BucketInfo?.Bucket;
+Console.WriteLine($"Name: {info?.Name}");
+Console.WriteLine($"Location: {info?.Location}");
+Console.WriteLine($"Storage Class: {info?.StorageClass}");
+Console.WriteLine($"Creation Date: {info?.CreationDate}");
+```
+
+## Delete a bucket
+
+<Warning>
+  A bucket must be empty (no objects or incomplete multipart uploads) before it can be deleted.
+</Warning>
+
+```csharp title="deleteBucket.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.DeleteBucketAsync(new OSS.Models.DeleteBucketRequest()
+{
+    Bucket = "my-bucket"
+});
+
+Console.WriteLine($"Bucket deleted. Status: {result.StatusCode}");
+```

@@ -1,0 +1,92 @@
+---
+title: "Manage Objects - iOS SDK"
+sidebarTitle: "Manage Objects"
+description: "List, copy, and delete objects using the Alibaba Cloud OSS SDK for iOS."
+"og:title": "Manage Objects with OSS iOS SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+```swift title="listObjects.swift"
+let list = OSSGetBucketRequest()
+list.bucketName = "my-bucket"
+list.prefix = "photos/"
+list.maxKeys = 100
+
+let task = client.getBucket(list)
+task.continue({ t -> Any? in
+    if let result = t.result as? OSSGetBucketResult {
+        for obj in result.contents ?? [] {
+            print("Key: \(obj["Key"] ?? ""), Size: \(obj["Size"] ?? "")")
+        }
+    }
+    return nil
+})
+```
+
+## Copy an object
+
+```swift title="copyObject.swift"
+let copy = OSSCopyObjectRequest()
+copy.bucketName = "dest-bucket"
+copy.objectKey = "dest-key.txt"
+copy.sourceCopyFrom = "/source-bucket/source-key.txt"
+
+client.copyObject(copy).continue({ t -> Any? in
+    if t.error == nil { print("Copied.") }
+    return nil
+})
+```
+
+## Delete an object
+
+```swift title="deleteObject.swift"
+let delete = OSSDeleteObjectRequest()
+delete.bucketName = "my-bucket"
+delete.objectKey = "old-file.txt"
+
+client.deleteObject(delete).continue({ t -> Any? in
+    if t.error == nil { print("Deleted.") }
+    return nil
+})
+```
+
+## Check if an object exists
+
+```swift title="objectExists.swift"
+let head = OSSHeadObjectRequest()
+head.bucketName = "my-bucket"
+head.objectKey = "example.txt"
+
+client.headObject(head).continue({ t -> Any? in
+    if t.error == nil {
+        print("Object exists.")
+    } else {
+        print("Object does not exist.")
+    }
+    return nil
+})
+```
+
+## Get object metadata
+
+```swift title="objectMetadata.swift"
+let head = OSSHeadObjectRequest()
+head.bucketName = "my-bucket"
+head.objectKey = "example.txt"
+
+client.headObject(head).continue({ t -> Any? in
+    if let result = t.result as? OSSHeadObjectResult {
+        print("Content-Type: \(result.objectMeta["Content-Type"] ?? "")")
+        print("Content-Length: \(result.objectMeta["Content-Length"] ?? "")")
+    }
+    return nil
+})
+```
+
+## Next steps
+
+- [Upload objects](/sdks/ios/upload-objects)
+- [Download objects](/sdks/ios/download-objects)

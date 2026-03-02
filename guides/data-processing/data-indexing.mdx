@@ -1,0 +1,51 @@
+---
+title: "Data Indexing"
+sidebarTitle: "Data Indexing"
+description: "Learn how to use data indexing to enable fast search and discovery of objects in Alibaba Cloud OSS."
+"og:title": "Data Indexing - Alibaba Cloud OSS"
+---
+
+Data indexing creates searchable metadata indexes for objects in your bucket. Query objects by file type, size, content tags, and custom metadata without listing entire buckets.
+
+## How it works
+
+Data indexing integrates OSS with Intelligent Media Management (IMM) to extract and index metadata from your objects. Once indexed, you can run structured queries to find objects matching specific criteria.
+
+## Enable data indexing
+
+<Steps>
+  <Step title="Activate IMM">
+    Activate the Intelligent Media Management (IMM) service and create a project associated with your bucket.
+  </Step>
+  <Step title="Build the index">
+    Trigger indexing for existing objects. New objects are indexed automatically after the initial setup.
+  </Step>
+  <Step title="Query the index">
+    Use the IMM API to search for objects by metadata fields such as file type, creation date, image dimensions, tags, and custom properties.
+  </Step>
+</Steps>
+
+## Query examples
+
+| Query | Description |
+|-------|-------------|
+| File type = `image/jpeg` | Find all JPEG images |
+| Image width > 1920 | Find high-resolution images |
+| Tag contains `landscape` | Find images tagged as landscapes |
+| Created after 2025-01-01 | Find recently uploaded objects |
+
+## Use cases
+
+- **Media asset management**: Search large media libraries by content, tags, or technical attributes.
+- **Compliance auditing**: Find objects matching specific metadata criteria for review.
+- **Data lifecycle**: Identify objects based on age, type, or usage for lifecycle transitions.
+
+<Note>
+Data indexing requires the Intelligent Media Management (IMM) service. See the [IMM documentation](https://www.alibabacloud.com/product/imm) for setup and pricing details.
+</Note>
+
+## Next steps
+
+- [AI content awareness](/guides/data-processing/ai-content-awareness)
+- [Image processing](/guides/data-processing/image-processing)
+- [Manage object metadata](/guides/objects/manage-object-metadata)

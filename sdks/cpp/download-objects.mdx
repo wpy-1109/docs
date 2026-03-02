@@ -1,0 +1,104 @@
+---
+title: "Download Objects - C++ SDK"
+sidebarTitle: "Download Objects"
+description: "Download objects from Alibaba Cloud OSS using the C++ SDK."
+"og:title": "Download Objects with OSS C++ SDK"
+---
+
+# Download Objects
+
+## Download to memory
+
+```cpp title="downloadToMemory.cpp"
+#include <alibabacloud/oss/OssClient.h>
+using namespace AlibabaCloud::OSS;
+
+// ... (initialization) ...
+
+auto outcome = client.GetObject("my-bucket", "example.txt");
+
+if (outcome.isSuccess()) {
+    std::ostringstream ss;
+    ss << outcome.result().Content()->rdbuf();
+    std::string content = ss.str();
+    std::cout << "Content: " << content << std::endl;
+}
+```
+
+## Download to a local file
+
+```cpp title="downloadToFile.cpp"
+GetObjectRequest request("my-bucket", "documents/report.pdf");
+request.setResponseStreamFactory([=]() {
+    return std::make_shared<std::fstream>("/path/to/local/report.pdf",
+        std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+});
+
+auto outcome = client.GetObject(request);
+
+if (outcome.isSuccess()) {
+    std::cout << "Downloaded to local file." << std::endl;
+}
+```
+
+## Range download
+
+Download a specific byte range:
+
+```cpp title="rangeDownload.cpp"
+GetObjectRequest request("my-bucket", "large-file.bin");
+request.setRange(0, 1023); // First 1 KB
+
+auto outcome = client.GetObject(request);
+
+if (outcome.isSuccess()) {
+    std::ostringstream ss;
+    ss << outcome.result().Content()->rdbuf();
+    std::cout << "Downloaded " << ss.str().size() << " bytes" << std::endl;
+}
+```
+
+## Download with progress callback
+
+```cpp title="downloadProgress.cpp"
+GetObjectRequest request("my-bucket", "large-file.zip");
+request.setResponseStreamFactory([=]() {
+    return std::make_shared<std::fstream>("/path/to/local/large-file.zip",
+        std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
+});
+
+TransferProgress progressCallback = {
+    [](size_t increment, int64_t transferred, int64_t total, void* userData) {
+        if (total > 0) {
+            double percent = (double)transferred / total * 100.0;
+            std::cout << "\rProgress: " << std::fixed << std::setprecision(1) << percent << "%" << std::flush;
+        }
+    },
+    nullptr
+};
+
+request.setTransferProgress(progressCallback);
+auto outcome = client.GetObject(request);
+std::cout << std::endl;
+```
+
+## Resumable download
+
+For large files, use resumable download for automatic recovery:
+
+```cpp title="resumableDownload.cpp"
+DownloadObjectRequest request("my-bucket", "large-file.zip", "/path/to/local/large-file.zip");
+request.setPartSize(10 * 1024 * 1024); // 10 MB per part
+request.setThreadNum(3);               // 3 parallel threads
+
+auto outcome = client.ResumableDownloadObject(request);
+
+if (outcome.isSuccess()) {
+    std::cout << "Resumable download complete." << std::endl;
+}
+```
+
+## Next steps
+
+- [Upload objects](/sdks/cpp/upload-objects)
+- [Manage objects](/sdks/cpp/manage-objects)

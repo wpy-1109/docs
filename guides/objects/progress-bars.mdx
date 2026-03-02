@@ -1,0 +1,85 @@
+---
+title: "Progress Bars"
+sidebarTitle: "Progress Bars"
+description: "Learn how to display upload and download progress using OSS SDKs."
+"og:title": "Progress Bars - Alibaba Cloud OSS"
+---
+
+OSS SDKs provide progress callbacks that let you display upload and download progress, estimated time remaining, and transfer speed. This improves user experience for long-running transfers.
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="progress_bar.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    def progress_callback(consumed_bytes, total_bytes, **kwargs):
+        if total_bytes:
+            percentage = (consumed_bytes / total_bytes) * 100
+            print(f"\rProgress: {percentage:.1f}%  ({consumed_bytes}/{total_bytes})", end="")
+
+    # Upload with progress
+    with open("large-file.zip", "rb") as f:
+        result = client.put_object(oss.PutObjectRequest(
+            bucket="examplebucket",
+            key="large-file.zip",
+            body=f,
+            progress_fn=progress_callback,
+        ))
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="ProgressBar.java"
+    import com.aliyun.oss.event.*;
+
+    PutObjectRequest request = new PutObjectRequest("examplebucket",
+        "large-file.zip", new File("large-file.zip"));
+
+    request.setProgressListener(new ProgressListener() {
+        @Override
+        public void progressChanged(ProgressEvent event) {
+            long bytes = event.getBytes();
+            switch (event.getEventType()) {
+                case TRANSFER_STARTED_EVENT:
+                    System.out.println("Upload started.");
+                    break;
+                case REQUEST_BYTE_TRANSFER_EVENT:
+                    System.out.println("Transferred: " + bytes + " bytes");
+                    break;
+                case TRANSFER_COMPLETED_EVENT:
+                    System.out.println("Upload completed.");
+                    break;
+                case TRANSFER_FAILED_EVENT:
+                    System.out.println("Upload failed.");
+                    break;
+            }
+        }
+    });
+
+    ossClient.putObject(request);
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="progressBar.js"
+    const result = await client.multipartUpload('large-file.zip', './large-file.zip', {
+      progress: (percentage) => {
+        console.log(`Progress: ${(percentage * 100).toFixed(1)}%`);
+      },
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Upload objects](/guides/objects/upload-objects)
+- [Multipart upload](/guides/objects/multipart-upload)
+- [Resumable upload](/guides/objects/resumable-upload)

@@ -1,0 +1,51 @@
+---
+title: "Monitoring Alerts"
+sidebarTitle: "Monitoring Alerts"
+description: "Learn how to monitor OSS metrics and configure alerts using CloudMonitor."
+"og:title": "Monitoring Alerts - Alibaba Cloud OSS"
+---
+
+OSS integrates with CloudMonitor to provide real-time monitoring of bucket metrics. Configure alert rules to receive notifications when metrics exceed thresholds, enabling proactive issue detection.
+
+## Available metrics
+
+| Category | Metrics |
+|----------|---------|
+| Request | Total requests, successful requests, server/client errors, redirects |
+| Traffic | Internet outbound/inbound, internal outbound/inbound, CDN outbound, cross-region replication |
+| Latency | Average E2E latency, average server latency |
+| Availability | Availability rate |
+| Storage | Total storage, storage by class |
+
+## Configure alert rules
+
+<Steps>
+  <Step title="Open CloudMonitor">
+    Navigate to your bucket, choose **Data Monitoring > Monitoring Service**, or go directly to the [CloudMonitor console](https://cloudmonitor.console.alibabacloud.com/).
+  </Step>
+  <Step title="Create an alert rule">
+    Click **Create Alert Rule**. Select the metric to monitor, set the threshold and evaluation period, and configure notification contacts.
+  </Step>
+  <Step title="Set notification channels">
+    Configure how you want to be notified: email, SMS, DingTalk webhook, or other channels.
+  </Step>
+</Steps>
+
+## Common alert scenarios
+
+| Scenario | Metric | Threshold |
+|----------|--------|-----------|
+| Error spike | 5xx error count | > 10 per minute |
+| Traffic anomaly | Internet outbound traffic | > 10 GB per hour |
+| High latency | Average E2E latency | > 500 ms |
+| Storage growth | Total storage | > 90% of quota |
+
+<Tip>
+Set up alerts for both server-side errors (5xx) and client-side errors (4xx). A spike in 403 errors may indicate a misconfigured access policy or hotlinking attempt.
+</Tip>
+
+## Next steps
+
+- [Access logging](/guides/logging-monitoring/access-logging)
+- [Real-Time log query](/guides/logging-monitoring/real-time-log-query)
+- [Access monitor](/guides/logging-monitoring/access-monitor)

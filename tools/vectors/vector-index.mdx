@@ -1,0 +1,28 @@
+---
+title: 'Vector Index Configuration'
+description: 'Configure and tune vector indexes for optimal search performance'
+---
+
+## Index parameters
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `dimension` | Vector dimension (must match your embeddings) | Required |
+| `metric` | Distance metric: `cosine`, `l2`, `ip` (inner product) | `cosine` |
+| `index_type` | Index algorithm: `hnsw`, `flat` | `hnsw` |
+| `ef_construction` | HNSW construction parameter (higher = better quality, slower build) | 200 |
+| `m` | HNSW max connections per node | 16 |
+
+## Distance metrics
+
+| Metric | Use Case | Range |
+|--------|----------|-------|
+| `cosine` | Text embeddings, normalized vectors | 0 to 2 (0 = identical) |
+| `l2` | Image embeddings, spatial data | 0 to infinity |
+| `ip` | When vectors are already normalized | -1 to 1 (1 = most similar) |
+
+## HNSW tuning
+
+- **Higher `ef_construction`**: Better index quality, slower build time
+- **Higher `m`**: Better recall, more memory usage
+- **Search `ef`**: Set at query time; higher values improve recall at the cost of latency

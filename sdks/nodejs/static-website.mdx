@@ -1,0 +1,36 @@
+---
+title: "Static Website Hosting - Node.js SDK"
+sidebarTitle: "Static Website"
+description: "Configure static website hosting for Alibaba Cloud OSS buckets using the Node.js SDK."
+"og:title": "Static Website Hosting with OSS Node.js SDK"
+---
+
+# Static Website Hosting
+
+## Enable static website hosting
+
+```javascript title="enableWebsite.js"
+await client.putBucketWebsite('my-bucket', {
+  index: 'index.html',
+  error: '404.html',
+});
+```
+
+## Get website configuration
+
+```javascript title="getWebsite.js"
+const result = await client.getBucketWebsite('my-bucket');
+console.log('Index:', result.index);
+console.log('Error:', result.error);
+```
+
+## Delete website configuration
+
+```javascript title="deleteWebsite.js"
+await client.deleteBucketWebsite('my-bucket');
+```
+
+## Next steps
+
+- [Static website hosting (Guide)](/guides/advanced/static-website-hosting)
+- [Custom domain names](/sdks/nodejs/custom-domain)

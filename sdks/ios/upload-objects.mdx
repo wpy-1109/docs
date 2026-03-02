@@ -1,0 +1,105 @@
+---
+title: "Upload Objects - iOS SDK"
+sidebarTitle: "Upload Objects"
+description: "Upload objects using the Alibaba Cloud OSS SDK for iOS."
+"og:title": "Upload Objects with OSS iOS SDK"
+---
+
+# Upload Objects
+
+## Simple upload
+
+```swift title="simpleUpload.swift"
+let put = OSSPutObjectRequest()
+put.bucketName = "my-bucket"
+put.objectKey = "documents/report.pdf"
+put.uploadingFileURL = URL(fileURLWithPath: "/path/to/report.pdf")
+
+put.uploadProgress = { bytesSent, totalBytesSent, totalBytesExpectedToSend in
+    let progress = Double(totalBytesSent) / Double(totalBytesExpectedToSend) * 100
+    print("Progress: \(String(format: "%.1f", progress))%")
+}
+
+let task = client.putObject(put)
+task.continue({ t -> Any? in
+    if t.error == nil { print("Upload complete.") }
+    return nil
+})
+```
+
+## Upload from data
+
+```swift title="uploadData.swift"
+let put = OSSPutObjectRequest()
+put.bucketName = "my-bucket"
+put.objectKey = "greeting.txt"
+put.uploadingData = "Hello, OSS!".data(using: .utf8)!
+
+client.putObject(put).continue({ t -> Any? in
+    if t.error == nil { print("Data uploaded.") }
+    return nil
+})
+```
+
+## Resumable upload
+
+```swift title="resumableUpload.swift"
+let request = OSSResumableUploadRequest()
+request.bucketName = "my-bucket"
+request.objectKey = "videos/large-video.mp4"
+request.uploadingFileURL = URL(fileURLWithPath: "/path/to/large-video.mp4")
+request.partSize = 256 * 1024 // 256 KB
+
+request.uploadProgress = { bytesSent, totalBytesSent, totalBytesExpectedToSend in
+    let progress = Double(totalBytesSent) / Double(totalBytesExpectedToSend) * 100
+    print("Progress: \(String(format: "%.1f", progress))%")
+}
+
+let task = client.resumableUpload(request)
+task.continue({ t -> Any? in
+    if t.error == nil { print("Resumable upload complete.") }
+    return nil
+})
+```
+
+## Multipart upload
+
+```swift title="multipartUpload.swift"
+let request = OSSMultipartUploadRequest()
+request.bucketName = "my-bucket"
+request.objectKey = "large-file.zip"
+request.uploadingFileURL = URL(fileURLWithPath: "/path/to/large-file.zip")
+request.partSize = 1024 * 1024 // 1 MB
+
+let task = client.multipartUpload(request)
+```
+
+## Append upload
+
+```swift title="appendUpload.swift"
+let append = OSSAppendObjectRequest()
+append.bucketName = "my-bucket"
+append.objectKey = "log.txt"
+append.appendPosition = 0
+append.uploadingData = "First entry.\n".data(using: .utf8)!
+
+let task = client.appendObject(append)
+task.continue({ t -> Any? in
+    if let result = t.result as? OSSAppendObjectResult {
+        // Use result.xOssNextAppendPosition for next append
+        print("Next position: \(result.xOssNextAppendPosition)")
+    }
+    return nil
+})
+```
+
+## Cancel an upload
+
+```swift title="cancelUpload.swift"
+task.cancel()
+```
+
+## Next steps
+
+- [Download objects](/sdks/ios/download-objects)
+- [Manage objects](/sdks/ios/manage-objects)

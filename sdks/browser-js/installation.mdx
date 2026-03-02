@@ -1,0 +1,47 @@
+---
+title: "Installation - Browser.js SDK"
+sidebarTitle: "Installation"
+description: "Install and configure the Alibaba Cloud OSS Browser.js SDK."
+"og:title": "Install OSS Browser.js SDK"
+---
+
+# Installation
+
+## Install via npm
+
+```bash
+npm install ali-oss
+```
+
+## Use via CDN
+
+```html
+<script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
+```
+
+## Set up CORS
+
+Before using the Browser.js SDK, configure CORS on your bucket:
+
+1. Go to the OSS Console and select your bucket
+2. Navigate to **Permission** > **Cross-Origin Resource Sharing (CORS)**
+3. Add a rule:
+   - **Allowed Origins:** `*` (or your domain)
+   - **Allowed Methods:** `GET, POST, PUT, DELETE, HEAD`
+   - **Allowed Headers:** `*`
+   - **Expose Headers:** `ETag, x-oss-request-id`
+
+<Warning>
+  The Browser.js SDK runs in the browser. Never use long-term AccessKey credentials directly. Use STS temporary tokens instead.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Initialization" icon="gear" href="/sdks/browser-js/initialization">
+    Configure the OSS client with STS credentials.
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/sdks/browser-js/quick-start">
+    Upload and download your first object from the browser.
+  </Card>
+</CardGroup>

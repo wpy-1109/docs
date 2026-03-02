@@ -1,0 +1,212 @@
+---
+title: "Create a Bucket"
+sidebarTitle: "Create a Bucket"
+description: "Learn how to create a bucket in Alibaba Cloud OSS using the console, CLI, or SDK."
+"og:title": "Create a Bucket - Alibaba Cloud OSS"
+---
+
+A bucket is the fundamental container for storing objects in OSS. It offers unlimited storage capacity and scales elastically. Before you upload data, you must create a bucket.
+
+<Info>
+Bucket names must be globally unique across all OSS users. The bucket name and region cannot be changed after creation.
+</Info>
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair (AccessKey ID and AccessKey Secret) or STS temporary credentials
+- Appropriate RAM permissions (`oss:PutBucket`)
+
+## Configuration options
+
+When you create a bucket, you must specify the following:
+
+| Setting | Description | Changeable After Creation |
+|---------|-------------|--------------------------|
+| **Bucket name** | Globally unique identifier. Use department or business identifiers (e.g., `hr-documents`). | No |
+| **Region** | Physical location of your data. Choose based on compliance, latency, and cost. | No |
+| **Storage class** | Standard (default), IA, Archive, Cold Archive, or Deep Cold Archive. | Yes (per object) |
+| **Redundancy type** | Locally Redundant Storage (LRS) or Zone-Redundant Storage (ZRS, default). | No |
+| **ACL** | Private (default), Public Read, or Public Read/Write. | Yes |
+
+<Tip>
+Select the same region as your ECS instances to benefit from free internal network traffic and lower latency.
+</Tip>
+
+## Using the console
+
+<Steps>
+  <Step title="Navigate to Buckets">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/bucket) and click **Create Bucket**.
+  </Step>
+  <Step title="Configure the bucket">
+    Set the **Bucket Name** and **Region**, then configure optional settings such as storage class, redundancy type, and ACL.
+  </Step>
+  <Step title="Create">
+    Click **Create**. The bucket appears in your bucket list.
+  </Step>
+</Steps>
+
+## Using ossutil CLI
+
+```bash
+# Create a bucket in the China (Hangzhou) region
+ossutil api put-bucket --bucket examplebucket --body '{
+  "CreateBucketConfiguration": {
+    "StorageClass": "Standard",
+    "DataRedundancyType": "ZRS"
+  }
+}'
+```
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="create_bucket.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.put_bucket(oss.PutBucketRequest(
+        bucket="examplebucket",
+        create_bucket_configuration=oss.CreateBucketConfiguration(
+            storage_class="Standard",
+            data_redundancy_type="ZRS"
+        )
+    ))
+
+    print(f"Bucket created. Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="CreateBucket.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.CreateBucketRequest;
+    import com.aliyun.oss.model.StorageClass;
+    import com.aliyun.oss.model.DataRedundancyType;
+
+    public class CreateBucket {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                CreateBucketRequest request = new CreateBucketRequest("examplebucket");
+                request.setStorageClass(StorageClass.Standard);
+                request.setDataRedundancyType(DataRedundancyType.ZRS);
+                ossClient.createBucket(request);
+                System.out.println("Bucket created successfully.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="create_bucket.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        request := &oss.PutBucketRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            CreateBucketConfiguration: &oss.CreateBucketConfiguration{
+                StorageClass:      oss.StorageClassStandard,
+                DataRedundancyType: oss.Ptr("ZRS"),
+            },
+        }
+
+        result, err := client.PutBucket(context.TODO(), request)
+        if err != nil {
+            log.Fatalf("Failed to create bucket: %v", err)
+        }
+
+        log.Printf("Bucket created: %#v\n", result)
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="createBucket.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+    });
+
+    async function createBucket() {
+      try {
+        const result = await client.putBucket('examplebucket', {
+          storageClass: 'Standard',
+          dataRedundancyType: 'ZRS',
+        });
+        console.log('Bucket created:', result);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    createBucket();
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+Never hardcode credentials in production code. Use environment variables, instance metadata, or STS temporary credentials.
+</Warning>
+
+## Naming rules
+
+- Must be 3 to 63 characters long
+- Can contain only lowercase letters, digits, and hyphens (`-`)
+- Must start and end with a lowercase letter or digit
+- Cannot start with `http://` or `https://`
+
+## Error handling
+
+| Error Code | Cause | Solution |
+|------------|-------|----------|
+| `BucketAlreadyExists` | The bucket name is already taken by another user. | Choose a different, globally unique name. |
+| `TooManyBuckets` | You have reached the maximum number of buckets (default: 100). | Delete unused buckets or request a quota increase. |
+| `InvalidBucketName` | The name violates naming rules. | Follow the naming rules above. |
+
+## Next steps
+
+- [List buckets](/guides/buckets/list-buckets)
+- [Bucket tagging](/guides/buckets/bucket-tagging)
+- [Naming conventions](/get-started/concepts/naming-conventions)

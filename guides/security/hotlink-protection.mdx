@@ -1,0 +1,34 @@
+---
+title: "Hotlink Protection"
+sidebarTitle: "Hotlink Protection"
+description: "Learn how to prevent unauthorized linking to your Alibaba Cloud OSS objects using Referer-based rules."
+"og:title": "Hotlink Protection - Alibaba Cloud OSS"
+---
+
+Hotlink protection prevents unauthorized websites from embedding or linking directly to your OSS objects. OSS checks the `Referer` header and allows or denies the request based on your whitelist.
+
+## Configure hotlink protection
+
+<Tabs>
+  <Tab title="Console">
+    Navigate to your bucket, choose **Permission Control > Hotlink Protection**, add allowed Referer domains, and save.
+  </Tab>
+  <Tab title="Python">
+    ```python
+    client.put_bucket_referer(oss.PutBucketRefererRequest(
+        bucket="examplebucket",
+        referer_configuration=oss.RefererConfiguration(
+            allow_empty_referer=False,
+            referer_list=oss.RefererList(
+                referers=["https://example.com", "https://*.example.com"]
+            ),
+        )
+    ))
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [CDN acceleration](/guides/networking/cdn-acceleration)
+- [OSS sandbox](/guides/security/sandbox)

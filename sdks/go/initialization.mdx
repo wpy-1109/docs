@@ -1,0 +1,84 @@
+---
+title: "Initialization - Go SDK"
+sidebarTitle: "Initialization"
+description: "Configure credentials and initialize the Alibaba Cloud OSS Go SDK client."
+"og:title": "Initialize OSS Go SDK Client"
+---
+
+# Initialization
+
+## V2 SDK (Recommended)
+
+### Using environment variables
+
+```go title="init_v2.go"
+package main
+
+import (
+    "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+    "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+)
+
+func main() {
+    cfg := oss.LoadDefaultConfig().
+        WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+        WithRegion("cn-hangzhou")
+
+    client := oss.NewClient(cfg)
+    _ = client
+}
+```
+
+Set environment variables:
+
+```bash
+export OSS_ACCESS_KEY_ID="your-access-key-id"
+export OSS_ACCESS_KEY_SECRET="your-access-key-secret"
+```
+
+## V1 SDK
+
+### Using accessKey
+
+```go title="init_v1.go"
+package main
+
+import (
+    "os"
+    "github.com/aliyun/aliyun-oss-go-sdk/oss"
+)
+
+func main() {
+    endpoint := "https://oss-cn-hangzhou.aliyuncs.com"
+    accessKeyId := os.Getenv("OSS_ACCESS_KEY_ID")
+    accessKeySecret := os.Getenv("OSS_ACCESS_KEY_SECRET")
+
+    client, err := oss.New(endpoint, accessKeyId, accessKeySecret)
+    if err != nil {
+        panic(err)
+    }
+    _ = client
+}
+```
+
+### Using STS temporary credentials
+
+```go title="init_sts.go"
+client, err := oss.New(endpoint, accessKeyId, accessKeySecret,
+    oss.SecurityToken(securityToken))
+```
+
+## Configuration notes
+
+- V2 SDK uses **V4 signatures by default** for improved security
+- **Region is required** for V2 SDK; the endpoint is auto-constructed
+- When region is `cn-hangzhou`, the endpoint becomes `https://oss-cn-hangzhou.aliyuncs.com`
+
+<Warning>
+Never hardcode credentials in source code. Use environment variables or instance RAM roles.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/sdks/go/upload-objects)
+- [Download objects](/sdks/go/download-objects)

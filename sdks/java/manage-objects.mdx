@@ -1,0 +1,99 @@
+---
+title: "Manage Objects - Java SDK"
+sidebarTitle: "Manage Objects"
+description: "List, delete, and manage object metadata, ACLs, and tags using the Alibaba Cloud OSS SDK for Java."
+"og:title": "Manage Objects with OSS Java SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+```java title="ListObjects.java"
+// Simple listing
+ObjectListing listing = ossClient.listObjects(bucketName);
+for (OSSObjectSummary summary : listing.getObjectSummaries()) {
+    System.out.printf("Key: %s, Size: %d%n", summary.getKey(), summary.getSize());
+}
+
+// With prefix and max keys
+ListObjectsRequest request = new ListObjectsRequest(bucketName);
+request.setPrefix("photos/");
+request.setMaxKeys(100);
+ObjectListing result = ossClient.listObjects(request);
+```
+
+## Check if an object exists
+
+```java title="ObjectExists.java"
+boolean exists = ossClient.doesObjectExist(bucketName, objectName);
+System.out.println("Object exists: " + exists);
+```
+
+## Delete objects
+
+```java title="DeleteObjects.java"
+// Delete a single object
+ossClient.deleteObject(bucketName, objectName);
+
+// Delete multiple objects (batch)
+List<String> keys = Arrays.asList("key1.txt", "key2.txt", "key3.txt");
+DeleteObjectsRequest deleteRequest = new DeleteObjectsRequest(bucketName);
+deleteRequest.setKeys(keys);
+ossClient.deleteObjects(deleteRequest);
+```
+
+## Object metadata
+
+### Get metadata
+
+```java title="GetMetadata.java"
+ObjectMetadata metadata = ossClient.getObjectMetadata(bucketName, objectName);
+System.out.println("Content-Type: " + metadata.getContentType());
+System.out.println("Content-Length: " + metadata.getContentLength());
+System.out.println("Last-Modified: " + metadata.getLastModified());
+System.out.println("ETag: " + metadata.getETag());
+
+// Custom metadata
+String author = metadata.getUserMetadata().get("author");
+```
+
+### Set metadata on upload
+
+```java title="SetMetadata.java"
+ObjectMetadata metadata = new ObjectMetadata();
+metadata.setContentType("application/pdf");
+metadata.addUserMetadata("x-oss-meta-department", "engineering");
+
+PutObjectRequest request = new PutObjectRequest(
+    bucketName, objectName, new File(filePath));
+request.setMetadata(metadata);
+ossClient.putObject(request);
+```
+
+## Object ACL
+
+```java title="ObjectAcl.java"
+// Set object ACL
+ossClient.setObjectAcl(bucketName, objectName, CannedAccessControlList.PublicRead);
+
+// Get object ACL
+ObjectAcl acl = ossClient.getObjectAcl(bucketName, objectName);
+System.out.println("ACL: " + acl.getPermission());
+```
+
+## Restore archived objects
+
+```java title="RestoreObject.java"
+ossClient.restoreObject(bucketName, objectName);
+
+// Check restoration status
+ObjectMetadata meta = ossClient.getObjectMetadata(bucketName, objectName);
+// If ongoing-request="true", restoration is in progress
+```
+
+## Next steps
+
+- [Upload objects](/sdks/java/upload-objects)
+- [Copy objects](/sdks/java/copy-objects)
+- [Download objects](/sdks/java/download-objects)

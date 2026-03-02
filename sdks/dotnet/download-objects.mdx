@@ -1,0 +1,145 @@
+---
+title: "Download Objects - .NET SDK"
+sidebarTitle: "Download Objects"
+description: "Download objects from Alibaba Cloud OSS using the .NET (C#) SDK."
+"og:title": "Download Objects with OSS .NET SDK"
+---
+
+# Download Objects
+
+## Download to memory
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="downloadToMemory.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    var result = await client.GetObjectAsync(new OSS.Models.GetObjectRequest()
+    {
+        Bucket = "my-bucket",
+        Key = "example.txt"
+    });
+
+    using var reader = new StreamReader(result.Body);
+    var content = await reader.ReadToEndAsync();
+    Console.WriteLine($"Content: {content}");
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="downloadToMemoryV1.cs"
+    using Aliyun.OSS;
+
+    var result = ossClient.GetObject("my-bucket", "example.txt");
+
+    using var reader = new StreamReader(result.Content);
+    var content = reader.ReadToEnd();
+    Console.WriteLine($"Content: {content}");
+    ```
+  </Tab>
+</Tabs>
+
+## Download to a local file
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="downloadToFile.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    var result = await client.GetObjectToFileAsync(new OSS.Models.GetObjectRequest()
+    {
+        Bucket = "my-bucket",
+        Key = "documents/report.pdf"
+    }, "/path/to/local/report.pdf");
+
+    Console.WriteLine($"Downloaded to file. Status: {result.StatusCode}");
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="downloadToFileV1.cs"
+    using Aliyun.OSS;
+
+    var result = ossClient.GetObject("my-bucket", "documents/report.pdf");
+
+    using var fileStream = File.Create("/path/to/local/report.pdf");
+    result.Content.CopyTo(fileStream);
+    ```
+  </Tab>
+</Tabs>
+
+## Range download
+
+Download a specific byte range of an object:
+
+```csharp title="rangeDownload.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+var cfg = OSS.Configuration.LoadDefault();
+cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+cfg.Region = "cn-hangzhou";
+
+using var client = new OSS.Client(cfg);
+
+var result = await client.GetObjectAsync(new OSS.Models.GetObjectRequest()
+{
+    Bucket = "my-bucket",
+    Key = "large-file.bin",
+    Range = "bytes=0-1023" // First 1 KB
+});
+
+using var ms = new MemoryStream();
+await result.Body.CopyToAsync(ms);
+Console.WriteLine($"Downloaded {ms.Length} bytes");
+```
+
+## Download with progress (V1)
+
+```csharp title="downloadProgress.cs"
+using Aliyun.OSS;
+
+var request = new GetObjectRequest("my-bucket", "large-file.zip");
+
+request.StreamTransferProgress += (sender, args) =>
+{
+    var percent = (double)args.TransferredBytes / args.TotalBytes * 100;
+    Console.WriteLine($"Progress: {percent:F1}%");
+};
+
+var result = ossClient.GetObject(request);
+using var fileStream = File.Create("/path/to/local/large-file.zip");
+result.Content.CopyTo(fileStream);
+```
+
+## Resumable download (V1)
+
+For large files, use resumable download to automatically resume after interruptions:
+
+```csharp title="resumableDownload.cs"
+using Aliyun.OSS;
+
+var request = new DownloadObjectRequest("my-bucket", "large-file.zip", "/path/to/local/large-file.zip")
+{
+    PartSize = 10 * 1024 * 1024, // 10 MB per part
+    ParallelCount = 3,
+    CheckpointDir = "/path/to/checkpoint/"
+};
+
+ossClient.ResumableDownloadObject(request);
+Console.WriteLine("Resumable download complete.");
+```
+
+## Next steps
+
+- [Upload objects](/sdks/dotnet/upload-objects)
+- [Manage objects](/sdks/dotnet/manage-objects)

@@ -1,0 +1,46 @@
+---
+title: "Manage Objects - PHP SDK"
+sidebarTitle: "Manage Objects"
+description: "List, copy, delete, and manage objects using the Alibaba Cloud OSS SDK for PHP."
+"og:title": "Manage Objects with OSS PHP SDK"
+---
+
+# Manage Objects
+
+## List objects
+
+```php title="listObjects.php"
+$listInfo = $ossClient->listObjects($bucket, ['prefix' => 'photos/', 'max-keys' => 100]);
+foreach ($listInfo->getObjectList() as $obj) {
+    echo "Key: " . $obj->getKey() . ", Size: " . $obj->getSize() . "\n";
+}
+```
+
+## Copy objects
+
+```php title="copyObjects.php"
+$ossClient->copyObject($bucket, 'source.txt', $bucket, 'destination.txt');
+```
+
+## Delete objects
+
+```php title="deleteObjects.php"
+// Single delete
+$ossClient->deleteObject($bucket, 'example.txt');
+
+// Batch delete
+$ossClient->deleteObjects($bucket, ['key1.txt', 'key2.txt', 'key3.txt']);
+```
+
+## Object metadata
+
+```php title="metadata.php"
+$meta = $ossClient->getObjectMeta($bucket, 'example.txt');
+echo "Content-Type: " . $meta['content-type'] . "\n";
+echo "Content-Length: " . $meta['content-length'] . "\n";
+```
+
+## Next steps
+
+- [Upload objects](/sdks/php/upload-objects)
+- [Download objects](/sdks/php/download-objects)

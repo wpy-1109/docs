@@ -1,0 +1,22 @@
+---
+title: "Presigned URLs - PHP SDK"
+sidebarTitle: "Presigned URLs"
+description: "Generate presigned URLs using the Alibaba Cloud OSS SDK for PHP."
+"og:title": "Presigned URLs with OSS PHP SDK"
+---
+
+# Presigned URLs
+
+## Generate a download URL
+
+```php title="presignedDownload.php"
+$url = $ossClient->signUrl($bucket, 'documents/report.pdf', 3600); // 1 hour
+echo "Download URL: " . $url . "\n";
+```
+
+## Generate an upload URL
+
+```php title="presignedUpload.php"
+$url = $ossClient->signUrl($bucket, 'uploads/file.txt', 3600, 'PUT');
+echo "Upload URL: " . $url . "\n";
+```

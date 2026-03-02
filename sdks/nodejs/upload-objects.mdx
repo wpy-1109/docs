@@ -1,0 +1,86 @@
+---
+title: "Upload Objects - Node.js SDK"
+sidebarTitle: "Upload Objects"
+description: "Upload objects to Alibaba Cloud OSS using the Node.js SDK. Covers file upload, buffer upload, and streaming upload."
+"og:title": "Upload Objects with OSS Node.js SDK"
+---
+
+# Upload Objects
+
+## Upload a local file
+
+```javascript title="uploadFile.js"
+const path = require('path');
+
+const result = await client.put(
+  'documents/report.pdf',
+  path.normalize('/path/to/report.pdf')
+);
+console.log('Uploaded:', result.name, 'ETag:', result.res.headers.etag);
+```
+
+## Upload from buffer
+
+```javascript title="uploadBuffer.js"
+const result = await client.put(
+  'example.txt',
+  Buffer.from('Hello, Alibaba Cloud OSS!')
+);
+console.log('Uploaded:', result.name);
+```
+
+## Upload from stream
+
+```javascript title="uploadStream.js"
+const fs = require('fs');
+
+const stream = fs.createReadStream('/path/to/large-file.zip');
+const result = await client.putStream('uploads/large-file.zip', stream);
+console.log('Uploaded:', result.name);
+```
+
+## Upload with headers
+
+```javascript title="uploadHeaders.js"
+const result = await client.put('example.txt',
+  Buffer.from('content'),
+  {
+    headers: {
+      'Content-Type': 'text/plain',
+      'x-oss-object-acl': 'private',
+      'x-oss-storage-class': 'Standard',
+      'x-oss-meta-author': 'your-name',
+      'x-oss-tagging': 'Tag1=value1&Tag2=value2',
+    },
+  }
+);
+```
+
+## Append upload
+
+```javascript title="appendUpload.js"
+// First append
+let result = await client.append('append-log.txt', Buffer.from('First entry\n'), {
+  position: 0,
+});
+
+// Subsequent appends
+result = await client.append('append-log.txt', Buffer.from('Second entry\n'), {
+  position: result.nextAppendPosition,
+});
+```
+
+## Upload limits
+
+| Method | Max Size |
+|--------|----------|
+| `put()` | 5 GB |
+| `putStream()` | 5 GB |
+| `append()` | 5 GB |
+| `multipartUpload()` | 48.8 TB |
+
+## Next steps
+
+- [Multipart upload](/sdks/nodejs/multipart-upload)
+- [Upload callbacks](/sdks/nodejs/upload-callbacks)
+- [Presigned URLs](/sdks/nodejs/presigned-urls)

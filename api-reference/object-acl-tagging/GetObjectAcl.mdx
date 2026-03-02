@@ -1,0 +1,28 @@
+---
+title: 'GetObjectAcl'
+description: 'Query the ACL of an object'
+---
+
+Queries the ACL of an object.
+
+## Request
+
+```
+GET /{ObjectName}?acl HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<AccessControlPolicy>
+  <Owner>
+    <ID>51264</ID>
+    <DisplayName>51264</DisplayName>
+  </Owner>
+  <AccessControlList>
+    <Grant>private</Grant>
+  </AccessControlList>
+</AccessControlPolicy>
+```

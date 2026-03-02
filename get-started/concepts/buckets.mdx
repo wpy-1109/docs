@@ -1,0 +1,110 @@
+---
+title: "Buckets"
+sidebarTitle: "Buckets"
+description: "Understand buckets in Alibaba Cloud OSS -- the containers that hold your objects."
+icon: "folder"
+"og:title": "Buckets - Alibaba Cloud OSS"
+"og:description": "Understand buckets in Alibaba Cloud OSS -- the containers that hold your objects."
+---
+
+# Buckets
+
+A bucket is the fundamental container for storing objects in OSS. Every object you store must reside in a bucket. Buckets provide the top-level organizational unit and define key properties like region, storage class, and access permissions.
+
+## Overview
+
+<CardGroup cols={2}>
+  <Card title="Flat Structure" icon="list">
+    Buckets use a flat namespace -- all objects are stored at the same level. Forward slashes in object keys simulate folder hierarchies.
+  </Card>
+  <Card title="Globally Unique Names" icon="fingerprint">
+    Bucket names must be unique across all of OSS. No two buckets can share the same name, regardless of region or account.
+  </Card>
+</CardGroup>
+
+## Key properties
+
+When you create a bucket, you define these properties. Most cannot be changed after creation.
+
+| Property | Description | Changeable? |
+|----------|-------------|-------------|
+| **Name** | Globally unique identifier for the bucket | No |
+| **Region** | Physical data center location (e.g., China (Hangzhou)) | No |
+| **Storage class** | Default storage tier for objects (Standard, IA, Archive, Cold Archive, Deep Cold Archive) | No |
+| **Redundancy type** | Data redundancy level: LRS (11 nines) or ZRS (12 nines) | Upgrade only (LRS to ZRS) |
+| **ACL** | Access control level: private, public-read, or public-read-write | Yes |
+| **Versioning** | Enable to keep historical versions of objects | Yes (enable/suspend) |
+
+## Naming rules
+
+Bucket names must follow these conventions:
+
+- **Length**: 3 to 63 characters
+- **Characters**: Lowercase letters, digits, and hyphens (`-`) only
+- **Start and end**: Must start and end with a lowercase letter or digit
+- **No consecutive hyphens**: Cannot contain consecutive hyphens
+- **Globally unique**: Must be unique across all of OSS
+
+**Valid examples**: `my-app-data`, `project2024-logs`, `cdn-assets-prod`
+
+**Invalid examples**: `My-Bucket` (uppercase), `-bucket` (starts with hyphen), `bucket..name` (consecutive dots)
+
+## Bucket limits
+
+| Limit | Value |
+|-------|-------|
+| Maximum buckets per region (per account) | 100 |
+| Maximum capacity per bucket | Unlimited |
+| Maximum lifecycle rules per bucket | 1,000 |
+| Maximum domain names per bucket | 100 |
+| Maximum back-to-origin rules per bucket | 20 |
+
+<Tip>
+If you need more than 100 buckets in a single region, submit a request through [Quota Center](https://quotas.console.alibabacloud.com/products/oss/quotas).
+</Tip>
+
+## Storage redundancy
+
+The redundancy type determines how OSS stores copies of your data for durability.
+
+| Redundancy Type | Durability | Availability | Use Case |
+|-----------------|------------|--------------|----------|
+| **LRS** (Locally Redundant Storage) | 99.999999999% (11 nines) | 99.99% | Development, testing, non-critical data |
+| **ZRS** (Zone-Redundant Storage) | 99.9999999999% (12 nines) | 99.995% | Production, business-critical data |
+
+<Note>
+You can upgrade a bucket from LRS to ZRS, but you cannot downgrade from ZRS to LRS.
+</Note>
+
+## Access control
+
+OSS enforces access control in this order of precedence (highest to lowest):
+
+1. **Block Public Access** -- Overrides all other policies to prevent public access. Enabled by default for new buckets.
+2. **Bucket policies** -- Resource-based policies for fine-grained access control. Can grant access to other accounts or anonymous users.
+3. **RAM policies** -- User-based policies that define which OSS resources RAM users can access.
+4. **Bucket ACL** -- Simplified permission with three presets: private, public-read, or public-read-write.
+
+For more details, see [Access Control Overview](/get-started/concepts/access-control-overview).
+
+## Simulated folders
+
+Although buckets have a flat structure, you can simulate directories by using forward slashes (`/`) in object keys:
+
+```
+my-bucket/
+  images/
+    photo1.jpg      -> key: "images/photo1.jpg"
+    photo2.jpg      -> key: "images/photo2.jpg"
+  documents/
+    report.pdf      -> key: "documents/report.pdf"
+```
+
+The OSS Console and graphical tools display these as folders for convenience, but the underlying storage remains flat.
+
+## Next steps
+
+- [Create a bucket](/guides/buckets/create-bucket)
+- [Objects](/get-started/concepts/objects)
+- [Storage classes](/get-started/concepts/storage-classes)
+- [Naming conventions](/get-started/concepts/naming-conventions)

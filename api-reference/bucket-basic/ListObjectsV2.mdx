@@ -1,0 +1,97 @@
+---
+title: 'ListObjectsV2'
+description: 'List objects in a bucket using the V2 API'
+---
+
+Returns up to 1,000 objects in a bucket. This is the recommended listing API (V2). Use [ListObjects](/api-reference/bucket-basic/ListObjects) only for backward compatibility.
+
+## Request
+
+```
+GET /?list-type=2 HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `list-type` | Integer | Yes | Must be `2`. |
+| `prefix` | String | No | Filter objects by key prefix. |
+| `delimiter` | String | No | Character to group keys (typically `/` for directory-like listing). |
+| `start-after` | String | No | List objects after this key. |
+| `continuation-token` | String | No | Token from a previous response to continue listing. |
+| `max-keys` | Integer | No | Maximum number of objects to return. Default: 100. Max: 1000. |
+| `encoding-type` | String | No | Set to `url` to URL-encode keys in the response. |
+| `fetch-owner` | Boolean | No | Set to `true` to include owner information. Default: `false`. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult>
+  <Name>my-bucket</Name>
+  <Prefix>images/</Prefix>
+  <MaxKeys>100</MaxKeys>
+  <Delimiter>/</Delimiter>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>images/photo1.jpg</Key>
+    <LastModified>2025-04-17T03:15:40.000Z</LastModified>
+    <ETag>"D41D8CD98F00B204E9800998ECF8****"</ETag>
+    <Size>1024000</Size>
+    <StorageClass>Standard</StorageClass>
+    <Type>Normal</Type>
+  </Contents>
+  <CommonPrefixes>
+    <Prefix>images/2025/</Prefix>
+  </CommonPrefixes>
+</ListBucketResult>
+```
+
+### Response elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `Name` | String | Bucket name. |
+| `Prefix` | String | Prefix filter. |
+| `MaxKeys` | Integer | Maximum results per page. |
+| `IsTruncated` | Boolean | `true` if more results are available. |
+| `NextContinuationToken` | String | Token for the next page. Present only when `IsTruncated` is `true`. |
+| `Contents.Key` | String | Object key. |
+| `Contents.LastModified` | String | Last modified time in ISO 8601 format. |
+| `Contents.ETag` | String | Object ETag. |
+| `Contents.Size` | Long | Object size in bytes. |
+| `Contents.StorageClass` | String | Storage class. |
+| `Contents.Type` | String | Object type (`Normal`, `Multipart`, `Appendable`). |
+| `CommonPrefixes.Prefix` | String | Common prefix when using a delimiter. Represents a "directory". |
+
+## Examples
+
+### List all objects
+
+```http
+GET /?list-type=2 HTTP/1.1
+Host: my-bucket.oss-cn-hangzhou.aliyuncs.com
+```
+
+### List objects with prefix and delimiter
+
+```http
+GET /?list-type=2&prefix=images/&delimiter=/ HTTP/1.1
+Host: my-bucket.oss-cn-hangzhou.aliyuncs.com
+```
+
+### Paginate results
+
+```http
+GET /?list-type=2&max-keys=10&continuation-token=ContinuationToken**** HTTP/1.1
+Host: my-bucket.oss-cn-hangzhou.aliyuncs.com
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The specified bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to list objects. |

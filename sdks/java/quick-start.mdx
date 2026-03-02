@@ -1,0 +1,124 @@
+---
+title: "Quick Start - Java SDK"
+sidebarTitle: "Quick Start"
+description: "Get started with Alibaba Cloud OSS using the Java SDK. Upload, download, list, and delete objects."
+"og:title": "Quickstart: Java SDK - Alibaba Cloud OSS"
+---
+
+# Quick Start
+
+<Info>
+This quickstart takes approximately 5 minutes to complete.
+</Info>
+
+## V1 SDK quick start
+
+```java title="OssQuickStart.java"
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.*;
+import java.io.*;
+import java.util.List;
+
+public class OssQuickStart {
+    public static void main(String[] args) {
+        String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+        String accessKeyId = System.getenv("OSS_ACCESS_KEY_ID");
+        String accessKeySecret = System.getenv("OSS_ACCESS_KEY_SECRET");
+        String bucketName = "my-example-bucket";
+        String objectName = "example-object.txt";
+
+        OSS ossClient = new OSSClientBuilder().build(
+            endpoint, accessKeyId, accessKeySecret);
+
+        try {
+            // 1. Create a bucket
+            ossClient.createBucket(bucketName);
+            System.out.println("Bucket created: " + bucketName);
+
+            // 2. Upload an object
+            String content = "Hello OSS! This is a quick start example.";
+            ossClient.putObject(bucketName, objectName,
+                new ByteArrayInputStream(content.getBytes()));
+            System.out.println("Object uploaded: " + objectName);
+
+            // 3. Download the object
+            OSSObject ossObject = ossClient.getObject(bucketName, objectName);
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(ossObject.getObjectContent()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("Content: " + line);
+            }
+            reader.close();
+            ossObject.close();
+
+            // 4. List objects
+            ObjectListing listing = ossClient.listObjects(bucketName);
+            for (OSSObjectSummary summary : listing.getObjectSummaries()) {
+                System.out.println("Object: " + summary.getKey()
+                    + " Size: " + summary.getSize());
+            }
+
+            // 5. Delete the object
+            ossClient.deleteObject(bucketName, objectName);
+            System.out.println("Object deleted: " + objectName);
+
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        } finally {
+            ossClient.shutdown();
+        }
+    }
+}
+```
+
+## V2 SDK quick start
+
+```java title="QuickStartV2.java"
+import com.aliyun.sdk.service.oss2.OSSClient;
+import com.aliyun.sdk.service.oss2.credentials.EnvironmentVariableCredentialsProvider;
+import com.aliyun.sdk.service.oss2.models.*;
+import com.aliyun.sdk.service.oss2.transport.BinaryData;
+
+public class QuickStartV2 {
+    public static void main(String[] args) {
+        var provider = new EnvironmentVariableCredentialsProvider();
+
+        try (OSSClient client = OSSClient.newBuilder()
+                .credentialsProvider(provider)
+                .region("cn-hangzhou")
+                .build()) {
+
+            PutObjectResult result = client.putObject(PutObjectRequest.newBuilder()
+                    .bucket("my-bucket")
+                    .key("hello.txt")
+                    .body(BinaryData.fromString("hello world"))
+                    .build());
+
+            System.out.printf("Status: %d, ETag: %s%n",
+                    result.statusCode(), result.eTag());
+
+        } catch (Exception e) {
+            System.out.printf("Error: %s%n", e.getMessage());
+        }
+    }
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Upload Objects" icon="upload" href="/sdks/java/upload-objects">
+    Simple upload, streaming, and append upload.
+  </Card>
+  <Card title="Multipart Upload" icon="layer-group" href="/sdks/java/multipart-upload">
+    Upload large files with resumable support.
+  </Card>
+  <Card title="Download Objects" icon="download" href="/sdks/java/download-objects">
+    Download, range download, and resumable download.
+  </Card>
+  <Card title="Manage Objects" icon="file" href="/sdks/java/manage-objects">
+    Copy, delete, list, and manage metadata.
+  </Card>
+</CardGroup>

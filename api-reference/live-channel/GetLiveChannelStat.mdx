@@ -1,0 +1,24 @@
+---
+title: 'GetLiveChannelStat'
+description: 'Query LiveChannel streaming status'
+---
+
+Query LiveChannel streaming status.
+
+## Request
+
+```
+GET /{ChannelName}?live&comp=stat HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchLiveChannel` | 404 | The LiveChannel does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

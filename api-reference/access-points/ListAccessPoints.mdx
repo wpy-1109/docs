@@ -1,0 +1,51 @@
+---
+title: 'ListAccessPoints'
+description: 'List access points for a user or bucket'
+---
+
+Lists access points at the user level or bucket level.
+
+## Request
+
+```
+GET /?accessPoint HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+For bucket-level listing:
+
+```
+GET /?accessPoint HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `max-keys` | Integer | No | Maximum number of results. Default: 1000. |
+| `continuation-token` | String | No | Continuation token for pagination. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListAccessPointsResult>
+  <IsTruncated>false</IsTruncated>
+  <AccessPoints>
+    <AccessPoint>
+      <AccessPointName>my-access-point</AccessPointName>
+      <Bucket>my-bucket</Bucket>
+      <NetworkOrigin>internet</NetworkOrigin>
+      <Alias>my-access-point-oss-cn-hangzhou-****</Alias>
+      <Status>enable</Status>
+    </AccessPoint>
+  </AccessPoints>
+</ListAccessPointsResult>
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `AccessDenied` | 403 | Insufficient permissions. |

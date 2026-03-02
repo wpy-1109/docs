@@ -1,0 +1,25 @@
+---
+title: "Storage class conversion"
+sidebarTitle: "Storage class conversion"
+description: "Learn how to configure storage class conversion in Alibaba Cloud OSS."
+"og:title": "Storage class conversion - Alibaba Cloud OSS"
+---
+
+You can convert objects between storage classes to optimize costs. Use lifecycle rules for automatic conversion or manually change the storage class of individual objects.
+
+## Conversion paths
+
+| From | To | Method |
+|------|-----|--------|
+| Standard | IA, Archive, Cold Archive, Deep Cold Archive | Lifecycle rule or manual |
+| IA | Archive, Cold Archive, Deep Cold Archive | Lifecycle rule or manual |
+| Archive | Cold Archive, Deep Cold Archive | Lifecycle rule |
+
+<Warning>
+Objects in IA have a minimum storage duration of 30 days. Deleting or converting before 30 days incurs early deletion fees.
+</Warning>
+
+## Next steps
+
+- [Lifecycle rules](/guides/data-management/lifecycle-rules)
+- [Storage classes](/get-started/concepts/storage-classes)

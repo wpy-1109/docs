@@ -1,0 +1,62 @@
+---
+title: "Presigned URLs - Node.js SDK"
+sidebarTitle: "Presigned URLs"
+description: "Generate presigned URLs for temporary access to Alibaba Cloud OSS objects using the Node.js SDK."
+"og:title": "Presigned URLs with OSS Node.js SDK"
+---
+
+# Presigned URLs
+
+## Generate a download URL
+
+```javascript title="presignedDownload.js"
+const url = client.signatureUrl('documents/report.pdf', {
+  expires: 3600,  // Expires in 1 hour (seconds)
+});
+console.log('Download URL:', url);
+```
+
+## Generate an upload URL
+
+```javascript title="presignedUpload.js"
+const url = client.signatureUrl('uploads/file.txt', {
+  method: 'PUT',
+  expires: 3600,
+  'Content-Type': 'application/octet-stream',
+});
+console.log('Upload URL:', url);
+```
+
+## Presigned URL with custom headers
+
+```javascript title="presignedHeaders.js"
+const url = client.signatureUrl('example.txt', {
+  method: 'PUT',
+  expires: 3600,
+  'Content-Type': 'text/plain',
+  'x-oss-meta-author': 'your-name',
+});
+```
+
+## Use a presigned URL
+
+```javascript title="usePresignedUrl.js"
+const axios = require('axios');
+const fs = require('fs');
+
+// Download
+const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+fs.writeFileSync('/path/to/file.pdf', response.data);
+
+// Upload
+const fileData = fs.readFileSync('/path/to/file.txt');
+await axios.put(uploadUrl, fileData, {
+  headers: { 'Content-Type': 'application/octet-stream' },
+});
+```
+
+## Next steps
+
+- [Upload objects](/sdks/nodejs/upload-objects)
+- [Download objects](/sdks/nodejs/download-objects)
+- [Presigned URLs (Guide)](/guides/access-control/presigned-urls)

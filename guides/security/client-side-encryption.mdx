@@ -1,0 +1,41 @@
+---
+title: "Client-Side Encryption"
+sidebarTitle: "Client-Side Encryption"
+description: "Learn how to encrypt objects on the client before uploading to Alibaba Cloud OSS."
+"og:title": "Client-Side Encryption - Alibaba Cloud OSS"
+---
+
+Client-side encryption encrypts objects on the client before uploading to OSS. OSS stores only the encrypted data and never has access to your encryption keys or plaintext data.
+
+## Encryption modes
+
+| Mode | Description |
+|------|-------------|
+| **RSA** | Use an RSA key pair to encrypt a per-object data key. |
+| **KMS** | Use a KMS customer master key (CMK) to encrypt per-object data keys. |
+
+## Using the Java SDK
+
+```java
+import com.aliyun.oss.crypto.*;
+
+RSAEncryptionMaterials materials = new RSAEncryptionMaterials(rsaKeyPair);
+OSSEncryptionClient encryptionClient = new OSSEncryptionClientBuilder()
+    .build(endpoint, credentialsProvider, materials);
+
+// Upload -- automatically encrypted
+encryptionClient.putObject("examplebucket", "encrypted.txt",
+    new ByteArrayInputStream("Secret data".getBytes()));
+
+// Download -- automatically decrypted
+OSSObject object = encryptionClient.getObject("examplebucket", "encrypted.txt");
+```
+
+<Warning>
+You are responsible for managing encryption keys. If you lose your keys, the encrypted data cannot be recovered.
+</Warning>
+
+## Next steps
+
+- [Server-Side encryption](/guides/security/server-side-encryption)
+- [Data verification](/guides/security/data-verification)

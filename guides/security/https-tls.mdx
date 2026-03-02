@@ -1,0 +1,43 @@
+---
+title: "HTTPS / TLS"
+sidebarTitle: "HTTPS / TLS"
+description: "Learn how to enforce HTTPS-only access to Alibaba Cloud OSS buckets."
+"og:title": "HTTPS / TLS - Alibaba Cloud OSS"
+---
+
+Enforcing HTTPS ensures that all data in transit between clients and OSS is encrypted using TLS.
+
+## Enforce HTTPS with a bucket policy
+
+```json
+{
+  "Version": "1",
+  "Statement": [{
+    "Effect": "Deny",
+    "Principal": ["*"],
+    "Action": ["oss:*"],
+    "Resource": ["acs:oss:*:*:examplebucket", "acs:oss:*:*:examplebucket/*"],
+    "Condition": { "Bool": { "oss:SecureTransport": "false" } }
+  }]
+}
+```
+
+## Set minimum TLS version
+
+```python
+client.put_bucket_https_config(oss.PutBucketHttpsConfigRequest(
+    bucket="examplebucket",
+    https_configuration=oss.HttpsConfiguration(
+        tls=oss.TLS(tls_versions=["TLSv1.2", "TLSv1.3"])
+    )
+))
+```
+
+<Tip>
+Always use TLS 1.2 or higher. TLS 1.0 and 1.1 have known security vulnerabilities.
+</Tip>
+
+## Next steps
+
+- [Server-Side encryption](/guides/security/server-side-encryption)
+- [Bucket policies](/guides/access-control/bucket-policies)

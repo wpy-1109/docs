@@ -1,0 +1,187 @@
+---
+title: "Advanced Features - .NET SDK"
+sidebarTitle: "Advanced Features"
+description: "Use versioning, lifecycle rules, encryption, and data processing with the Alibaba Cloud OSS SDK for .NET (C#)."
+"og:title": "Advanced Features with OSS .NET SDK"
+---
+
+# Advanced Features
+
+## Versioning
+
+Enable versioning on a bucket to preserve, retrieve, and restore every version of every object:
+
+<Tabs>
+  <Tab title="V2 SDK (Recommended)">
+    ```csharp title="versioning.cs"
+    using OSS = AlibabaCloud.OSS.V2;
+
+    var cfg = OSS.Configuration.LoadDefault();
+    cfg.CredentialsProvider = new OSS.Credentials.EnvironmentVariableCredentialsProvider();
+    cfg.Region = "cn-hangzhou";
+
+    using var client = new OSS.Client(cfg);
+
+    // Enable versioning
+    await client.PutBucketVersioningAsync(new OSS.Models.PutBucketVersioningRequest()
+    {
+        Bucket = "my-bucket",
+        VersioningConfiguration = new OSS.Models.VersioningConfiguration()
+        {
+            Status = "Enabled"
+        }
+    });
+
+    // Get versioning status
+    var result = await client.GetBucketVersioningAsync(new OSS.Models.GetBucketVersioningRequest()
+    {
+        Bucket = "my-bucket"
+    });
+
+    Console.WriteLine($"Versioning status: {result.VersioningConfiguration?.Status}");
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```csharp title="versioningV1.cs"
+    using Aliyun.OSS;
+
+    // Enable versioning
+    var request = new SetBucketVersioningRequest("my-bucket", VersioningStatus.Enabled);
+    ossClient.SetBucketVersioning(request);
+
+    // Get status
+    var info = ossClient.GetBucketVersioning("my-bucket");
+    Console.WriteLine($"Status: {info.Status}");
+    ```
+  </Tab>
+</Tabs>
+
+## Lifecycle rules
+
+Automatically transition or expire objects based on age or date:
+
+```csharp title="lifecycle.cs"
+using Aliyun.OSS;
+
+var request = new SetBucketLifecycleRequest("my-bucket");
+
+// Expire objects with 'logs/' prefix after 30 days
+var rule = new LifecycleRule
+{
+    ID = "expire-logs",
+    Prefix = "logs/",
+    Status = RuleStatus.Enabled,
+    ExpriationDays = 30
+};
+request.AddLifecycleRule(rule);
+
+// Transition to IA storage after 60 days
+var archiveRule = new LifecycleRule
+{
+    ID = "archive-old-data",
+    Prefix = "data/",
+    Status = RuleStatus.Enabled
+};
+archiveRule.AddTransition(new LifecycleRule.LifeCycleTransition
+{
+    LifeCycleExpiration = new LifecycleRule.LifeCycleExpiration { Days = 60 },
+    StorageClass = StorageClass.IA
+});
+request.AddLifecycleRule(archiveRule);
+
+ossClient.SetBucketLifecycle(request);
+```
+
+## Server-Side encryption
+
+```csharp title="encryption.cs"
+using Aliyun.OSS;
+
+// Set default encryption on a bucket
+var request = new SetBucketEncryptionRequest("my-bucket", "AES256");
+ossClient.SetBucketEncryption(request);
+
+// Upload with KMS encryption
+var metadata = new ObjectMetadata();
+metadata.AddHeader("x-oss-server-side-encryption", "KMS");
+ossClient.PutObject("my-bucket", "secret.txt", fileStream, metadata);
+```
+
+## Object tagging
+
+```csharp title="tagging.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+// Set tags on an object
+await client.PutObjectTaggingAsync(new OSS.Models.PutObjectTaggingRequest()
+{
+    Bucket = "my-bucket",
+    Key = "example.txt",
+    Tagging = new OSS.Models.Tagging()
+    {
+        TagSet = new OSS.Models.TagSet()
+        {
+            Tags = new List<OSS.Models.Tag>
+            {
+                new() { Key = "environment", Value = "production" },
+                new() { Key = "department", Value = "engineering" }
+            }
+        }
+    }
+});
+
+// Get tags
+var result = await client.GetObjectTaggingAsync(new OSS.Models.GetObjectTaggingRequest()
+{
+    Bucket = "my-bucket",
+    Key = "example.txt"
+});
+
+foreach (var tag in result.Tagging?.TagSet?.Tags ?? [])
+{
+    Console.WriteLine($"Tag: {tag.Key} = {tag.Value}");
+}
+```
+
+## Error handling
+
+```csharp title="errorHandling.cs"
+using OSS = AlibabaCloud.OSS.V2;
+
+try
+{
+    var result = await client.GetObjectAsync(new OSS.Models.GetObjectRequest()
+    {
+        Bucket = "my-bucket",
+        Key = "nonexistent.txt"
+    });
+}
+catch (OSS.ServiceException ex)
+{
+    Console.WriteLine($"Error Code: {ex.Code}");
+    Console.WriteLine($"Message: {ex.Message}");
+    Console.WriteLine($"Request ID: {ex.RequestId}");
+    Console.WriteLine($"Status Code: {ex.StatusCode}");
+}
+catch (OSS.ClientException ex)
+{
+    Console.WriteLine($"Client Error: {ex.Message}");
+}
+```
+
+For V1 SDK:
+
+```csharp title="errorHandlingV1.cs"
+using Aliyun.OSS;
+
+try
+{
+    ossClient.GetObject("my-bucket", "nonexistent.txt");
+}
+catch (OssException ex)
+{
+    Console.WriteLine($"Error Code: {ex.ErrorCode}");
+    Console.WriteLine($"Message: {ex.Message}");
+    Console.WriteLine($"Request ID: {ex.RequestId}");
+}
+```

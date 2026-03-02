@@ -1,0 +1,193 @@
+---
+title: "Upload Objects"
+sidebarTitle: "Upload Objects"
+description: "Learn how to upload objects to Alibaba Cloud OSS using simple upload with the console, CLI, or SDK."
+"og:title": "Upload Objects - Alibaba Cloud OSS"
+---
+
+You can upload any type of file (images, documents, videos) to an OSS bucket. Uploaded files are stored as objects. OSS supports multiple upload methods depending on file size and use case.
+
+<Info>
+Simple upload (PutObject) supports files up to **5 GB**. For larger files, use [multipart upload](/guides/objects/multipart-upload) (up to 48.8 TB).
+</Info>
+
+## Upload methods overview
+
+| Method | Max Size | Use Case |
+|--------|----------|----------|
+| [Simple upload](#simple-upload) | 5 GB | Small files, quick uploads |
+| [Multipart upload](/guides/objects/multipart-upload) | 48.8 TB | Large files, parallel uploads |
+| [Append upload](/guides/objects/append-upload) | 5 GB per append | Streaming data, log files |
+| [Form upload](/guides/objects/form-upload) | 5 GB | Browser-based HTML form uploads |
+| [Resumable upload](/guides/objects/resumable-upload) | 48.8 TB | Unreliable networks |
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:PutObject` permission
+- A bucket to upload to
+
+## Simple upload
+
+Simple upload uses the `PutObject` API to upload a file in a single request. It is the easiest method for files under 5 GB.
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="upload_object.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Upload from a local file
+    with open("/path/to/local/file.txt", "rb") as f:
+        result = client.put_object(oss.PutObjectRequest(
+            bucket="examplebucket",
+            key="example.txt",
+            body=f,
+        ))
+
+    print(f"Uploaded. ETag: {result.etag}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="UploadObject.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import java.io.File;
+
+    public class UploadObject {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                ossClient.putObject("examplebucket", "example.txt",
+                    new File("/path/to/local/file.txt"));
+                System.out.println("Upload completed.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="upload_object.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "os"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        file, err := os.Open("/path/to/local/file.txt")
+        if err != nil {
+            log.Fatalf("Failed to open file: %v", err)
+        }
+        defer file.Close()
+
+        result, err := client.PutObject(context.TODO(), &oss.PutObjectRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            Key:    oss.Ptr("example.txt"),
+            Body:   file,
+        })
+        if err != nil {
+            log.Fatalf("Failed to upload: %v", err)
+        }
+
+        log.Printf("Uploaded. ETag: %v", oss.ToString(result.ETag))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="uploadObject.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function upload() {
+      try {
+        const result = await client.put('example.txt', '/path/to/local/file.txt');
+        console.log('Upload result:', result);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    upload();
+    ```
+  </Tab>
+</Tabs>
+
+## Using the console
+
+<Steps>
+  <Step title="Open your bucket">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/) and click the bucket name.
+  </Step>
+  <Step title="Upload files">
+    Click **Object List** in the left pane, then click **Upload**. Drag files into the upload area or click **Select File**.
+  </Step>
+  <Step title="Configure options">
+    Optionally set the storage class, ACL, and object metadata, then click **Upload**.
+  </Step>
+</Steps>
+
+## Using ossutil CLI
+
+```bash
+# Upload a single file
+ossutil cp /path/to/local/file.txt oss://examplebucket/example.txt
+
+# Upload a directory recursively
+ossutil cp /path/to/local/dir/ oss://examplebucket/dir/ -r
+
+# Upload with a specific storage class
+ossutil cp /path/to/file.txt oss://examplebucket/file.txt --storage-class IA
+```
+
+<Warning>
+Never hardcode credentials in production. Use environment variables or STS temporary credentials.
+</Warning>
+
+## Next steps
+
+- [Multipart upload](/guides/objects/multipart-upload)
+- [Resumable upload](/guides/objects/resumable-upload)
+- [Upload callbacks](/guides/objects/upload-callback)
+- [Object metadata](/guides/objects/manage-object-metadata)
+- [Presigned URLs](/guides/access-control/presigned-urls)

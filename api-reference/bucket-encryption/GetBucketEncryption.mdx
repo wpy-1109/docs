@@ -1,0 +1,31 @@
+---
+title: 'GetBucketEncryption'
+description: 'Query the server-side encryption configuration of a bucket'
+---
+
+Queries the default server-side encryption rules of a bucket.
+
+## Request
+
+```
+GET /?encryption HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ServerSideEncryptionRule>
+  <ApplyServerSideEncryptionByDefault>
+    <SSEAlgorithm>AES256</SSEAlgorithm>
+  </ApplyServerSideEncryptionByDefault>
+</ServerSideEncryptionRule>
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `NoSuchServerSideEncryptionRule` | 404 | No encryption rule is configured. |

@@ -1,0 +1,180 @@
+---
+title: "Advanced Features - Go SDK"
+sidebarTitle: "Advanced Features"
+description: "Use presigned URLs, lifecycle rules, versioning, encryption, and image processing with the Alibaba Cloud OSS SDK for Go."
+"og:title": "Advanced Features with OSS Go SDK"
+---
+
+# Advanced Features
+
+## Presigned URLs
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```go title="presigned_v2.go"
+    import "time"
+
+    // Download URL
+    result, err := client.Presign(ctx,
+        &oss.GetObjectRequest{
+            Bucket: oss.Ptr("my-bucket"),
+            Key:    oss.Ptr("document.pdf"),
+        },
+        oss.PresignExpires(10*time.Minute))
+    fmt.Printf("URL: %s\n", result.URL)
+
+    // Upload URL
+    result, err := client.Presign(ctx,
+        &oss.PutObjectRequest{
+            Bucket: oss.Ptr("my-bucket"),
+            Key:    oss.Ptr("uploads/file.txt"),
+        },
+        oss.PresignExpires(1*time.Hour))
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```go title="presigned_v1.go"
+    // Download URL (1-hour expiration)
+    url, err := bucket.SignURL("document.pdf", oss.HTTPGet, 3600)
+
+    // Upload URL
+    url, err := bucket.SignURL("uploads/file.txt", oss.HTTPPut, 3600)
+    ```
+  </Tab>
+</Tabs>
+
+## Lifecycle rules
+
+```go title="lifecycle.go"
+rules := []oss.LifecycleRule{
+    {
+        ID:     "expire-logs",
+        Prefix: "logs/",
+        Status: "Enabled",
+        Expiration: &oss.LifecycleExpiration{Days: 30},
+    },
+    {
+        ID:     "archive-data",
+        Prefix: "data/",
+        Status: "Enabled",
+        Transitions: []oss.LifecycleTransition{
+            {Days: 60, StorageClass: oss.StorageIA},
+        },
+    },
+}
+err := client.SetBucketLifecycle("my-bucket", rules)
+
+// Get lifecycle rules
+result, err := client.GetBucketLifecycle("my-bucket")
+
+// Delete lifecycle rules
+err = client.DeleteBucketLifecycle("my-bucket")
+```
+
+## Versioning
+
+```go title="versioning.go"
+// Enable versioning
+err := client.SetBucketVersioning("my-bucket", oss.VersionEnabled)
+
+// Suspend versioning
+err = client.SetBucketVersioning("my-bucket", oss.VersionSuspended)
+
+// Get versioning status
+result, err := client.GetBucketVersioning("my-bucket")
+fmt.Printf("Status: %s\n", result.Status)
+
+// Download specific version
+body, err := bucket.GetObject("example.txt", oss.VersionId("version-id"))
+
+// List object versions
+vResult, err := bucket.ListObjectVersions()
+for _, v := range vResult.ObjectVersions {
+    fmt.Printf("Key: %s, VersionId: %s, IsLatest: %v\n",
+        v.Key, v.VersionId, v.IsLatest)
+}
+```
+
+## Server-Side encryption
+
+```go title="encryption.go"
+// Set bucket default encryption (SSE-OSS)
+rule := oss.ServerEncryptionRule{
+    SSEDefault: oss.SSEDefaultRule{SSEAlgorithm: "AES256"},
+}
+err := client.SetBucketEncryption("my-bucket", rule)
+
+// Per-object encryption
+err = bucket.PutObject("secret.txt", strings.NewReader("data"),
+    oss.ServerSideEncryption("AES256"))
+```
+
+## Client-Side encryption (V2 SDK)
+
+```go title="client_encryption.go"
+import "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/crypto"
+
+mc, err := crypto.CreateMasterRsa(materialDesc, "rsaPublicKey", "rsaPrivateKey")
+eclient, err := oss.NewEncryptionClient(client, mc)
+
+// Upload encrypted
+eclient.PutObject(ctx, &oss.PutObjectRequest{
+    Bucket: oss.Ptr("my-bucket"),
+    Key:    oss.Ptr("encrypted.txt"),
+    Body:   strings.NewReader("secret data"),
+})
+
+// Download and decrypt
+result, err := eclient.GetObject(ctx, &oss.GetObjectRequest{
+    Bucket: oss.Ptr("my-bucket"),
+    Key:    oss.Ptr("encrypted.txt"),
+})
+```
+
+## Error handling
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```go title="errors_v2.go"
+    result, err := client.PutObject(ctx, request)
+    if err != nil {
+        var se *oss.ServiceError
+        if errors.As(err, &se) {
+            fmt.Printf("Service Error: Code=%s, Message=%s, RequestId=%s\n",
+                se.Code, se.Message, se.RequestId)
+        } else {
+            fmt.Printf("Error: %v\n", err)
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```go title="errors_v1.go"
+    err := bucket.PutObjectFromFile("example.txt", "/path/to/file")
+    if err != nil {
+        switch e := err.(type) {
+        case oss.ServiceError:
+            fmt.Printf("Code: %s, Message: %s, RequestId: %s\n",
+                e.Code, e.Message, e.RequestId)
+        default:
+            fmt.Printf("Error: %v\n", err)
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Image processing
+
+```go title="image_processing.go"
+options := []oss.Option{
+    oss.Process("image/resize,m_fixed,w_200,h_200"),
+}
+body, err := bucket.GetObject("photo.jpg", options...)
+```
+
+## Next steps
+
+- [Bucket operations](/sdks/go/bucket-operations)
+- [Upload objects](/sdks/go/upload-objects)
+- [Lifecycle rules (Guide)](/guides/data-management/lifecycle-rules)

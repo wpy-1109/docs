@@ -1,0 +1,85 @@
+---
+title: 'Direct Client Upload'
+description: 'Best practices for uploading directly from browsers and mobile apps to OSS'
+---
+
+## Architecture
+
+Instead of routing uploads through your server, upload directly from the client to OSS:
+
+```
+Client (Browser/App)
+    │
+    ├── 1. Request upload credentials from your server
+    │
+    ├── 2. Your server calls STS AssumeRole
+    │
+    ├── 3. Server returns temporary credentials + policy
+    │
+    └── 4. Client uploads directly to OSS
+```
+
+## Benefits
+
+- Eliminates server bandwidth bottleneck
+- Reduces server load and costs
+- Better upload performance (direct connection to OSS)
+- Scales independently from your server
+
+## Implementation
+
+### Server side: generate STS credentials
+
+```python
+from alibabacloud_sts20150401 import Client, models
+
+client = Client(config)
+request = models.AssumeRoleRequest(
+    role_arn='acs:ram::111111:role/oss-upload-role',
+    role_session_name='client-upload',
+    duration_seconds=3600,
+    policy='{"Version":"1","Statement":[{"Effect":"Allow","Action":"oss:PutObject","Resource":"acs:oss:*:*:my-bucket/uploads/*"}]}'
+)
+response = client.assume_role(request)
+```
+
+### Client side: upload with temporary credentials
+
+```javascript
+const OSS = require('ali-oss');
+
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: credentials.accessKeyId,
+  accessKeySecret: credentials.accessKeySecret,
+  stsToken: credentials.securityToken,
+  bucket: 'my-bucket'
+});
+
+const result = await client.put('uploads/' + filename, file);
+```
+
+### Alternative: postObject with policy
+
+For simple form-based uploads without JavaScript SDK:
+
+```html
+<form action="https://my-bucket.oss-cn-hangzhou.aliyuncs.com"
+      method="post" enctype="multipart/form-data">
+  <input type="hidden" name="key" value="uploads/${filename}">
+  <input type="hidden" name="OSSAccessKeyId" value="LTAI****">
+  <input type="hidden" name="policy" value="BASE64_POLICY">
+  <input type="hidden" name="signature" value="SIGNATURE">
+  <input type="file" name="file">
+  <button type="submit">Upload</button>
+</form>
+```
+
+## Security considerations
+
+- Always scope STS credentials to the minimum required permissions
+- Restrict uploads to specific key prefixes
+- Set maximum file size in the policy
+- Use short credential lifetimes (15-60 minutes)
+- Validate file types and content on the server side after upload
+- Use upload callbacks to notify your server when uploads complete

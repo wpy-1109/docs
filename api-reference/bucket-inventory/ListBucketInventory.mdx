@@ -1,0 +1,31 @@
+---
+title: 'ListBucketInventory'
+description: 'List all inventory tasks in a bucket'
+---
+
+Lists all inventory tasks configured for a bucket.
+
+## Request
+
+```
+GET /?inventory HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `continuation-token` | String | No | Token for pagination. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListInventoryConfigurationsResult>
+  <IsTruncated>false</IsTruncated>
+  <InventoryConfiguration>
+    <!-- inventory configuration elements -->
+  </InventoryConfiguration>
+</ListInventoryConfigurationsResult>
+```

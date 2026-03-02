@@ -1,0 +1,128 @@
+---
+title: "Bucket Operations - Python SDK"
+sidebarTitle: "Bucket Operations"
+description: "Create, list, query, and delete buckets using the Alibaba Cloud OSS SDK for Python."
+"og:title": "Bucket Operations with OSS Python SDK"
+---
+
+# Bucket Operations
+
+Manage OSS buckets including creation, listing, querying information, setting ACLs, and deletion.
+
+## Create a bucket
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="create_bucket_v2.py"
+    import alibabacloud_oss_v2 as oss
+
+    result = client.put_bucket(oss.PutBucketRequest(
+        bucket='my-bucket',
+    ))
+    print(f'Bucket created, status: {result.status_code}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="create_bucket_v1.py"
+    import oss2
+
+    bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', 'my-bucket')
+
+    # Simple creation
+    bucket.create_bucket()
+
+    # With storage class and ACL
+    bucket.create_bucket(
+        oss2.BUCKET_ACL_PRIVATE,
+        oss2.models.BucketCreateConfig(oss2.BUCKET_STORAGE_CLASS_STANDARD)
+    )
+    ```
+  </Tab>
+</Tabs>
+
+## List buckets
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="list_buckets_v2.py"
+    result = client.list_buckets(oss.ListBucketsRequest())
+    for b in result.buckets:
+        print(f'Bucket: {b.name}, Location: {b.location}')
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="list_buckets_v1.py"
+    service = oss2.Service(auth, 'https://oss-cn-hangzhou.aliyuncs.com')
+    for bucket_info in oss2.BucketIterator(service):
+        print(f'Bucket: {bucket_info.name}, Location: {bucket_info.location}')
+    ```
+  </Tab>
+</Tabs>
+
+## Check if a bucket exists
+
+```python title="check_bucket.py"
+try:
+    bucket.get_bucket_info()
+    print('Bucket exists')
+except oss2.exceptions.NoSuchBucket:
+    print('Bucket does not exist')
+```
+
+## Get bucket info
+
+```python title="get_bucket_info.py"
+info = bucket.get_bucket_info()
+print(f'Name: {info.name}')
+print(f'Location: {info.location}')
+print(f'Storage Class: {info.storage_class}')
+print(f'Creation Date: {info.creation_date}')
+```
+
+## Set bucket ACL
+
+```python title="set_bucket_acl.py"
+bucket.put_bucket_acl(oss2.BUCKET_ACL_PRIVATE)
+```
+
+Available ACL values:
+
+| Constant | Description |
+|----------|-------------|
+| `BUCKET_ACL_PRIVATE` | Only the owner can read and write |
+| `BUCKET_ACL_PUBLIC_READ` | Anyone can read; only owner can write |
+| `BUCKET_ACL_PUBLIC_READ_WRITE` | Anyone can read and write |
+
+## Get bucket ACL
+
+```python title="get_bucket_acl.py"
+acl = bucket.get_bucket_acl()
+print(f'ACL: {acl.acl}')
+```
+
+## Delete a bucket
+
+<Tabs>
+  <Tab title="V2 SDK">
+    ```python title="delete_bucket_v2.py"
+    result = client.delete_bucket(oss.DeleteBucketRequest(
+        bucket='my-bucket',
+    ))
+    ```
+  </Tab>
+  <Tab title="V1 SDK">
+    ```python title="delete_bucket_v1.py"
+    bucket.delete_bucket()
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+A bucket must be empty before it can be deleted. Delete all objects and abort all incomplete multipart uploads first.
+</Note>
+
+## Next steps
+
+- [Upload objects](/sdks/python/upload-objects)
+- [Create a bucket (Guide)](/guides/buckets/create-bucket)
+- [API reference: putBucket](/api-reference/bucket-basic/PutBucket)

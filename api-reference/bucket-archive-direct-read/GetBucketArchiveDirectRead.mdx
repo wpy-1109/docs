@@ -1,0 +1,22 @@
+---
+title: 'GetBucketArchiveDirectRead'
+description: 'Query whether archive direct read is enabled'
+---
+
+Queries whether real-time access of Archive objects is enabled for a bucket.
+
+## Request
+
+```
+GET /?bucketArchiveDirectRead HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ArchiveDirectReadConfiguration>
+  <Enabled>true</Enabled>
+</ArchiveDirectReadConfiguration>
+```

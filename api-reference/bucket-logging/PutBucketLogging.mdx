@@ -1,0 +1,34 @@
+---
+title: 'PutBucketLogging'
+description: 'Enable access logging for a bucket'
+---
+
+Enables access log recording for a bucket. Logs are stored in a specified destination bucket with a configurable prefix.
+
+## Request
+
+```
+PUT /?logging HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<BucketLoggingStatus>
+  <LoggingEnabled>
+    <TargetBucket>log-bucket</TargetBucket>
+    <TargetPrefix>access-logs/my-bucket/</TargetPrefix>
+  </LoggingEnabled>
+</BucketLoggingStatus>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `TargetBucket` | String | Destination bucket for logs. Must be in the same region. |
+| `TargetPrefix` | String | Prefix for log object keys. |
+
+## Response
+
+**Success:** HTTP 200 with empty body.

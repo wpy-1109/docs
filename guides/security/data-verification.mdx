@@ -1,0 +1,36 @@
+---
+title: "Data Verification"
+sidebarTitle: "Data Verification"
+description: "Learn how to verify data integrity using CRC-64 and Content-MD5 in Alibaba Cloud OSS."
+"og:title": "Data Verification - Alibaba Cloud OSS"
+---
+
+Data verification ensures data integrity during upload and download using checksums.
+
+## Verification methods
+
+| Method | Description |
+|--------|-------------|
+| **CRC-64** | OSS calculates and returns a CRC-64 checksum. SDKs verify it automatically. |
+| **Content-MD5** | You provide an MD5 hash. OSS compares it against the uploaded data. |
+
+## Using Content-MD5
+
+```python
+import hashlib, base64
+
+data = b"Hello, OSS!"
+md5 = base64.b64encode(hashlib.md5(data).digest()).decode()
+
+result = client.put_object(oss.PutObjectRequest(
+    bucket="examplebucket", key="verified.txt",
+    body=data, content_md5=md5,
+))
+```
+
+If the MD5 does not match, OSS returns a `BadDigest` error.
+
+## Next steps
+
+- [Server-Side encryption](/guides/security/server-side-encryption)
+- [Upload objects](/guides/objects/upload-objects)

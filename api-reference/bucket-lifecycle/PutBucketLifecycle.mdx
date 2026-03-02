@@ -1,0 +1,73 @@
+---
+title: 'PutBucketLifecycle'
+description: 'Configure lifecycle rules for objects in a bucket'
+---
+
+Sets lifecycle rules for objects in a bucket. Rules can automatically transition objects to cheaper storage classes or delete them after a specified time.
+
+## Request
+
+```
+PUT /?lifecycle HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<LifecycleConfiguration>
+  <Rule>
+    <ID>transition-rule</ID>
+    <Prefix>logs/</Prefix>
+    <Status>Enabled</Status>
+    <Transition>
+      <Days>30</Days>
+      <StorageClass>IA</StorageClass>
+    </Transition>
+    <Transition>
+      <Days>90</Days>
+      <StorageClass>Archive</StorageClass>
+    </Transition>
+    <Expiration>
+      <Days>365</Days>
+    </Expiration>
+  </Rule>
+  <Rule>
+    <ID>abort-multipart</ID>
+    <Prefix></Prefix>
+    <Status>Enabled</Status>
+    <AbortMultipartUpload>
+      <Days>7</Days>
+    </AbortMultipartUpload>
+  </Rule>
+</LifecycleConfiguration>
+```
+
+### Rule elements
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `ID` | String | Unique rule identifier (max 255 chars). |
+| `Prefix` | String | Object key prefix this rule applies to. Empty string matches all objects. |
+| `Status` | String | `Enabled` or `Disabled`. |
+| `Transition.Days` | Integer | Days after object creation to transition storage class. |
+| `Transition.StorageClass` | String | Target storage class: `IA`, `Archive`, `ColdArchive`, `DeepColdArchive`. |
+| `Expiration.Days` | Integer | Days after creation to delete the object. |
+| `Expiration.CreatedBeforeDate` | String | Delete objects created before this date (ISO 8601). |
+| `AbortMultipartUpload.Days` | Integer | Days after initiation to abort incomplete multipart uploads. |
+| `NoncurrentVersionExpiration.NoncurrentDays` | Integer | Days after becoming noncurrent to delete a version. |
+| `NoncurrentVersionTransition.NoncurrentDays` | Integer | Days after becoming noncurrent to transition a version. |
+| `Tag` | Element | Apply rule only to objects with matching tags. |
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `InvalidArgument` | 400 | Invalid rule configuration. |
+| `MalformedXML` | 400 | Request body XML is malformed. |

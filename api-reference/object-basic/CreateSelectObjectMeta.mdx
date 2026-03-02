@@ -1,0 +1,17 @@
+---
+title: 'CreateSelectObjectMeta'
+description: 'Create metadata for SelectObject queries'
+---
+
+Analyzes a CSV or JSON object to create metadata (total rows, splits) required for efficient SelectObject queries.
+
+## Request
+
+```
+POST /{ObjectName}?x-oss-process=csv/meta HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+Returns metadata about the object structure including row count, column count, and split information.

@@ -1,0 +1,50 @@
+---
+title: 'Security FAQ'
+description: 'Frequently asked questions about OSS security'
+---
+
+<AccordionGroup>
+  <Accordion title="Is my data encrypted at rest?">
+    OSS supports server-side encryption (SSE) with three options:
+    - **SSE-KMS**: Encryption managed by Key Management Service with CMK rotation
+    - **SSE-OSS (AES256)**: Fully managed encryption by OSS
+    - **SSE-SM4**: SM4 algorithm (Chinese national standard)
+
+    You can also use client-side encryption to encrypt data before uploading.
+  </Accordion>
+
+  <Accordion title="Is data encrypted in transit?">
+    OSS supports HTTPS (TLS) for all API operations. You can enforce HTTPS by creating a bucket policy that denies non-HTTPS requests, and set a minimum TLS version (e.g., TLS 1.2).
+  </Accordion>
+
+  <Accordion title="How should I manage access credentials?">
+    - Never use your primary account AccessKey for applications
+    - Create RAM users with least-privilege permissions
+    - Use STS temporary credentials for client-side applications
+    - Store credentials in environment variables or secrets managers
+    - Never hardcode credentials in source code
+  </Accordion>
+
+  <Accordion title="What is Block Public Access?">
+    Block Public Access prevents accidental public exposure of your buckets and objects. It can be enabled at the account level (affects all buckets) or per-bucket. When enabled, it overrides any ACL or policy that would grant public access.
+  </Accordion>
+
+  <Accordion title="How do I prevent accidental data deletion?">
+    - Enable **versioning** to preserve deleted objects as delete markers
+    - Use **WORM retention policies** for compliance scenarios
+    - Set `x-oss-forbid-overwrite` to prevent accidental overwrites
+    - Use RAM policies to restrict delete permissions
+    - Enable **cross-region replication** for disaster recovery
+  </Accordion>
+
+  <Accordion title="Can I restrict access by IP address?">
+    Yes. Use bucket policies with the `IpAddress` condition to allow or deny access from specific IP ranges:
+    ```json
+    "Condition": {
+      "IpAddress": {
+        "acs:SourceIp": ["192.168.0.0/16"]
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>

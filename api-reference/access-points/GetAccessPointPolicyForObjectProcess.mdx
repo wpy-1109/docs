@@ -1,0 +1,24 @@
+---
+title: 'GetAccessPointPolicyForObjectProcess'
+description: 'Queries basic information about an Object FC access point.'
+---
+
+Queries basic information about an Object FC access point.
+
+## Request
+
+```
+GET /?accessPointForObjectProcess HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPointForObjectProcess` | 404 | The Object FC access point does not exist. |
+| `AccessDenied` | 403 | Insufficient permissions. |

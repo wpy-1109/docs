@@ -1,0 +1,38 @@
+---
+title: "WORM Retention Policies"
+sidebarTitle: "WORM Retention"
+description: "Learn how to configure Write Once Read Many (WORM) retention policies in Alibaba Cloud OSS."
+"og:title": "WORM Retention Policies - Alibaba Cloud OSS"
+---
+
+WORM retention policies prevent objects from being modified or deleted during a specified retention period (1 day to 70 years). This is essential for regulatory compliance.
+
+## How it works
+
+1. **Initiate** a WORM policy with a retention period.
+2. The policy enters a **pending** state for 24 hours.
+3. **Complete** (lock) the policy to make it permanent.
+4. You can **extend** the retention period but cannot shorten it.
+
+<Warning>
+Once locked, a WORM policy cannot be removed or shortened. Objects are protected until the retention period expires.
+</Warning>
+
+## Using the console
+
+<Steps>
+  <Step title="Enable WORM">
+    Navigate to your bucket, choose **Data Protection > WORM**, and click **Create Policy**.
+  </Step>
+  <Step title="Set retention period">
+    Configure the retention period and click **OK**.
+  </Step>
+  <Step title="Lock the policy">
+    Within 24 hours, click **Lock** to make the policy permanent.
+  </Step>
+</Steps>
+
+## Next steps
+
+- [Versioning](/guides/data-management/versioning)
+- [Compliance](/guides/security/compliance)

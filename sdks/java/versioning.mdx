@@ -1,0 +1,82 @@
+---
+title: "Versioning - Java SDK"
+sidebarTitle: "Versioning"
+description: "Enable versioning and manage object versions using the Alibaba Cloud OSS SDK for Java."
+"og:title": "Versioning with OSS Java SDK"
+---
+
+# Versioning
+
+When versioning is enabled, OSS preserves all versions of every object. Each version gets a unique version ID.
+
+## Enable versioning
+
+```java title="EnableVersioning.java"
+BucketVersioningConfiguration config = new BucketVersioningConfiguration();
+config.setStatus(BucketVersioningConfiguration.ENABLED);
+
+SetBucketVersioningRequest request = new SetBucketVersioningRequest(bucketName, config);
+ossClient.setBucketVersioning(request);
+```
+
+## Suspend versioning
+
+```java title="SuspendVersioning.java"
+BucketVersioningConfiguration config = new BucketVersioningConfiguration();
+config.setStatus(BucketVersioningConfiguration.SUSPENDED);
+
+SetBucketVersioningRequest request = new SetBucketVersioningRequest(bucketName, config);
+ossClient.setBucketVersioning(request);
+```
+
+## Get versioning status
+
+```java title="GetVersioning.java"
+GetBucketVersioningRequest request = new GetBucketVersioningRequest(bucketName);
+BucketVersioningConfiguration result = ossClient.getBucketVersioning(request);
+System.out.println("Status: " + result.getStatus());
+```
+
+## Download a specific version
+
+```java title="GetVersion.java"
+GetObjectRequest request = new GetObjectRequest(bucketName, objectName);
+request.setVersionId("version-id-here");
+OSSObject ossObject = ossClient.getObject(request);
+```
+
+## Delete a specific version
+
+```java title="DeleteVersion.java"
+ossClient.deleteVersion(bucketName, objectName, "version-id-here");
+```
+
+## List object versions
+
+```java title="ListVersions.java"
+ListVersionsRequest request = new ListVersionsRequest();
+request.setBucketName(bucketName);
+
+VersionListing listing = ossClient.listVersions(request);
+for (OSSVersionSummary version : listing.getVersionSummaries()) {
+    System.out.printf("Key: %s, VersionId: %s, IsLatest: %s, Size: %d%n",
+        version.getKey(), version.getVersionId(),
+        version.isLatest(), version.getSize());
+}
+```
+
+## Restore a previous version
+
+Copy a previous version to make it the current version:
+
+```java title="RestoreVersion.java"
+CopyObjectRequest copyRequest = new CopyObjectRequest(
+    bucketName, objectName, bucketName, objectName);
+copyRequest.setSourceVersionId("previous-version-id");
+ossClient.copyObject(copyRequest);
+```
+
+## Next steps
+
+- [Lifecycle rules](/sdks/java/lifecycle)
+- [Versioning (Guide)](/guides/data-management/versioning)

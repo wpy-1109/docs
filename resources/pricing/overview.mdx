@@ -1,0 +1,38 @@
+---
+title: 'Pricing Overview'
+description: 'Understand OSS pricing components and billing models'
+---
+
+OSS uses a pay-as-you-go billing model by default. You are charged based on actual usage across four categories.
+
+## Billing components
+
+| Component | Description | Billing Unit |
+|-----------|-------------|-------------|
+| **Storage** | Data stored in buckets | GB/month |
+| **Traffic** | Outbound internet data transfer | GB |
+| **API Requests** | PUT, GET, LIST, and other operations | Per 10,000 requests |
+| **Data Retrieval** | Retrieving IA, Archive, and Cold Archive objects | GB |
+| **Data Processing** | Image processing, video snapshots | Per operation |
+
+## Billing models
+
+| Model | Description | Best For |
+|-------|-------------|----------|
+| **Pay-as-you-go** | Pay for actual usage, billed hourly | Variable or unpredictable workloads |
+| **Storage Capacity Units (SCUs)** | Prepaid storage packages at discounted rates | Predictable storage workloads |
+| **Resource plans** | Prepaid packages for specific resource types | High-volume specific usage |
+
+## Free tier
+
+New users receive a free tier for the first 12 months:
+
+| Resource | Free Amount |
+|----------|-------------|
+| Standard storage | 5 GB/month |
+| Internet outbound traffic | 5 GB/month |
+| PUT/GET requests | Free up to quota |
+
+<Note>
+Pricing varies by region. See the [Alibaba Cloud pricing page](https://www.alibabacloud.com/product/object-storage-service/pricing) for current rates.
+</Note>

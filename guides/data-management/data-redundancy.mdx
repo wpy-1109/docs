@@ -1,0 +1,24 @@
+---
+title: "Data redundancy"
+sidebarTitle: "Data redundancy"
+description: "Learn how to configure data redundancy in Alibaba Cloud OSS."
+"og:title": "Data redundancy - Alibaba Cloud OSS"
+---
+
+OSS stores data with redundancy to protect against hardware failures. You can choose between Locally Redundant Storage (LRS) and Zone-Redundant Storage (ZRS).
+
+## Redundancy types
+
+| Type | Description | Durability |
+|------|-------------|------------|
+| **LRS** | Stores data across multiple devices in a single zone. | 99.999999999% (11 nines) |
+| **ZRS** | Stores data across multiple zones in the same region. | 99.999999999999% (12 nines) |
+
+<Note>
+The redundancy type is set when creating a bucket and cannot be changed afterward. ZRS is the default for new buckets.
+</Note>
+
+## Next steps
+
+- [Create a bucket](/guides/buckets/create-bucket)
+- [Cross-Region replication](/guides/data-management/cross-region-replication)

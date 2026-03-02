@@ -1,0 +1,69 @@
+---
+title: "Access Control - Browser.js SDK"
+sidebarTitle: "Access Control"
+description: "Configure access control using the Alibaba Cloud OSS Browser.js SDK."
+"og:title": "Access Control with OSS Browser.js SDK"
+---
+
+# Access Control
+
+## STS authentication (Recommended)
+
+Browser applications must use STS temporary credentials. Set up a backend endpoint that returns STS tokens:
+
+```javascript title="stsAuth.js"
+// Backend: Call STS AssumeRole API and return credentials
+// Frontend: Fetch STS token from your backend
+async function getSTSToken() {
+  const response = await fetch('/api/sts-token');
+  return await response.json();
+}
+
+const sts = await getSTSToken();
+
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: sts.AccessKeyId,
+  accessKeySecret: sts.AccessKeySecret,
+  stsToken: sts.SecurityToken,
+  bucket: 'my-bucket',
+  authorizationV4: true
+});
+```
+
+## Object ACL
+
+```javascript title="objectAcl.js"
+// Set object ACL
+await client.putACL('example.txt', 'public-read');
+
+// Get object ACL
+const result = await client.getACL('example.txt');
+console.log('ACL:', result.acl);
+```
+
+## Presigned URLs
+
+Generate temporary signed URLs for sharing:
+
+```javascript title="presignedUrls.js"
+// Download URL
+const downloadUrl = client.signatureUrl('documents/report.pdf', {
+  expires: 3600
+});
+
+// Upload URL
+const uploadUrl = client.signatureUrl('uploads/file.txt', {
+  method: 'PUT',
+  expires: 3600
+});
+```
+
+<Warning>
+  Never embed long-term AccessKey credentials in browser code. The browser is an untrusted environment. Always use STS tokens with minimal required permissions.
+</Warning>
+
+## Next steps
+
+- [Upload objects](/sdks/browser-js/upload-objects)
+- [Manage objects](/sdks/browser-js/manage-objects)

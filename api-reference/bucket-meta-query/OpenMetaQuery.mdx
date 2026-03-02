@@ -1,0 +1,21 @@
+---
+title: 'OpenMetaQuery'
+description: 'Enable data indexing (metadata management) for a bucket'
+---
+
+Enables the metadata management feature for a bucket, creating a metadata index that supports SQL-like queries on object metadata.
+
+## Request
+
+```
+POST /?metaQuery HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+<Note>
+After enabling, it takes some time to build the initial index. The indexing time depends on the number of objects in the bucket.
+</Note>

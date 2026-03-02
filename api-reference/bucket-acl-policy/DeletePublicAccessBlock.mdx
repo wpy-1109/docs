@@ -1,0 +1,23 @@
+---
+title: 'DeletePublicAccessBlock'
+description: 'Delete the global Block Public Access configuration'
+---
+
+Deletes the global Block Public Access configuration for OSS.
+
+## Request
+
+```
+DELETE /?publicAccessBlock HTTP/1.1
+Host: oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 204 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `AccessDenied` | 403 | Insufficient permissions. |

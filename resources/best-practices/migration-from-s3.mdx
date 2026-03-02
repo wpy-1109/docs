@@ -1,0 +1,93 @@
+---
+title: 'Migrate from Amazon S3'
+description: 'Guide for migrating data and applications from Amazon S3 to Alibaba Cloud OSS'
+---
+
+## S3 compatibility
+
+OSS provides an S3-compatible API endpoint, making migration straightforward for applications using the AWS SDK or S3-compatible tools.
+
+### S3-Compatible endpoint
+
+```
+https://{BucketName}.oss-{region}.aliyuncs.com
+```
+
+Most S3 API operations are supported, including:
+- PUT/GET/DELETE Object
+- Multipart Upload
+- ListObjects
+- Presigned URLs
+- ACLs and bucket policies
+
+### Using AWS SDK with OSS
+
+```python
+import boto3
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://oss-cn-hangzhou.aliyuncs.com',
+    aws_access_key_id='YOUR_OSS_ACCESS_KEY_ID',
+    aws_secret_access_key='YOUR_OSS_ACCESS_KEY_SECRET',
+    region_name='cn-hangzhou'
+)
+
+# List objects - works the same as S3
+response = s3.list_objects_v2(Bucket='my-oss-bucket')
+```
+
+## Migration steps
+
+<Steps>
+  <Step title="Inventory your S3 data">
+    Use S3 Inventory or `aws s3 ls --recursive` to catalog all objects, storage classes, and metadata.
+  </Step>
+  <Step title="Create OSS buckets">
+    Create corresponding OSS buckets in your target region with matching configurations (encryption, versioning, lifecycle).
+  </Step>
+  <Step title="Transfer data">
+    Choose a migration tool based on data volume:
+
+    | Volume | Tool |
+    |--------|------|
+    | Less than 1 TB | ossutil, rclone |
+    | 1-100 TB | OSS Migration Service |
+    | 100+ TB | Data Transport (Lightning Cube) |
+  </Step>
+  <Step title="Validate data">
+    Compare object counts, sizes, and checksums between source and destination.
+  </Step>
+  <Step title="Update applications">
+    Change endpoint URLs and credentials in your applications. If using S3-compatible access, only the endpoint needs to change.
+  </Step>
+  <Step title="Set up back-to-origin (optional)">
+    Configure back-to-origin rules to transparently proxy requests to S3 during the transition period.
+  </Step>
+</Steps>
+
+## Using rclone
+
+```bash
+# Configure rclone for OSS
+rclone config
+# Choose "s3" provider, set endpoint to oss-{region}.aliyuncs.com
+
+# Sync from S3 to OSS
+rclone sync s3:source-bucket oss:dest-bucket \
+  --transfers 16 \
+  --checkers 32 \
+  --progress
+```
+
+## Key differences from S3
+
+| Feature | S3 | OSS |
+|---------|-----|-----|
+| Bucket naming | Global namespace | Global namespace |
+| Max object size | 5 TB | 48.8 TB |
+| Max single PUT | 5 GB | 5 GB |
+| Multipart min part | 5 MB | 100 KB |
+| Storage classes | 7 classes | 5 classes |
+| Signature | SigV4 | V4 (similar to SigV4) |
+| Presigned URL max | 7 days | 7 days (STS) or 64800s (AccessKey) |

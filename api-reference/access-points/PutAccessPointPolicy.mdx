@@ -1,0 +1,43 @@
+---
+title: 'PutAccessPointPolicy'
+description: 'Set a policy for an access point'
+---
+
+Configures an access policy for a bucket access point.
+
+## Request
+
+```
+PUT /?accessPointPolicy HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-access-point-name: {AccessPointName}
+```
+
+### Request body
+
+JSON policy document, similar to bucket policies but scoped to the access point.
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["oss:GetObject"],
+      "Principal": ["*"],
+      "Resource": ["acs:oss:cn-hangzhou:111111:accesspoint/my-access-point"]
+    }
+  ]
+}
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPoint` | 404 | The access point does not exist. |
+| `MalformedPolicy` | 400 | The policy JSON is invalid. |

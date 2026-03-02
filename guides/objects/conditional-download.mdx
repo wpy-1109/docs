@@ -1,0 +1,113 @@
+---
+title: "Conditional Download"
+sidebarTitle: "Conditional Download"
+description: "Learn how to use conditional headers to download objects only when certain conditions are met."
+"og:title": "Conditional Download - Alibaba Cloud OSS"
+---
+
+Conditional download lets you use HTTP conditional headers to download an object only when it meets specified criteria, such as being modified since a certain time or matching (or not matching) a specific ETag. This saves bandwidth and improves cache efficiency.
+
+## Conditional headers
+
+| Header | Description |
+|--------|-------------|
+| `If-Modified-Since` | Download only if modified after this date. Returns `304 Not Modified` otherwise. |
+| `If-Unmodified-Since` | Download only if not modified after this date. Returns `412 Precondition Failed` otherwise. |
+| `If-Match` | Download only if the ETag matches. Returns `412 Precondition Failed` otherwise. |
+| `If-None-Match` | Download only if the ETag does not match. Returns `304 Not Modified` otherwise. |
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- The `oss:GetObject` permission
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="conditional_download.py"
+    import alibabacloud_oss_v2 as oss
+    from datetime import datetime
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    result = client.get_object(oss.GetObjectRequest(
+        bucket="examplebucket",
+        key="example.txt",
+        if_modified_since="Wed, 01 Jan 2025 00:00:00 GMT",
+    ))
+
+    print(f"Status: {result.status_code}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="ConditionalDownload.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.GetObjectRequest;
+    import java.util.Date;
+
+    public class ConditionalDownload {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                GetObjectRequest request = new GetObjectRequest(
+                    "examplebucket", "example.txt");
+                request.setModifiedSinceConstraint(new Date(2025 - 1900, 0, 1));
+                ossClient.getObject(request);
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="conditionalDownload.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function conditionalDownload() {
+      const result = await client.get('example.txt', {
+        headers: {
+          'If-Modified-Since': 'Wed, 01 Jan 2025 00:00:00 GMT',
+        },
+      });
+      console.log('Status:', result.res.status);
+    }
+
+    conditionalDownload();
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Download objects](/guides/objects/download-objects)
+- [Object metadata](/guides/objects/manage-object-metadata)

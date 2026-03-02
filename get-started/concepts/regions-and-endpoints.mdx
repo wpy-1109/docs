@@ -1,0 +1,134 @@
+---
+title: "Regions and Endpoints"
+sidebarTitle: "Regions & Endpoints"
+description: "Understand OSS regions, endpoint formats, and how to choose the right region for your workload."
+icon: "globe"
+"og:title": "Regions and Endpoints - Alibaba Cloud OSS"
+"og:description": "Understand OSS regions, endpoint formats, and how to choose the right region for your workload."
+---
+
+# Regions and Endpoints
+
+A **region** is the physical location of an Alibaba Cloud data center. An **endpoint** is the domain name used to access OSS in that region. Choosing the right region and endpoint affects performance, cost, and compliance.
+
+## Choosing a region
+
+Consider these factors when selecting a region:
+
+| Factor | Recommendation |
+|--------|---------------|
+| **Geographic proximity** | Choose the region closest to your users for lower latency. |
+| **Internal network access** | Place buckets in the same region as your ECS instances to use internal endpoints (no public bandwidth charges, lower latency). |
+| **Cost** | Prices vary by region. Compare pricing at [OSS Pricing](https://www.alibabacloud.com/product/oss/pricing). |
+| **Compliance** | Select a region that meets your data residency and compliance requirements. |
+| **Feature availability** | New features may be available in specific regions first. Check [Release Notes](/resources/release-notes). |
+
+<Tip>
+Test network latency to different regions using `curl`:
+
+```bash
+# Test latency to China (Hangzhou)
+curl -o /dev/null -s -w "Connect: %{time_connect}s\nTTFB: %{time_starttransfer}s\nTotal: %{time_total}s\n" \
+  "https://oss-cn-hangzhou.aliyuncs.com"
+```
+</Tip>
+
+## Endpoint formats
+
+Each region provides multiple endpoint types:
+
+| Endpoint Type | Format | Use Case |
+|--------------|--------|----------|
+| **Public** | `oss-{region-id}.aliyuncs.com` | Access from the internet |
+| **Internal** | `oss-{region-id}-internal.aliyuncs.com` | Access from ECS/services in the same region (no bandwidth charges) |
+| **Dual-stack** | `{region-id}.oss.aliyuncs.com` | IPv4 and IPv6 support (select China and Europe regions only) |
+
+**Example for China (Hangzhou)**:
+- Public: `oss-cn-hangzhou.aliyuncs.com`
+- Internal: `oss-cn-hangzhou-internal.aliyuncs.com`
+- Dual-stack: `cn-hangzhou.oss.aliyuncs.com`
+
+### Bucket-level endpoints
+
+To access a specific bucket, prepend the bucket name to the endpoint:
+
+```
+https://{bucket-name}.oss-{region-id}.aliyuncs.com
+```
+
+For example: `https://my-bucket.oss-cn-hangzhou.aliyuncs.com`
+
+## Important: custom domain requirement for Chinese mainland regions
+
+<Warning>
+Starting March 20, 2025, new OSS users must use a custom domain name (CNAME) to perform data API operations on OSS buckets in Chinese mainland regions. Default public endpoints are restricted for data operations. Existing users are not affected. If you access data via HTTPS, you must bind a valid SSL certificate to your custom domain. For details, see [Custom Domain Names](/guides/networking/custom-domain-names).
+</Warning>
+
+## Available regions
+
+### Asia-Pacific (China)
+
+| Region | Region ID | Public Endpoint | Internal Endpoint |
+|--------|-----------|-----------------|-------------------|
+| China (Hangzhou) | `cn-hangzhou` | `oss-cn-hangzhou.aliyuncs.com` | `oss-cn-hangzhou-internal.aliyuncs.com` |
+| China (Shanghai) | `cn-shanghai` | `oss-cn-shanghai.aliyuncs.com` | `oss-cn-shanghai-internal.aliyuncs.com` |
+| China (Beijing) | `cn-beijing` | `oss-cn-beijing.aliyuncs.com` | `oss-cn-beijing-internal.aliyuncs.com` |
+| China (Shenzhen) | `cn-shenzhen` | `oss-cn-shenzhen.aliyuncs.com` | `oss-cn-shenzhen-internal.aliyuncs.com` |
+| China (Zhangjiakou) | `cn-zhangjiakou` | `oss-cn-zhangjiakou.aliyuncs.com` | `oss-cn-zhangjiakou-internal.aliyuncs.com` |
+| China (Hohhot) | `cn-huhehaote` | `oss-cn-huhehaote.aliyuncs.com` | `oss-cn-huhehaote-internal.aliyuncs.com` |
+| China (Ulanqab) | `cn-wulanchabu` | `oss-cn-wulanchabu.aliyuncs.com` | `oss-cn-wulanchabu-internal.aliyuncs.com` |
+| China (Heyuan) | `cn-heyuan` | `oss-cn-heyuan.aliyuncs.com` | `oss-cn-heyuan-internal.aliyuncs.com` |
+| China (Guangzhou) | `cn-guangzhou` | `oss-cn-guangzhou.aliyuncs.com` | `oss-cn-guangzhou-internal.aliyuncs.com` |
+| China (Chengdu) | `cn-chengdu` | `oss-cn-chengdu.aliyuncs.com` | `oss-cn-chengdu-internal.aliyuncs.com` |
+| China (Qingdao) | `cn-qingdao` | `oss-cn-qingdao.aliyuncs.com` | `oss-cn-qingdao-internal.aliyuncs.com` |
+| China (Hong Kong) | `cn-hongkong` | `oss-cn-hongkong.aliyuncs.com` | `oss-cn-hongkong-internal.aliyuncs.com` |
+
+### Asia-Pacific (other)
+
+| Region | Region ID | Public Endpoint | Internal Endpoint |
+|--------|-----------|-----------------|-------------------|
+| Japan (Tokyo) | `ap-northeast-1` | `oss-ap-northeast-1.aliyuncs.com` | `oss-ap-northeast-1-internal.aliyuncs.com` |
+| South Korea (Seoul) | `ap-northeast-2` | `oss-ap-northeast-2.aliyuncs.com` | `oss-ap-northeast-2-internal.aliyuncs.com` |
+| Singapore | `ap-southeast-1` | `oss-ap-southeast-1.aliyuncs.com` | `oss-ap-southeast-1-internal.aliyuncs.com` |
+| Malaysia (Kuala Lumpur) | `ap-southeast-3` | `oss-ap-southeast-3.aliyuncs.com` | `oss-ap-southeast-3-internal.aliyuncs.com` |
+| Indonesia (Jakarta) | `ap-southeast-5` | `oss-ap-southeast-5.aliyuncs.com` | `oss-ap-southeast-5-internal.aliyuncs.com` |
+| Philippines (Manila) | `ap-southeast-6` | `oss-ap-southeast-6.aliyuncs.com` | `oss-ap-southeast-6-internal.aliyuncs.com` |
+| Thailand (Bangkok) | `ap-southeast-7` | `oss-ap-southeast-7.aliyuncs.com` | `oss-ap-southeast-7-internal.aliyuncs.com` |
+
+### Europe and Americas
+
+| Region | Region ID | Public Endpoint | Internal Endpoint |
+|--------|-----------|-----------------|-------------------|
+| Germany (Frankfurt) | `eu-central-1` | `oss-eu-central-1.aliyuncs.com` | `oss-eu-central-1-internal.aliyuncs.com` |
+| UK (London) | `eu-west-1` | `oss-eu-west-1.aliyuncs.com` | `oss-eu-west-1-internal.aliyuncs.com` |
+| US (Silicon Valley) | `us-west-1` | `oss-us-west-1.aliyuncs.com` | `oss-us-west-1-internal.aliyuncs.com` |
+| US (Virginia) | `us-east-1` | `oss-us-east-1.aliyuncs.com` | `oss-us-east-1-internal.aliyuncs.com` |
+| Mexico | `na-south-1` | `oss-na-south-1.aliyuncs.com` | `oss-na-south-1-internal.aliyuncs.com` |
+
+### Middle East
+
+| Region | Region ID | Public Endpoint | Internal Endpoint |
+|--------|-----------|-----------------|-------------------|
+| UAE (Dubai) | `me-east-1` | `oss-me-east-1.aliyuncs.com` | `oss-me-east-1-internal.aliyuncs.com` |
+| SAU (Riyadh) | `me-central-1` | `oss-me-central-1.aliyuncs.com` | `oss-me-central-1-internal.aliyuncs.com` |
+
+## Internal vs. public endpoints
+
+<CardGroup cols={2}>
+  <Card title="Public Endpoint" icon="globe">
+    Use for access from the internet or outside of Alibaba Cloud. Traffic incurs bandwidth charges.
+  </Card>
+  <Card title="Internal Endpoint" icon="lock">
+    Use from ECS or other Alibaba Cloud services in the same region. No bandwidth charges and lower latency.
+  </Card>
+</CardGroup>
+
+<Warning>
+Always use internal endpoints when accessing OSS from ECS instances in the same region. This avoids unnecessary bandwidth costs and provides more stable connections.
+</Warning>
+
+## Next steps
+
+- [Transfer acceleration](/guides/networking/transfer-acceleration)
+- [Custom domain names](/guides/networking/custom-domain-names)
+- [CDN acceleration](/guides/networking/cdn-acceleration)

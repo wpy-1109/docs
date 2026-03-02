@@ -1,0 +1,54 @@
+---
+title: "QoS Throttling"
+sidebarTitle: "QoS Throttling"
+description: "Learn how to configure quality-of-service (QoS) throttling for Alibaba Cloud OSS buckets."
+"og:title": "QoS Throttling - Alibaba Cloud OSS"
+---
+
+QoS throttling controls the maximum bandwidth and request rate for your OSS bucket. Use it to prevent a single application or tenant from consuming all available resources, ensuring fair sharing and predictable performance.
+
+## Throttling levels
+
+| Level | Scope | Description |
+|-------|-------|-------------|
+| **User-level** | Alibaba Cloud account | Limits total OSS bandwidth and request rate across all buckets |
+| **Bucket-level** | Individual bucket | Limits bandwidth and request rate for a specific bucket |
+
+## Default limits
+
+OSS applies default QoS limits based on your account type and region. Common defaults include:
+
+| Metric | Default Limit |
+|--------|--------------|
+| Total bandwidth per bucket | Varies by region |
+| Single-object download bandwidth | 5 Gbps |
+| Request rate | Varies by region |
+
+<Note>
+Default limits are sufficient for most workloads. Contact [technical support](https://smartservice.console.alibabacloud.com/#/ticket/createIndex) to request limit increases for high-traffic scenarios.
+</Note>
+
+## Single-Connection throttling
+
+For per-request bandwidth control, use the `x-oss-traffic-limit` header to limit individual upload or download speeds. See [Single-Connection Throttling](/guides/objects/single-connection-throttling) for details.
+
+## Preventing throttling
+
+If your workload is being throttled, consider these strategies:
+
+| Strategy | Description |
+|----------|-------------|
+| Distribute across buckets | Spread requests across multiple buckets to increase aggregate limits |
+| Use CDN | Offload read traffic to CDN to reduce direct OSS requests |
+| Optimize request patterns | Use multipart upload/download to improve efficiency |
+| Retry with backoff | Implement exponential backoff for throttled requests (HTTP 503) |
+
+<Tip>
+Monitor your bucket's request rate and bandwidth usage through [CloudMonitor](/guides/logging-monitoring/monitoring-alerts) to detect throttling before it impacts your application.
+</Tip>
+
+## Next steps
+
+- [Single-Connection throttling](/guides/objects/single-connection-throttling)
+- [Monitoring alerts](/guides/logging-monitoring/monitoring-alerts)
+- [CDN acceleration](/guides/networking/cdn-acceleration)

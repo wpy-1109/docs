@@ -1,0 +1,105 @@
+---
+title: "Error Handling - Java SDK"
+sidebarTitle: "Error Handling"
+description: "Handle errors and exceptions when using the Alibaba Cloud OSS SDK for Java. Includes common error codes and troubleshooting."
+"og:title": "Error Handling with OSS Java SDK"
+---
+
+# Error Handling
+
+The OSS Java SDK throws two types of exceptions: server-side errors (OSSException) and client-side errors (ClientException).
+
+## Exception types
+
+### OSSException (Server-Side)
+
+Thrown when the request reaches OSS but is rejected. Contains:
+- **Error Code** -- Specific OSS error code
+- **Error Message** -- Human-readable description
+- **Request ID** -- Unique identifier for troubleshooting
+- **Host ID** -- The OSS endpoint that processed the request
+
+### ClientException (Client-Side)
+
+Thrown when the client encounters issues before reaching OSS:
+- Network connectivity problems
+- DNS resolution failures
+- Timeout errors
+
+## Error handling pattern
+
+### V1 SDK
+
+```java title="ErrorHandling.java"
+import com.aliyun.oss.OSSException;
+import com.aliyun.oss.ClientException;
+
+try {
+    ossClient.putObject(bucketName, objectName, new File(filePath));
+
+} catch (OSSException oe) {
+    System.out.println("Server Error:");
+    System.out.println("  Error Code: " + oe.getErrorCode());
+    System.out.println("  Error Message: " + oe.getErrorMessage());
+    System.out.println("  Request ID: " + oe.getRequestId());
+    System.out.println("  Host ID: " + oe.getHostId());
+} catch (ClientException ce) {
+    System.out.println("Client Error:");
+    System.out.println("  Message: " + ce.getMessage());
+} finally {
+    if (ossClient != null) {
+        ossClient.shutdown();
+    }
+}
+```
+
+### V2 SDK
+
+```java title="ErrorHandlingV2.java"
+try {
+    PutObjectResult result = client.putObject(PutObjectRequest.newBuilder()
+        .bucket(bucket).key(key)
+        .body(BinaryData.fromString(data))
+        .build());
+} catch (Exception e) {
+    ServiceException se = ServiceException.asCause(e);
+    if (se != null) {
+        System.out.printf("Service Error: requestId=%s, errorCode=%s%n",
+            se.requestId(), se.errorCode());
+    } else {
+        System.out.printf("Error: %s%n", e.getMessage());
+    }
+}
+```
+
+## Common error codes
+
+| Error Code | HTTP Status | Description | Solution |
+|------------|-------------|-------------|----------|
+| `AccessDenied` | 403 | Access denied | Check credentials and permissions |
+| `BucketAlreadyExists` | 409 | Bucket name taken | Choose a different bucket name |
+| `BucketNotEmpty` | 409 | Bucket has objects | Delete all objects first |
+| `EntityTooLarge` | 400 | Object > 5 GB | Use multipart upload |
+| `InvalidAccessKeyId` | 403 | Invalid AccessKey | Verify your AccessKey ID |
+| `InvalidArgument` | 400 | Invalid parameter | Check request parameters |
+| `InvalidBucketName` | 400 | Invalid bucket name | Follow naming conventions |
+| `NoSuchBucket` | 404 | Bucket not found | Verify the bucket name and region |
+| `NoSuchKey` | 404 | Object not found | Verify the object key |
+| `NoSuchUpload` | 404 | Upload not found | The multipart upload may have been aborted |
+| `RequestTimeTooSkewed` | 403 | Clock skew | Synchronize system clock |
+| `SignatureDoesNotMatch` | 403 | Signature mismatch | Check AccessKey Secret and signing method |
+| `TooManyBuckets` | 400 | Bucket limit reached | Delete unused buckets or request a quota increase |
+
+## Retry strategy
+
+The SDK automatically retries on transient errors (network timeouts, 500/503 errors). Configure the retry count:
+
+```java title="RetryConfig.java"
+ClientBuilderConfiguration config = new ClientBuilderConfiguration();
+config.setMaxErrorRetry(5); // Default is 3
+```
+
+## Next steps
+
+- [Troubleshooting](/resources/troubleshooting/common-issues)
+- [Error codes reference](/resources/troubleshooting/error-codes)

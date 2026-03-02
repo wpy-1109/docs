@@ -1,0 +1,73 @@
+---
+title: "Access Logging"
+sidebarTitle: "Access Logging"
+description: "Learn how to enable access logging to record all requests to your Alibaba Cloud OSS bucket."
+"og:title": "Access Logging - Alibaba Cloud OSS"
+---
+
+Access logging creates hourly log files that record all requests made to your bucket. Log files are stored in a designated bucket using a fixed naming convention, providing an audit trail for security analysis, compliance, and troubleshooting.
+
+## Log file format
+
+Log files are named using the pattern:
+
+```
+<TargetPrefix><SourceBucket>YYYY-MM-DD-HH-MM-SS-<UniqueString>
+```
+
+Each log entry includes fields such as the remote IP, request time, operation type, object key, HTTP status, error code, and request duration.
+
+## Using the console
+
+<Steps>
+  <Step title="Enable access logging">
+    Navigate to your bucket, choose **Logging > Access Logging**, and click **Enable**.
+  </Step>
+  <Step title="Configure the destination">
+    Select the destination bucket where log files are stored and optionally set a log file prefix.
+  </Step>
+</Steps>
+
+<Tip>
+Store log files in a separate bucket from your source data to avoid recursive logging and simplify access control.
+</Tip>
+
+## Using the SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    import alibabacloud_oss_v2 as oss
+
+    result = client.put_bucket_logging(oss.PutBucketLoggingRequest(
+        bucket="examplebucket",
+        bucket_logging_status=oss.BucketLoggingStatus(
+            logging_enabled=oss.LoggingEnabled(
+                target_bucket="log-bucket",
+                target_prefix="examplebucket-logs/",
+            )
+        ),
+    ))
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    SetBucketLoggingRequest request = new SetBucketLoggingRequest("examplebucket");
+    request.setTargetBucket("log-bucket");
+    request.setTargetPrefix("examplebucket-logs/");
+    ossClient.setBucketLogging(request);
+    ```
+  </Tab>
+</Tabs>
+
+## Log delivery
+
+- Logs are delivered hourly. There may be a delay of several minutes to hours.
+- Log completeness is best-effort. Some records may be missing under heavy load.
+- For real-time log analysis, use [Real-Time Log Query](/guides/logging-monitoring/real-time-log-query) instead.
+
+## Next steps
+
+- [Real-Time log query](/guides/logging-monitoring/real-time-log-query)
+- [Custom log fields](/guides/logging-monitoring/custom-log-fields)
+- [Monitoring alerts](/guides/logging-monitoring/monitoring-alerts)

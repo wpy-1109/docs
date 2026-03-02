@@ -1,0 +1,178 @@
+---
+title: "Resumable Upload"
+sidebarTitle: "Resumable Upload"
+description: "Learn how to use resumable upload to handle unreliable network conditions in Alibaba Cloud OSS."
+"og:title": "Resumable Upload - Alibaba Cloud OSS"
+---
+
+Resumable upload automatically tracks upload progress and resumes from the last successful position after a failure. It is built on top of multipart upload and is ideal for large files over unreliable networks.
+
+<Info>
+Resumable upload supports files up to **48.8 TB**. The SDK automatically manages part tracking, retry logic, and progress checkpointing.
+</Info>
+
+## Prerequisites
+
+- An Alibaba Cloud account with OSS activated
+- An AccessKey pair or STS temporary credentials
+- The `oss:PutObject` and `oss:ListParts` permissions
+
+## How it works
+
+1. The SDK splits the file into parts and records progress in a local checkpoint file.
+2. Each part is uploaded independently. If a part fails, only that part is retried.
+3. On restart, the SDK reads the checkpoint file and resumes from where it stopped.
+4. After all parts are uploaded, the SDK completes the multipart upload.
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="resumable_upload.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    uploader = client.uploader
+
+    result = uploader.upload_file(
+        oss.PutObjectRequest(
+            bucket="examplebucket",
+            key="large-file.zip",
+        ),
+        filepath="/path/to/large-file.zip",
+        part_size=10 * 1024 * 1024,  # 10 MB parts
+        parallel_num=5,
+        enable_checkpoint=True,
+        checkpoint_dir="/tmp/oss_checkpoint/",
+    )
+
+    print(f"Upload complete. ETag: {result.etag}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="ResumableUpload.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import com.aliyun.oss.model.UploadFileRequest;
+    import com.aliyun.oss.model.UploadFileResult;
+
+    public class ResumableUpload {
+        public static void main(String[] args) throws Throwable {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                UploadFileRequest uploadRequest = new UploadFileRequest(
+                    "examplebucket", "large-file.zip");
+                uploadRequest.setUploadFile("/path/to/large-file.zip");
+                uploadRequest.setPartSize(10 * 1024 * 1024); // 10 MB
+                uploadRequest.setTaskNum(5); // Parallel threads
+                uploadRequest.setEnableCheckpoint(true);
+
+                UploadFileResult result = ossClient.uploadFile(uploadRequest);
+                System.out.println("Resumable upload complete.");
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go title="resumable_upload.go"
+    package main
+
+    import (
+        "context"
+        "log"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
+        "github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
+    )
+
+    func main() {
+        cfg := oss.LoadDefaultConfig().
+            WithCredentialsProvider(credentials.NewEnvironmentVariableCredentialsProvider()).
+            WithRegion("cn-hangzhou")
+
+        client := oss.NewClient(cfg)
+
+        u := client.NewUploader(func(uo *oss.UploaderOptions) {
+            uo.PartSize = 10 * 1024 * 1024 // 10 MB
+            uo.ParallelNum = 5
+            uo.EnableCheckpoint = true
+            uo.CheckpointDir = "/tmp/oss_checkpoint/"
+        })
+
+        result, err := u.UploadFile(context.TODO(), &oss.PutObjectRequest{
+            Bucket: oss.Ptr("examplebucket"),
+            Key:    oss.Ptr("large-file.zip"),
+        }, "/path/to/large-file.zip")
+        if err != nil {
+            log.Fatalf("Upload failed: %v", err)
+        }
+
+        log.Printf("Upload complete. ETag: %v", oss.ToString(result.ETag))
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="resumableUpload.js"
+    const OSS = require('ali-oss');
+
+    const client = new OSS({
+      region: 'oss-cn-hangzhou',
+      accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+      authorizationV4: true,
+      bucket: 'examplebucket',
+    });
+
+    async function resumableUpload() {
+      try {
+        const result = await client.multipartUpload(
+          'large-file.zip',
+          '/path/to/large-file.zip',
+          {
+            parallel: 5,
+            partSize: 10 * 1024 * 1024,
+            checkpoint: {},  // Enables checkpoint
+            progress: (p, checkpoint) => {
+              console.log(`Progress: ${(p * 100).toFixed(1)}%`);
+              // Save checkpoint for resuming later
+            },
+          }
+        );
+        console.log('Upload complete:', result);
+      } catch (err) {
+        console.error('Error:', err);
+      }
+    }
+
+    resumableUpload();
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Multipart upload](/guides/objects/multipart-upload)
+- [Resumable download](/guides/objects/resumable-download)
+- [Progress bars](/guides/objects/progress-bars)

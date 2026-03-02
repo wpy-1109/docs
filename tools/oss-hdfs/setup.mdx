@@ -1,0 +1,105 @@
+---
+title: 'OSS-HDFS Setup'
+description: 'Enable and configure OSS-HDFS for your bucket'
+---
+
+## Prerequisites
+
+- An OSS bucket in a [supported region](https://www.alibabacloud.com/help/en/oss/user-guide/enable-and-configure-oss-hdfs)
+- RAM permissions for OSS-HDFS operations
+- JindoSDK installed on your compute nodes
+
+## Enable OSS-HDFS
+
+<Steps>
+  <Step title="Enable in the console">
+    1. Go to the OSS console
+    2. Select your bucket
+    3. Navigate to **Data Lake Storage** > **OSS-HDFS**
+    4. Click **Enable**
+  </Step>
+  <Step title="Install JindoSDK">
+    Download and install the JindoSDK on all compute nodes:
+
+    ```bash
+    # Download JindoSDK
+    wget https://jindodata-binary.oss-cn-shanghai.aliyuncs.com/release/jindosdk-x.x.x-linux.tar.gz
+
+    # Extract
+    tar -xzf jindosdk-x.x.x-linux.tar.gz
+
+    # Set environment variable
+    export JINDOSDK_HOME=/path/to/jindosdk
+    export PATH=$JINDOSDK_HOME/bin:$PATH
+    ```
+  </Step>
+  <Step title="Configure Hadoop">
+    Add the following to your `core-site.xml`:
+
+    ```xml
+    <configuration>
+      <property>
+        <name>fs.oss.impl</name>
+        <value>com.aliyun.jindodata.oss.JindoOssFileSystem</value>
+      </property>
+      <property>
+        <name>fs.AbstractFileSystem.oss.impl</name>
+        <value>com.aliyun.jindodata.oss.OSS</value>
+      </property>
+      <property>
+        <name>fs.oss.accessKeyId</name>
+        <value>YOUR_ACCESS_KEY_ID</value>
+      </property>
+      <property>
+        <name>fs.oss.accessKeySecret</name>
+        <value>YOUR_ACCESS_KEY_SECRET</value>
+      </property>
+      <property>
+        <name>fs.oss.endpoint</name>
+        <value>cn-hangzhou.oss-dls.aliyuncs.com</value>
+      </property>
+    </configuration>
+    ```
+
+    The endpoint format for OSS-HDFS is: `{region}.oss-dls.aliyuncs.com`
+  </Step>
+  <Step title="Verify access">
+    ```bash
+    hadoop fs -ls oss://your-bucket/
+    ```
+  </Step>
+</Steps>
+
+## Access patterns
+
+Use the `oss://` scheme to access OSS-HDFS:
+
+```bash
+# List files
+hadoop fs -ls oss://bucket-name/path/
+
+# Create a directory
+hadoop fs -mkdir oss://bucket-name/new-dir/
+
+# Upload a file
+hadoop fs -put local-file.txt oss://bucket-name/path/
+
+# Read a file
+hadoop fs -cat oss://bucket-name/path/file.txt
+
+# Rename (atomic operation)
+hadoop fs -mv oss://bucket-name/old-name oss://bucket-name/new-name
+```
+
+## Spark integration
+
+```python
+spark = SparkSession.builder \
+    .appName("OSS-HDFS Example") \
+    .config("spark.hadoop.fs.oss.impl", "com.aliyun.jindodata.oss.JindoOssFileSystem") \
+    .config("spark.hadoop.fs.oss.endpoint", "cn-hangzhou.oss-dls.aliyuncs.com") \
+    .getOrCreate()
+
+df = spark.read.parquet("oss://my-bucket/data/")
+df.write.parquet("oss://my-bucket/output/")
+```

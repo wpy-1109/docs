@@ -1,0 +1,24 @@
+---
+title: 'DeleteAccessPointPolicy'
+description: 'Delete the policy of an access point'
+---
+
+Deletes the access policy of a bucket access point.
+
+## Request
+
+```
+DELETE /?accessPointPolicy HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+x-oss-access-point-name: {AccessPointName}
+```
+
+## Response
+
+**Success:** HTTP 204 with empty body.
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchAccessPoint` | 404 | The access point does not exist. |

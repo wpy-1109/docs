@@ -1,0 +1,39 @@
+---
+title: 'GetBucketPolicy'
+description: 'Query the bucket policy'
+---
+
+Returns the policy of the specified bucket.
+
+## Request
+
+```
+GET /?policy HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+Returns the policy as a JSON document in the response body.
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["oss:GetObject"],
+      "Principal": ["*"],
+      "Resource": ["acs:oss:*:*:my-bucket/*"]
+    }
+  ]
+}
+```
+
+## Error codes
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NoSuchBucketPolicy` | 404 | No policy is configured for this bucket. |
+| `NoSuchBucket` | 404 | The bucket does not exist. |
+| `AccessDenied` | 403 | You do not have permission to query the policy. |

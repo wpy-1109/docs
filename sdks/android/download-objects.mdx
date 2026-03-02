@@ -1,0 +1,73 @@
+---
+title: "Download Objects - Android SDK"
+sidebarTitle: "Download Objects"
+description: "Download objects using the Alibaba Cloud OSS SDK for Android."
+"og:title": "Download Objects with OSS Android SDK"
+---
+
+# Download Objects
+
+## Download to memory
+
+```java title="downloadToMemory.java"
+GetObjectRequest get = new GetObjectRequest("my-bucket", "example.txt");
+
+oss.asyncGetObject(get, new OSSCompletedCallback<GetObjectRequest, GetObjectResult>() {
+    @Override
+    public void onSuccess(GetObjectRequest request, GetObjectResult result) {
+        InputStream stream = result.getObjectContent();
+        // Read the stream
+        byte[] data = IOUtils.readStreamAsByteArray(stream);
+        Log.d("OSS", "Content: " + new String(data));
+    }
+    @Override
+    public void onFailure(GetObjectRequest request, ClientException ce, ServiceException se) {
+        Log.e("OSS", "Download failed");
+    }
+});
+```
+
+## Download to a local file
+
+```java title="downloadToFile.java"
+GetObjectRequest get = new GetObjectRequest("my-bucket", "documents/report.pdf");
+get.setDownloadToFile("/sdcard/Download/report.pdf");
+
+oss.asyncGetObject(get, new OSSCompletedCallback<GetObjectRequest, GetObjectResult>() {
+    @Override
+    public void onSuccess(GetObjectRequest request, GetObjectResult result) {
+        Log.d("OSS", "Downloaded to local file.");
+    }
+    @Override
+    public void onFailure(GetObjectRequest request, ClientException ce, ServiceException se) {
+        Log.e("OSS", "Download failed");
+    }
+});
+```
+
+## Range download
+
+```java title="rangeDownload.java"
+GetObjectRequest get = new GetObjectRequest("my-bucket", "large-file.bin");
+get.setRange(new Range(0, 1023)); // First 1 KB
+
+oss.asyncGetObject(get, callback);
+```
+
+## Download with progress
+
+```java title="downloadProgress.java"
+GetObjectRequest get = new GetObjectRequest("my-bucket", "large-file.zip");
+
+get.setProgressListener((request, currentSize, totalSize) -> {
+    double progress = (double) currentSize / totalSize * 100;
+    Log.d("OSS", String.format("Progress: %.1f%%", progress));
+});
+
+oss.asyncGetObject(get, callback);
+```
+
+## Next steps
+
+- [Upload objects](/sdks/android/upload-objects)
+- [Manage objects](/sdks/android/manage-objects)

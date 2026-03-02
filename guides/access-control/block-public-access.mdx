@@ -1,0 +1,61 @@
+---
+title: "Block Public Access"
+sidebarTitle: "Block Public Access"
+description: "Learn how to block public access to Alibaba Cloud OSS buckets and objects."
+"og:title": "Block Public Access - Alibaba Cloud OSS"
+---
+
+Block Public Access provides a safety mechanism that overrides any bucket or object ACLs that grant public access. When enabled, all public access is denied regardless of individual bucket or object settings.
+
+<Info>
+Block Public Access is enabled by default for new buckets. You can apply it at the account level (all buckets) or at the individual bucket level.
+</Info>
+
+## Levels of protection
+
+| Level | Scope |
+|-------|-------|
+| **Account-level** | Blocks public access to all buckets in the account. |
+| **Bucket-level** | Blocks public access to a specific bucket. |
+
+## Using the console
+
+<Steps>
+  <Step title="Account-level block">
+    In the OSS console, navigate to **Security Settings > Block Public Access** in the left pane. Toggle on the account-level block.
+  </Step>
+  <Step title="Bucket-level block">
+    Navigate to the bucket, choose **Permission Control > Block Public Access**, and enable it.
+  </Step>
+</Steps>
+
+## Using an SDK
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="block_public_access.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Enable block public access for a bucket
+    client.put_bucket_public_access_block(oss.PutBucketPublicAccessBlockRequest(
+        bucket="examplebucket",
+        public_access_block_configuration=oss.PublicAccessBlockConfiguration(
+            block_public_access=True,
+        )
+    ))
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [ACLs](/guides/access-control/acls)
+- [Bucket policies](/guides/access-control/bucket-policies)
+- [RAM policies](/guides/access-control/ram-policies)

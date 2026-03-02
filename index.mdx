@@ -1,97 +1,88 @@
 ---
-title: "Introduction"
+title: "Alibaba Cloud Object Storage Service (OSS)"
 description: "Alibaba Cloud OSS Documentation - AI-First, English-First"
 ---
 
-## Setting up
+Alibaba Cloud Object Storage Service (OSS) is a secure, cost-effective, and highly durable cloud storage service that lets you store, back up, and archive any amount of data in the cloud.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Get started"
+    icon="rocket"
+    href="/get-started/what-is-oss"
   >
-    Edit your docs locally and preview them in real time.
+    Learn what OSS is, explore core concepts, and set up your first bucket.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
+    title="SDKs"
     icon="code"
-    href="/essentials/code"
+    href="/sdks/overview"
   >
-    Add sample code to demonstrate how to use your product.
+    Integrate OSS into your application with SDKs for Java, Python, Go, Node.js, and more.
   </Card>
   <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
+    title="API reference"
+    icon="terminal"
+    href="/api-reference/overview"
   >
-    Display images and other media.
+    Complete REST API documentation for all OSS operations.
   </Card>
   <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
+    title="Tools & resources"
+    icon="wrench"
+    href="/tools/ossutil/overview"
   >
-    Write once and reuse across your docs.
+    CLI tools, Terraform, vector search, best practices, and troubleshooting.
   </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## Quickstart
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Get up and running with OSS in minutes.
+
+<CardGroup cols={3}>
+  <Card
+    title="Console"
+    icon="browser"
+    href="/get-started/quickstart/console"
+  >
+    Create a bucket and upload objects using the web console.
+  </Card>
+  <Card
+    title="CLI"
+    icon="square-terminal"
+    href="/get-started/quickstart/cli"
+  >
+    Manage OSS resources from the command line with ossutil.
+  </Card>
+  <Card
+    title="SDK"
+    icon="laptop-code"
+    href="/get-started/quickstart/sdk"
+  >
+    Upload your first object programmatically with Python, Java, Go, or Node.js.
+  </Card>
+</CardGroup>
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Flexible storage classes" icon="layer-group">
+    Standard, Infrequent Access, Archive, Cold Archive, and Deep Cold Archive tiers to optimize cost and performance.
+  </Card>
+  <Card title="Data protection" icon="shield-check">
+    Server-side encryption, versioning, cross-region replication, and WORM retention policies.
+  </Card>
+  <Card title="Access control" icon="lock">
+    Fine-grained permissions with RAM policies, bucket policies, ACLs, STS temporary credentials, and presigned URLs.
+  </Card>
+  <Card title="Data processing" icon="wand-magic-sparkles">
+    Built-in image processing, video snapshots, content detection, and AI-powered data indexing.
+  </Card>
+  <Card title="Acceleration" icon="bolt">
+    Transfer acceleration, CDN integration, and global acceleration for low-latency access worldwide.
+  </Card>
+  <Card title="S3 compatibility" icon="arrows-rotate">
+    Compatible with Amazon S3 APIs, making migration and multi-cloud workflows straightforward.
+  </Card>
+</CardGroup>

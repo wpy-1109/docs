@@ -1,0 +1,60 @@
+---
+title: "Installation - Ruby SDK"
+sidebarTitle: "Installation"
+description: "Install the Alibaba Cloud OSS SDK for Ruby."
+"og:title": "Install OSS Ruby SDK"
+---
+
+# Installation
+
+## Requirements
+
+- Ruby 2.0 or later
+
+## Install via rubyGems
+
+```bash title="gem"
+gem install aliyun-sdk
+```
+
+## Install via bundler
+
+Add the dependency to your `Gemfile`:
+
+```ruby title="Gemfile"
+gem 'aliyun-sdk', '~> 0.6.0'
+```
+
+Then install:
+
+```bash title="bundler"
+bundle install
+```
+
+## Verify installation
+
+Open an interactive Ruby shell and verify the SDK loads correctly:
+
+```bash title="verify"
+irb
+> require 'aliyun/oss'
+=> true
+```
+
+## Configure environment variables
+
+Set your AccessKey credentials as environment variables:
+
+```bash title="env"
+export OSS_ACCESS_KEY_ID=<YOUR_ACCESS_KEY_ID>
+export OSS_ACCESS_KEY_SECRET=<YOUR_ACCESS_KEY_SECRET>
+```
+
+<Warning>
+  Never hard-code AccessKey credentials in your source code. Use environment variables or a credentials management service.
+</Warning>
+
+## Next steps
+
+- [Initialization](/sdks/ruby/initialization)
+- [Quick start](/sdks/ruby/quick-start)

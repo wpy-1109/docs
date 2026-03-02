@@ -1,0 +1,30 @@
+---
+title: 'PutBucketArchiveDirectRead'
+description: 'Enable or disable real-time access for Archive objects'
+---
+
+Enables or disables real-time access (direct read) of Archive storage class objects without requiring a restore operation.
+
+## Request
+
+```
+PUT /?bucketArchiveDirectRead HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ArchiveDirectReadConfiguration>
+  <Enabled>true</Enabled>
+</ArchiveDirectReadConfiguration>
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+<Note>
+Archive direct read incurs additional data retrieval fees.
+</Note>

@@ -1,0 +1,36 @@
+---
+title: 'PutBucketReferer'
+description: 'Configure hotlink protection (Referer whitelist/blacklist) for a bucket'
+---
+
+Sets a hotlink protection rule for a bucket by configuring a Referer whitelist or blacklist.
+
+## Request
+
+```
+PUT /?referer HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Request body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<RefererConfiguration>
+  <AllowEmptyReferer>false</AllowEmptyReferer>
+  <AllowTruncateQueryString>true</AllowTruncateQueryString>
+  <RefererList>
+    <Referer>https://example.com</Referer>
+    <Referer>https://*.example.com</Referer>
+  </RefererList>
+</RefererConfiguration>
+```
+
+| Element | Type | Description |
+|---------|------|-------------|
+| `AllowEmptyReferer` | Boolean | Allow requests with empty Referer. |
+| `RefererList.Referer` | String | Allowed Referer URL (supports `*` and `?` wildcards). |
+
+## Response
+
+**Success:** HTTP 200 with empty body.

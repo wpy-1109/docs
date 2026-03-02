@@ -1,0 +1,105 @@
+---
+title: "Object Metadata"
+sidebarTitle: "Object Metadata"
+description: "Learn how to manage object metadata, including HTTP headers and user-defined metadata, in Alibaba Cloud OSS."
+"og:title": "Object Metadata - Alibaba Cloud OSS"
+---
+
+Object metadata is a set of key-value pairs that describe the properties of an object. OSS supports standard HTTP headers (Content-Type, Cache-Control, etc.) and user-defined metadata (x-oss-meta-*).
+
+## Metadata types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| **Standard HTTP headers** | Control caching, content type, encoding | `Content-Type: image/png` |
+| **User-defined metadata** | Custom key-value pairs (prefixed with `x-oss-meta-`) | `x-oss-meta-author: John` |
+| **OSS system metadata** | Set by OSS automatically | `Last-Modified`, `ETag`, `Content-Length` |
+
+## Set metadata during upload
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="set_metadata.py"
+    import alibabacloud_oss_v2 as oss
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    with open("image.png", "rb") as f:
+        result = client.put_object(oss.PutObjectRequest(
+            bucket="examplebucket",
+            key="image.png",
+            body=f,
+            content_type="image/png",
+            cache_control="max-age=86400",
+            metadata={"x-oss-meta-author": "John", "x-oss-meta-project": "website"},
+        ))
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="SetMetadata.java"
+    import com.aliyun.oss.model.ObjectMetadata;
+    import com.aliyun.oss.model.PutObjectRequest;
+    import java.io.File;
+
+    ObjectMetadata metadata = new ObjectMetadata();
+    metadata.setContentType("image/png");
+    metadata.setCacheControl("max-age=86400");
+    metadata.addUserMetadata("author", "John");
+    metadata.addUserMetadata("project", "website");
+
+    PutObjectRequest request = new PutObjectRequest(
+        "examplebucket", "image.png", new File("image.png"));
+    request.setMetadata(metadata);
+    ossClient.putObject(request);
+    ```
+  </Tab>
+  <Tab title="Node.js">
+    ```javascript title="setMetadata.js"
+    await client.put('image.png', './image.png', {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'max-age=86400',
+        'x-oss-meta-author': 'John',
+        'x-oss-meta-project': 'website',
+      },
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Query metadata
+
+Use HeadObject to retrieve metadata without downloading the object body:
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="get_metadata.py"
+    result = client.head_object(oss.HeadObjectRequest(
+        bucket="examplebucket",
+        key="image.png",
+    ))
+
+    print(f"Content-Type: {result.content_type}")
+    print(f"Content-Length: {result.content_length}")
+    print(f"Last-Modified: {result.last_modified}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java
+    ObjectMetadata metadata = ossClient.getObjectMetadata("examplebucket", "image.png");
+    System.out.println("Content-Type: " + metadata.getContentType());
+    System.out.println("Author: " + metadata.getUserMetadata().get("author"));
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Object tagging](/guides/objects/object-tagging)
+- [Upload objects](/guides/objects/upload-objects)
+- [Conditional download](/guides/objects/conditional-download)

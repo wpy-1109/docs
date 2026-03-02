@@ -1,0 +1,21 @@
+---
+title: 'CreateDirectory'
+description: 'Create a directory in a hierarchical namespace bucket'
+---
+
+Creates a directory in a bucket with hierarchical namespace enabled.
+
+## Request
+
+```
+POST /{DirectoryName}/?mkdir HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+## Response
+
+**Success:** HTTP 200 with empty body.
+
+<Note>
+This API is only available for buckets with hierarchical namespace enabled. For standard buckets, simulate directories by creating a zero-byte object ending with `/`.
+</Note>

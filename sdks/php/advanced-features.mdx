@@ -1,0 +1,49 @@
+---
+title: "Advanced Features - PHP SDK"
+sidebarTitle: "Advanced Features"
+description: "Use lifecycle rules, versioning, and encryption with the Alibaba Cloud OSS SDK for PHP."
+"og:title": "Advanced Features with OSS PHP SDK"
+---
+
+# Advanced Features
+
+## Lifecycle rules
+
+```php title="lifecycle.php"
+$lifecycleConfig = new \OSS\Model\LifecycleConfig();
+$rule = new \OSS\Model\LifecycleRule('expire-logs', 'logs/', 'Enabled', 30);
+$lifecycleConfig->addRule($rule);
+$ossClient->putBucketLifecycle($bucket, $lifecycleConfig);
+
+// Get rules
+$config = $ossClient->getBucketLifecycle($bucket);
+
+// Delete rules
+$ossClient->deleteBucketLifecycle($bucket);
+```
+
+## Versioning
+
+```php title="versioning.php"
+$ossClient->putBucketVersioning($bucket, 'Enabled');
+$status = $ossClient->getBucketVersioning($bucket);
+```
+
+## Server-Side encryption
+
+```php title="encryption.php"
+$config = new \OSS\Model\ServerSideEncryptionConfig('AES256');
+$ossClient->putBucketEncryption($bucket, $config);
+```
+
+## Error handling
+
+```php title="errorHandling.php"
+try {
+    $ossClient->putObject($bucket, 'example.txt', 'content');
+} catch (\OSS\Core\OssException $e) {
+    echo "Error Code: " . $e->getErrorCode() . "\n";
+    echo "Error Message: " . $e->getErrorMessage() . "\n";
+    echo "Request ID: " . $e->getRequestId() . "\n";
+}
+```

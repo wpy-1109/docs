@@ -1,0 +1,38 @@
+---
+title: 'ListMultipartUploads'
+description: 'List all in-progress multipart uploads in a bucket'
+---
+
+Lists all in-progress multipart uploads in a bucket.
+
+## Request
+
+```
+GET /?uploads HTTP/1.1
+Host: {BucketName}.oss-{region}.aliyuncs.com
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prefix` | String | No | Filter by object key prefix. |
+| `delimiter` | String | No | Character to group keys. |
+| `key-marker` | String | No | Start listing from this key. |
+| `upload-id-marker` | String | No | Start listing from this upload ID. |
+| `max-uploads` | Integer | No | Maximum results. Default: 1000. |
+
+## Response
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ListMultipartUploadsResult>
+  <Bucket>my-bucket</Bucket>
+  <IsTruncated>false</IsTruncated>
+  <Upload>
+    <Key>large-file.bin</Key>
+    <UploadId>0004B9895DBBB6EC98E36****</UploadId>
+    <Initiated>2025-04-17T03:15:40.000Z</Initiated>
+  </Upload>
+</ListMultipartUploadsResult>
+```

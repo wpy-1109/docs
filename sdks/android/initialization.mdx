@@ -1,0 +1,68 @@
+---
+title: "Initialization - Android SDK"
+sidebarTitle: "Initialization"
+description: "Initialize the OSS client for Android with STS credentials."
+"og:title": "Initialize OSS Android SDK Client"
+---
+
+# Initialization
+
+## Create an oSSClient with STS
+
+```java title="InitOSS.java"
+import com.alibaba.sdk.android.oss.*;
+import com.alibaba.sdk.android.oss.common.auth.*;
+
+String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+String accessKeyId = "your-sts-access-key-id";
+String accessKeySecret = "your-sts-access-key-secret";
+String securityToken = "your-sts-security-token";
+
+OSSCredentialProvider credentialProvider =
+    new OSSStsTokenCredentialProvider(accessKeyId, accessKeySecret, securityToken);
+
+ClientConfiguration conf = new ClientConfiguration();
+conf.setConnectionTimeout(15 * 1000);
+conf.setSocketTimeout(15 * 1000);
+conf.setMaxConcurrentRequest(5);
+conf.setMaxErrorRetry(2);
+
+OSS oss = new OSSClient(getApplicationContext(), endpoint, credentialProvider, conf);
+```
+
+## Auto-Refresh STS tokens
+
+Use `OSSFederationCredentialProvider` to auto-refresh tokens:
+
+```java title="AutoRefreshSTS.java"
+OSSCredentialProvider credentialProvider = new OSSFederationCredentialProvider() {
+    @Override
+    public OSSFederationToken getFederationToken() {
+        // Call your backend to get a new STS token
+        // Return the token
+        return new OSSFederationToken(
+            accessKeyId, accessKeySecret, securityToken, expiration
+        );
+    }
+};
+
+OSS oss = new OSSClient(getApplicationContext(), endpoint, credentialProvider);
+```
+
+## Client configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `connectionTimeout` | Connection timeout (ms) | 15000 |
+| `socketTimeout` | Socket timeout (ms) | 15000 |
+| `maxConcurrentRequest` | Max concurrent requests | 5 |
+| `maxErrorRetry` | Max retry count | 2 |
+
+<Note>
+  Keep the `OSSClient` lifecycle aligned with your application lifecycle. Create it once at app startup and reuse it throughout the app.
+</Note>
+
+## Next steps
+
+- [Upload objects](/sdks/android/upload-objects)
+- [Download objects](/sdks/android/download-objects)

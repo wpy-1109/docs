@@ -1,0 +1,64 @@
+---
+title: "Function Compute Triggers"
+sidebarTitle: "Function Compute Triggers"
+description: "Learn how to trigger Alibaba Cloud Function Compute functions from OSS events."
+"og:title": "Function Compute Triggers - Alibaba Cloud OSS"
+---
+
+OSS triggers let you automatically execute Function Compute functions in response to bucket events. This enables serverless, event-driven workflows such as image processing, data transformation, and notification dispatch.
+
+## How it works
+
+1. An event occurs in your OSS bucket (e.g., a new object is uploaded).
+2. OSS sends an event notification to Function Compute.
+3. Function Compute invokes your function with the event payload containing bucket name, object key, event type, and metadata.
+4. Your function processes the event and returns a result.
+
+## Configure a trigger
+
+<Steps>
+  <Step title="Create a function">
+    In the [Function Compute console](https://fcnext.console.alibabacloud.com/), create a function in the same region as your OSS bucket.
+  </Step>
+  <Step title="Add an OSS trigger">
+    In the function's trigger settings, add an OSS trigger. Select the bucket, event types (e.g., `oss:ObjectCreated:*`), and optional prefix/suffix filters.
+  </Step>
+  <Step title="Grant permissions">
+    Ensure the Function Compute service role has permission to read from the OSS bucket.
+  </Step>
+</Steps>
+
+## Event payload
+
+The function receives an event payload in JSON format:
+
+```json
+{
+  "events": [{
+    "eventName": "ObjectCreated:PutObject",
+    "eventSource": "acs:oss",
+    "oss": {
+      "bucket": { "name": "examplebucket" },
+      "object": {
+        "key": "uploads/photo.jpg",
+        "size": 1024000
+      }
+    }
+  }]
+}
+```
+
+## Common use cases
+
+| Use Case | Trigger Event | Function Action |
+|----------|--------------|-----------------|
+| Image thumbnailing | `ObjectCreated:*` on `images/` | Generate thumbnails and save to a target prefix |
+| Log processing | `ObjectCreated:*` on `logs/` | Parse and aggregate log data |
+| Data validation | `ObjectCreated:*` | Validate uploaded data and notify on errors |
+| Cleanup | `ObjectCreated:*` | Remove temporary files after processing |
+
+## Next steps
+
+- [Event notifications](/guides/advanced/event-notifications)
+- [Object FC access points](/guides/access-control/object-fc-access-points)
+- [Image processing](/guides/data-processing/image-processing)

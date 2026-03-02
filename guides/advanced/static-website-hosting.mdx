@@ -1,0 +1,56 @@
+---
+title: "Static Website Hosting"
+sidebarTitle: "Static Website Hosting"
+description: "Learn how to host a static website on Alibaba Cloud OSS."
+"og:title": "Static Website Hosting - Alibaba Cloud OSS"
+---
+
+OSS can serve as a static website host for HTML, CSS, JavaScript, images, and other static files. Configure an index document and error document to serve a complete website from your bucket.
+
+## Prerequisites
+
+- A bucket with public-read ACL or appropriate bucket policy.
+- A custom domain name mapped to the bucket (recommended).
+
+## Configure static website hosting
+
+<Steps>
+  <Step title="Enable static website hosting">
+    Navigate to your bucket, choose **Basic Settings > Static Website Hosting**, and click **Enable**.
+  </Step>
+  <Step title="Set the index document">
+    Enter the default index document name, typically `index.html`. OSS returns this file when visitors access the root URL or a directory.
+  </Step>
+  <Step title="Set the error document">
+    Enter the 404 error document name, such as `404.html`. OSS returns this file when a requested object does not exist.
+  </Step>
+  <Step title="Map a custom domain">
+    Map a [custom domain name](/guides/networking/custom-domain-names) to the bucket for production use.
+  </Step>
+</Steps>
+
+## URL behavior
+
+| Request | Response |
+|---------|----------|
+| `http://example.com/` | Returns `index.html` |
+| `http://example.com/about/` | Returns `about/index.html` |
+| `http://example.com/nonexistent` | Returns `404.html` with 404 status |
+
+<Warning>
+Static website hosting requires anonymous access. If you use CDN with a private bucket and enable private origin fetch, CDN signs the requests, which prevents the index document feature from working. In that case, configure URL rewrite rules in CDN instead.
+</Warning>
+
+## Best practices
+
+- **Enable HTTPS** with an SSL certificate on your custom domain.
+- **Use CDN** for global distribution and caching of static assets.
+- **Configure CORS** if your website loads resources from other domains.
+- **Enable versioning** to protect against accidental file overwrites.
+
+## Next steps
+
+- [Custom domain names](/guides/networking/custom-domain-names)
+- [CDN acceleration](/guides/networking/cdn-acceleration)
+- [HTTPS/TLS](/guides/security/https-tls)
+- [CORS](/guides/access-control/cors)
