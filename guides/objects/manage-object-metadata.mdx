@@ -1,8 +1,8 @@
 ---
-title: "Object Metadata"
-sidebarTitle: "Object Metadata"
-description: "Learn how to manage object metadata, including HTTP headers and user-defined metadata, in Alibaba Cloud OSS."
-"og:title": "Object Metadata - Alibaba Cloud OSS"
+title: "Set object metadata"
+sidebarTitle: "Object metadata"
+description: "Manage object metadata, including HTTP headers and user-defined metadata, in Alibaba Cloud OSS."
+"og:title": "Set object metadata - Alibaba Cloud OSS"
 ---
 
 Object metadata is a set of key-value pairs that describe the properties of an object. OSS supports standard HTTP headers (Content-Type, Cache-Control, etc.) and user-defined metadata (x-oss-meta-*).
@@ -14,6 +14,10 @@ Object metadata is a set of key-value pairs that describe the properties of an o
 | **Standard HTTP headers** | Control caching, content type, encoding | `Content-Type: image/png` |
 | **User-defined metadata** | Custom key-value pairs (prefixed with `x-oss-meta-`) | `x-oss-meta-author: John` |
 | **OSS system metadata** | Set by OSS automatically | `Last-Modified`, `ETag`, `Content-Length` |
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Set metadata during upload
 
@@ -42,6 +46,7 @@ Object metadata is a set of key-value pairs that describe the properties of an o
   </Tab>
   <Tab title="Java">
     ```java title="SetMetadata.java"
+    // Initialize ossClient: /sdks/java/initialization
     import com.aliyun.oss.model.ObjectMetadata;
     import com.aliyun.oss.model.PutObjectRequest;
     import java.io.File;
@@ -60,6 +65,7 @@ Object metadata is a set of key-value pairs that describe the properties of an o
   </Tab>
   <Tab title="Node.js">
     ```javascript title="setMetadata.js"
+    // Initialize client: /sdks/nodejs/initialization
     await client.put('image.png', './image.png', {
       headers: {
         'Content-Type': 'image/png',
@@ -91,6 +97,7 @@ Use HeadObject to retrieve metadata without downloading the object body:
   </Tab>
   <Tab title="Java">
     ```java
+    // Initialize ossClient: /sdks/java/initialization
     ObjectMetadata metadata = ossClient.getObjectMetadata("examplebucket", "image.png");
     System.out.println("Content-Type: " + metadata.getContentType());
     System.out.println("Author: " + metadata.getUserMetadata().get("author"));

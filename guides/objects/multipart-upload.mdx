@@ -1,8 +1,8 @@
 ---
-title: "Multipart Upload"
-sidebarTitle: "Multipart Upload"
-description: "Learn how to upload large files using multipart upload in Alibaba Cloud OSS."
-"og:title": "Multipart Upload - Alibaba Cloud OSS"
+title: "Upload large objects"
+sidebarTitle: "Large objects"
+description: "Upload large files using multipart upload in Alibaba Cloud OSS."
+"og:title": "Upload large objects - Alibaba Cloud OSS"
 ---
 
 Multipart upload splits a large file into smaller parts, uploads them in parallel, and assembles them into a single object. This method supports files up to **48.8 TB** and improves upload speed and reliability for large files.
@@ -21,6 +21,7 @@ If the upload fails, you can retry individual parts without re-uploading the ent
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - An Alibaba Cloud account with OSS activated
 - An AccessKey pair or STS temporary credentials
 - The `oss:PutObject` permission

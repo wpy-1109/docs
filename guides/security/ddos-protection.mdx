@@ -1,31 +1,52 @@
 ---
-title: "DDoS Protection"
-sidebarTitle: "DDoS Protection"
-description: "Learn about DDoS protection for Alibaba Cloud OSS buckets."
-"og:title": "DDoS Protection - Alibaba Cloud OSS"
+title: "DDoS protection and sandbox"
+sidebarTitle: "DDoS protection"
+description: "Protect your OSS buckets from DDoS attacks and understand the sandbox mechanism."
+"og:title": "DDoS protection and sandbox - Alibaba Cloud OSS"
+"og:description": "Protect your OSS buckets from DDoS attacks and understand the sandbox mechanism."
 ---
 
-OSS integrates with Anti-DDoS to defend against volumetric and application-layer attacks.
+OSS integrates with Anti-DDoS to defend against volumetric and application-layer attacks. When abnormal traffic is detected, OSS may place a bucket into sandbox mode to protect the platform.
 
 ## Protection levels
 
-| Level | Description |
-|-------|-------------|
-| **Basic** | Free, automatic protection against common attacks. Always enabled. |
-| **Advanced** | Paid protection with higher thresholds and traffic scrubbing. |
+| Level | Description | Cost |
+|-------|-------------|------|
+| **Basic** | Automatic protection against common attacks. Always enabled. | Free |
+| **Advanced** | Higher thresholds, traffic scrubbing, dedicated IP pools. | Paid |
 
 ## Enable advanced protection
 
 <Steps>
   <Step title="Create an Anti-DDoS instance">
-    Purchase an Anti-DDoS Pro or Premium instance from the Alibaba Cloud console.
+    Purchase an Anti-DDoS Pro or Premium instance from the [Anti-DDoS console](https://yundun.console.alibabacloud.com/).
   </Step>
   <Step title="Bind your bucket">
-    In the OSS console, navigate to **Bucket Settings > DDoS Protection** and bind the bucket.
+    In the OSS console, navigate to **Bucket Settings > DDoS Protection** and bind the Anti-DDoS instance to your bucket.
   </Step>
 </Steps>
+
+## Sandbox mode
+
+When OSS detects abnormal traffic patterns (traffic spikes from hotlinking, DDoS attacks, or abuse), it places the affected bucket into **sandbox mode**. In sandbox mode:
+
+- Download speeds are throttled.
+- Access may be intermittently unavailable.
+- The bucket remains in sandbox until traffic returns to normal.
+
+### Prevent sandbox activation
+
+- Enable [hotlink protection](/guides/security/hotlink-protection) to block unauthorized embedding.
+- Use [CDN acceleration](/guides/networking/cdn-acceleration) to offload traffic from OSS.
+- Enable advanced DDoS protection for high-traffic buckets.
+- Monitor access patterns with [access logging](/guides/logging-monitoring/access-logging).
+
+<Warning>
+If your bucket enters sandbox mode repeatedly, contact [Alibaba Cloud support](https://www.alibabacloud.com/help) to review your traffic patterns and protection configuration.
+</Warning>
 
 ## Next steps
 
 - [Hotlink protection](/guides/security/hotlink-protection)
-- [OSS sandbox](/guides/security/sandbox)
+- [CDN acceleration](/guides/networking/cdn-acceleration)
+- [HTTPS and TLS](/guides/security/https-tls)

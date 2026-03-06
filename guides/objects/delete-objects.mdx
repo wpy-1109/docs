@@ -1,8 +1,8 @@
 ---
-title: "Delete Objects"
-sidebarTitle: "Delete Objects"
-description: "Learn how to delete one or more objects from Alibaba Cloud OSS."
-"og:title": "Delete Objects - Alibaba Cloud OSS"
+title: "Delete objects"
+sidebarTitle: "Delete objects"
+description: "Delete one or more objects from Alibaba Cloud OSS."
+"og:title": "Delete objects - Alibaba Cloud OSS"
 ---
 
 You can delete individual objects or batch-delete up to 1,000 objects per request. In versioned buckets, deleting an object adds a delete marker rather than permanently removing the data. To permanently delete a versioned object, specify its version ID.
@@ -13,6 +13,7 @@ Deleted objects cannot be recovered unless versioning is enabled. Always verify 
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - The `oss:DeleteObject` permission
 
 ## Delete a single object
@@ -39,12 +40,14 @@ Deleted objects cannot be recovered unless versioning is enabled. Always verify 
   </Tab>
   <Tab title="Java">
     ```java title="DeleteObject.java"
+    // Initialize ossClient: /sdks/java/initialization
     ossClient.deleteObject("examplebucket", "example.txt");
     System.out.println("Object deleted.");
     ```
   </Tab>
   <Tab title="Go">
     ```go title="delete_object.go"
+    // Initialize client: /sdks/go/initialization
     _, err := client.DeleteObject(context.TODO(), &oss.DeleteObjectRequest{
         Bucket: oss.Ptr("examplebucket"),
         Key:    oss.Ptr("example.txt"),
@@ -53,6 +56,7 @@ Deleted objects cannot be recovered unless versioning is enabled. Always verify 
   </Tab>
   <Tab title="Node.js">
     ```javascript title="deleteObject.js"
+    // Initialize client: /sdks/nodejs/initialization
     await client.delete('example.txt');
     ```
   </Tab>
@@ -80,6 +84,7 @@ Delete up to 1,000 objects in a single request:
   </Tab>
   <Tab title="Java">
     ```java title="BatchDelete.java"
+    // Initialize ossClient: /sdks/java/initialization
     List<String> keys = Arrays.asList("file1.txt", "file2.txt", "file3.txt");
     DeleteObjectsRequest request = new DeleteObjectsRequest("examplebucket")
         .withKeys(keys)

@@ -1,11 +1,15 @@
 ---
-title: "Prevent Overwrite"
-sidebarTitle: "Prevent Overwrite"
-description: "Learn how to prevent objects from being overwritten in Alibaba Cloud OSS."
-"og:title": "Prevent Overwrite - Alibaba Cloud OSS"
+title: "Prevent overwrite"
+sidebarTitle: "Prevent overwrite"
+description: "Prevent objects from being overwritten in Alibaba Cloud OSS."
+"og:title": "Prevent overwrite - Alibaba Cloud OSS"
 ---
 
 By default, uploading an object with the same key overwrites the existing object. You can use the `x-oss-forbid-overwrite` header to prevent accidental overwrites.
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Using the forbid overwrite header
 
@@ -33,6 +37,7 @@ Set the `x-oss-forbid-overwrite` header to `true` in your upload request. If an 
   </Tab>
   <Tab title="Java">
     ```java title="PreventOverwrite.java"
+    // Initialize ossClient: /sdks/java/initialization
     PutObjectRequest request = new PutObjectRequest("examplebucket",
         "important-file.txt", new ByteArrayInputStream("File contents".getBytes()));
     ObjectMetadata metadata = new ObjectMetadata();
@@ -43,6 +48,7 @@ Set the `x-oss-forbid-overwrite` header to `true` in your upload request. If an 
   </Tab>
   <Tab title="Node.js">
     ```javascript title="preventOverwrite.js"
+    // Initialize client: /sdks/nodejs/initialization
     await client.put('important-file.txt', Buffer.from('File contents'), {
       headers: { 'x-oss-forbid-overwrite': 'true' },
     });

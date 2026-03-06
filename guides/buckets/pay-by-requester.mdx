@@ -1,8 +1,8 @@
 ---
-title: "Pay-by-Requester"
-sidebarTitle: "Pay-by-Requester"
-description: "Learn how to enable pay-by-requester mode to shift access costs from the bucket owner to the requester."
-"og:title": "Pay-by-Requester - Alibaba Cloud OSS"
+title: "Pay-by-requester"
+sidebarTitle: "Pay-by-requester"
+description: "Enable pay-by-requester mode to shift access costs from the bucket owner to the requester."
+"og:title": "Pay-by-requester - Alibaba Cloud OSS"
 ---
 
 Pay-by-requester shifts data-access costs (traffic and request fees) from the bucket owner to the requester. The bucket owner pays only for storage. When enabled, anonymous access is disabled and all requests must include authentication.
@@ -21,6 +21,7 @@ When pay-by-requester is enabled, anonymous access is no longer possible. All re
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - An Alibaba Cloud account with OSS activated
 - An AccessKey pair or STS temporary credentials
 - Bucket owner permissions (`oss:PutBucketRequestPayment`)

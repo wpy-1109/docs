@@ -1,8 +1,8 @@
 ---
-title: "Server-Side Encryption"
-sidebarTitle: "Server-Side Encryption"
-description: "Learn how to encrypt objects at rest using server-side encryption in Alibaba Cloud OSS."
-"og:title": "Server-Side Encryption - Alibaba Cloud OSS"
+title: "Server-side encryption"
+sidebarTitle: "Server-side encryption"
+description: "Encrypt objects at rest using server-side encryption in Alibaba Cloud OSS."
+"og:title": "Server-side encryption - Alibaba Cloud OSS"
 ---
 
 Server-side encryption (SSE) encrypts objects at rest. OSS encrypts the data before writing it to disk and decrypts it when you download. You can use OSS-managed keys (SSE-OSS), KMS-managed keys (SSE-KMS), or customer-provided keys (SSE-C).
@@ -14,6 +14,10 @@ Server-side encryption (SSE) encrypts objects at rest. OSS encrypts the data bef
 | **SSE-OSS** | OSS manages keys automatically | Default encryption, simplest setup |
 | **SSE-KMS** | Key Management Service manages keys | Compliance requirements, key rotation, auditing |
 | **SSE-C** | You provide keys with each request | Full control over encryption keys |
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Configure default bucket encryption
 

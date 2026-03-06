@@ -1,8 +1,8 @@
 ---
-title: "Query Objects (Select)"
-sidebarTitle: "Query Objects"
-description: "Learn how to query structured data within objects using SQL-like expressions in Alibaba Cloud OSS."
-"og:title": "Query Objects (Select) - Alibaba Cloud OSS"
+title: "Query object content"
+sidebarTitle: "Query content"
+description: "Query structured data within objects using SQL-like expressions in Alibaba Cloud OSS."
+"og:title": "Query object content - Alibaba Cloud OSS"
 ---
 
 OSS Select lets you run SQL-like queries directly on CSV and JSON objects stored in OSS, returning only the data you need. This avoids downloading and processing entire files, reducing bandwidth and processing time.
@@ -13,6 +13,7 @@ OSS Select supports CSV and JSON formats. The maximum object size for Select is 
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - The `oss:GetObject` permission
 - Objects stored in Standard storage class
 - Objects in CSV or JSON format
@@ -58,6 +59,7 @@ OSS Select supports CSV and JSON formats. The maximum object size for Select is 
   </Tab>
   <Tab title="Java">
     ```java title="SelectObject.java"
+    // Initialize ossClient: /sdks/java/initialization
     SelectObjectRequest request = new SelectObjectRequest("examplebucket", "data.csv")
         .withExpression("SELECT * FROM ossobject WHERE _3 > 100")
         .withInputSerialization(

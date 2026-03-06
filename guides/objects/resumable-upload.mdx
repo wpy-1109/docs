@@ -1,8 +1,8 @@
 ---
-title: "Resumable Upload"
-sidebarTitle: "Resumable Upload"
-description: "Learn how to use resumable upload to handle unreliable network conditions in Alibaba Cloud OSS."
-"og:title": "Resumable Upload - Alibaba Cloud OSS"
+title: "Resume interrupted uploads"
+sidebarTitle: "Resumable uploads"
+description: "Use resumable upload to handle unreliable network conditions in Alibaba Cloud OSS."
+"og:title": "Resume interrupted uploads - Alibaba Cloud OSS"
 ---
 
 Resumable upload automatically tracks upload progress and resumes from the last successful position after a failure. It is built on top of multipart upload and is ideal for large files over unreliable networks.
@@ -13,6 +13,7 @@ Resumable upload supports files up to **48.8 TB**. The SDK automatically manages
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - An Alibaba Cloud account with OSS activated
 - An AccessKey pair or STS temporary credentials
 - The `oss:PutObject` and `oss:ListParts` permissions

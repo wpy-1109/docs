@@ -2,3 +2,20 @@
 node_modules/
 .mintlify/
 *.png
+
+# Tool/IDE config
+.agents/
+.claude/
+.qoder/
+.qwen/
+skills/
+skills-lock.json
+
+# Temp/debug files
+firebase-debug.log
+docs.json.bak
+crawled-docs/
+architecture-proposals/
+validate.py
+validation-report.md
+ux-evaluation-report.md

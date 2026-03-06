@@ -1,8 +1,8 @@
 ---
-title: "Copy Objects"
-sidebarTitle: "Copy Objects"
-description: "Learn how to copy objects within or across buckets in Alibaba Cloud OSS."
-"og:title": "Copy Objects - Alibaba Cloud OSS"
+title: "Copy objects"
+sidebarTitle: "Copy objects"
+description: "Copy objects within or across buckets in Alibaba Cloud OSS."
+"og:title": "Copy objects - Alibaba Cloud OSS"
 ---
 
 You can copy objects within the same bucket or across buckets without downloading and re-uploading them. For objects up to 5 GB, use simple copy (CopyObject). For larger objects up to 48.8 TB, use multipart copy (UploadPartCopy).
@@ -13,6 +13,7 @@ Copying does not affect the source object. The destination gets a new copy with 
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - The `oss:GetObject` permission on the source bucket
 - The `oss:PutObject` permission on the destination bucket
 
@@ -132,4 +133,4 @@ Copying does not affect the source object. The destination gets a new copy with 
 ## Next steps
 
 - [Move / rename objects](/guides/objects/move-rename-objects)
-- [Cross-Region replication](/guides/data-management/cross-region-replication)
+- [Cross-Region replication](/guides/data-management/replication)

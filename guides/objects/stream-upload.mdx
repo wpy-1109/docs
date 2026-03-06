@@ -1,0 +1,84 @@
+---
+title: "Stream uploads"
+sidebarTitle: "Stream uploads"
+description: "Upload data from an in-memory stream to Alibaba Cloud OSS without writing to disk first."
+"og:title": "Stream uploads - Alibaba Cloud OSS"
+---
+
+Streaming lets you upload data from an in-memory stream without writing to disk first. This is useful for processing pipelines, log forwarding, and real-time data handling.
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
+- An Alibaba Cloud account with OSS activated
+- The `oss:PutObject` permission
+
+## Upload from a stream
+
+Upload data from a byte stream, string, or generator without saving to a file first.
+
+<Tabs>
+  <Tab title="Python">
+    ```python title="streaming_upload.py"
+    import alibabacloud_oss_v2 as oss
+    import io
+
+    credentials_provider = oss.credentials.EnvironmentVariableCredentialsProvider()
+    cfg = oss.config.load_default()
+    cfg.credentials_provider = credentials_provider
+    cfg.region = "cn-hangzhou"
+
+    client = oss.Client(cfg)
+
+    # Upload from a byte stream
+    data = io.BytesIO(b"Hello, this is streaming data!")
+    result = client.put_object(oss.PutObjectRequest(
+        bucket="examplebucket",
+        key="stream-data.txt",
+        body=data,
+    ))
+
+    print(f"Streamed upload complete. ETag: {result.etag}")
+    ```
+  </Tab>
+  <Tab title="Java">
+    ```java title="StreamingUpload.java"
+    import com.aliyun.oss.*;
+    import com.aliyun.oss.common.auth.*;
+    import com.aliyun.oss.common.comm.SignVersion;
+    import java.io.ByteArrayInputStream;
+
+    public class StreamingUpload {
+        public static void main(String[] args) throws Exception {
+            String endpoint = "https://oss-cn-hangzhou.aliyuncs.com";
+            String region = "cn-hangzhou";
+            EnvironmentVariableCredentialsProvider credentialsProvider =
+                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
+
+            ClientBuilderConfiguration clientConfig = new ClientBuilderConfiguration();
+            clientConfig.setSignatureVersion(SignVersion.V4);
+            OSS ossClient = OSSClientBuilder.create()
+                .endpoint(endpoint)
+                .credentialsProvider(credentialsProvider)
+                .clientConfiguration(clientConfig)
+                .region(region)
+                .build();
+
+            try {
+                byte[] content = "Hello, this is streaming data!".getBytes();
+                ossClient.putObject("examplebucket", "stream-data.txt",
+                    new ByteArrayInputStream(content));
+            } finally {
+                ossClient.shutdown();
+            }
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Next steps
+
+- [Upload objects](/guides/objects/upload-objects)
+- [Stream downloads](/guides/objects/stream-download)
+- [Upload large objects](/guides/objects/multipart-upload)

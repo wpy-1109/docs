@@ -1,8 +1,8 @@
 ---
-title: "Restore Archived Objects"
-sidebarTitle: "Restore Archived"
-description: "Learn how to restore archived, cold archive, and deep cold archive objects in Alibaba Cloud OSS."
-"og:title": "Restore Archived Objects - Alibaba Cloud OSS"
+title: "Restore archived objects"
+sidebarTitle: "Restore archived"
+description: "Restore archived, cold archive, and deep cold archive objects in Alibaba Cloud OSS."
+"og:title": "Restore archived objects - Alibaba Cloud OSS"
 ---
 
 Objects stored in Archive, Cold Archive, or Deep Cold Archive storage classes must be restored before you can read them. The restore process copies the data to a readable state for a temporary period.
@@ -17,6 +17,7 @@ Objects stored in Archive, Cold Archive, or Deep Cold Archive storage classes mu
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - The `oss:RestoreObject` permission
 
 ## Using an SDK
@@ -46,12 +47,14 @@ Objects stored in Archive, Cold Archive, or Deep Cold Archive storage classes mu
   </Tab>
   <Tab title="Java">
     ```java title="RestoreObject.java"
+    // Initialize ossClient: /sdks/java/initialization
     ossClient.restoreObject("examplebucket", "archived-file.zip");
     System.out.println("Restore initiated.");
     ```
   </Tab>
   <Tab title="Go">
     ```go title="restore_object.go"
+    // Initialize client: /sdks/go/initialization
     _, err := client.RestoreObject(context.TODO(), &oss.RestoreObjectRequest{
         Bucket: oss.Ptr("examplebucket"),
         Key:    oss.Ptr("archived-file.zip"),
@@ -63,6 +66,7 @@ Objects stored in Archive, Cold Archive, or Deep Cold Archive storage classes mu
   </Tab>
   <Tab title="Node.js">
     ```javascript title="restoreObject.js"
+    // Initialize client: /sdks/nodejs/initialization
     await client.restore('archived-file.zip', { type: 'ColdArchive', Days: 3 });
     ```
   </Tab>
@@ -80,6 +84,6 @@ Enable [archive direct reading](/guides/data-management/archive-direct-read) to 
 
 ## Next steps
 
-- [Storage classes](/get-started/concepts/storage-classes)
+- [Storage classes](/get-started/concepts/core-concepts)
 - [Archive direct reading](/guides/data-management/archive-direct-read)
 - [Storage class conversion](/guides/data-management/storage-class-conversion)

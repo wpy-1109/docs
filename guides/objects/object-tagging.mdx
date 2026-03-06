@@ -1,11 +1,10 @@
 ---
-title: "Object Tagging"
-sidebarTitle: "Object Tagging"
-description: "Learn how to tag objects for classification, lifecycle management, and access control in Alibaba Cloud OSS."
-"og:title": "Object Tagging - Alibaba Cloud OSS"
+title: "Tag objects"
+sidebarTitle: "Object tagging"
+description: "Tag objects for classification, lifecycle management, and access control in Alibaba Cloud OSS."
+"og:title": "Tag objects - Alibaba Cloud OSS"
 ---
 
-Object tags are key-value pairs that you attach to objects for classification, lifecycle rule targeting, and fine-grained access control. You can add up to 10 tags per object.
 
 ## Tag constraints
 
@@ -14,6 +13,10 @@ Object tags are key-value pairs that you attach to objects for classification, l
 | Maximum tags per object | 10 |
 | Key length | 1--128 characters (UTF-8) |
 | Value length | 0--256 characters (UTF-8) |
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Using an SDK
 
@@ -55,6 +58,7 @@ Object tags are key-value pairs that you attach to objects for classification, l
   </Tab>
   <Tab title="Java">
     ```java title="ObjectTagging.java"
+    // Initialize ossClient: /sdks/java/initialization
     Map<String, String> tags = new HashMap<>();
     tags.put("department", "engineering");
     tags.put("classification", "public");
@@ -63,6 +67,7 @@ Object tags are key-value pairs that you attach to objects for classification, l
   </Tab>
   <Tab title="Node.js">
     ```javascript title="objectTagging.js"
+    // Initialize client: /sdks/nodejs/initialization
     await client.putObjectTagging('example.txt', {
       department: 'engineering',
       classification: 'public',

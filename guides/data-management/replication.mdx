@@ -1,0 +1,62 @@
+---
+title: "Replication"
+sidebarTitle: "Replication"
+description: "Replicate objects across regions or within the same region for disaster recovery, compliance, and data aggregation."
+"og:title": "Replication - Alibaba Cloud OSS"
+"og:description": "Replicate objects across regions or within the same region for disaster recovery, compliance, and data aggregation."
+---
+
+Replication automatically copies objects from a source bucket to a destination bucket. OSS supports two modes:
+
+| Mode | Destination | Use case |
+|------|-------------|----------|
+| **Cross-region replication (CRR)** | Different region | Disaster recovery, geo-redundancy, reduced latency for distributed users |
+| **Same-region replication (SRR)** | Same region | Data backup, compliance, aggregating data from multiple buckets |
+
+## Prerequisites
+
+- Both source and destination buckets must have **versioning enabled**.
+- You must have permissions to configure replication on both buckets.
+- For CRR, the destination bucket must be in a **different region** from the source.
+
+## Configure cross-region replication
+
+<Steps>
+  <Step title="Enable versioning">
+    Enable versioning on both the source and destination buckets. Go to **Bucket Settings > Versioning** and set the status to **Enabled**.
+  </Step>
+  <Step title="Create a replication rule">
+    Navigate to the source bucket, choose **Data Management > Cross-Region Replication**, and click **Enable**.
+  </Step>
+  <Step title="Select destination">
+    Choose the destination region and bucket. Configure replication scope:
+    - **All objects**: Replicate everything in the bucket.
+    - **Objects with specific prefix**: Replicate only objects matching the prefix.
+  </Step>
+  <Step title="Choose replication options">
+    - **Replicate historical data**: Copy existing objects (not only new uploads).
+    - **Replication Time Control (RTC)**: Guarantee replication within 15 minutes (additional cost).
+  </Step>
+</Steps>
+
+## Configure same-region replication
+
+Same-region replication follows the same setup as cross-region replication. The only difference: the destination bucket is in the **same region** as the source.
+
+Navigate to **Data Management > Same-Region Replication** and follow the same steps above.
+
+## Comparison
+
+| Feature | Cross-region (CRR) | Same-region (SRR) |
+|---------|--------------------|--------------------|
+| Destination region | Different | Same |
+| Disaster recovery | Yes (geographic redundancy) | No (same data center risk) |
+| Data transfer cost | Yes (cross-region traffic fees) | No |
+| Replication Time Control | Available | Available |
+| Replicate historical data | Yes | Yes |
+
+## Next steps
+
+- [Versioning](/guides/data-management/versioning)
+- [Data redundancy](/guides/data-management/data-redundancy)
+- [Scheduled backup](/guides/data-management/scheduled-backup)

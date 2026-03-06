@@ -1,11 +1,15 @@
 ---
-title: "Progress Bars"
-sidebarTitle: "Progress Bars"
-description: "Learn how to display upload and download progress using OSS SDKs."
-"og:title": "Progress Bars - Alibaba Cloud OSS"
+title: "Track transfer progress"
+sidebarTitle: "Transfer progress"
+description: "Display upload and download progress using OSS SDKs."
+"og:title": "Track transfer progress - Alibaba Cloud OSS"
 ---
 
 OSS SDKs provide progress callbacks that let you display upload and download progress, estimated time remaining, and transfer speed. This improves user experience for long-running transfers.
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Using an SDK
 
@@ -38,6 +42,7 @@ OSS SDKs provide progress callbacks that let you display upload and download pro
   </Tab>
   <Tab title="Java">
     ```java title="ProgressBar.java"
+    // Initialize ossClient: /sdks/java/initialization
     import com.aliyun.oss.event.*;
 
     PutObjectRequest request = new PutObjectRequest("examplebucket",
@@ -69,6 +74,7 @@ OSS SDKs provide progress callbacks that let you display upload and download pro
   </Tab>
   <Tab title="Node.js">
     ```javascript title="progressBar.js"
+    // Initialize client: /sdks/nodejs/initialization
     const result = await client.multipartUpload('large-file.zip', './large-file.zip', {
       progress: (percentage) => {
         console.log(`Progress: ${(percentage * 100).toFixed(1)}%`);

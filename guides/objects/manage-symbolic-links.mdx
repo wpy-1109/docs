@@ -1,14 +1,15 @@
 ---
-title: "Symbolic Links"
-sidebarTitle: "Symbolic Links"
-description: "Learn how to create and manage symbolic links (symlinks) to objects in Alibaba Cloud OSS."
-"og:title": "Symbolic Links - Alibaba Cloud OSS"
+title: "Use symbolic links"
+sidebarTitle: "Symbolic links"
+description: "Create and manage symbolic links (symlinks) to objects in Alibaba Cloud OSS."
+"og:title": "Use symbolic links - Alibaba Cloud OSS"
 ---
 
 A symbolic link (symlink) is a special object that points to another object in the same bucket. You can access the target object through the symlink, similar to shortcuts in a file system. Symlinks allow you to create multiple access paths to the same data without duplicating it.
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - The `oss:PutObject` permission (to create symlinks)
 - The `oss:GetObject` permission (to read symlinks)
 
@@ -50,6 +51,7 @@ A symbolic link (symlink) is a special object that points to another object in t
   </Tab>
   <Tab title="Java">
     ```java title="SymbolicLinks.java"
+    // Initialize ossClient: /sdks/java/initialization
     // Create a symlink
     ossClient.createSymlink("examplebucket", "shortcut.txt", "original/path/file.txt");
 
@@ -60,6 +62,7 @@ A symbolic link (symlink) is a special object that points to another object in t
   </Tab>
   <Tab title="Node.js">
     ```javascript title="symbolicLinks.js"
+    // Initialize client: /sdks/nodejs/initialization
     // Create a symlink
     await client.putSymlink('shortcut.txt', 'original/path/file.txt');
 

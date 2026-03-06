@@ -1,14 +1,15 @@
 ---
-title: "Query Bucket Info"
-sidebarTitle: "Query Bucket Info"
-description: "Learn how to query bucket information in Alibaba Cloud OSS using the console, CLI, or SDK."
-"og:title": "Query Bucket Info - Alibaba Cloud OSS"
+title: "Query bucket info"
+sidebarTitle: "Query bucket info"
+description: "Query bucket information in Alibaba Cloud OSS using the console, CLI, or SDK."
+"og:title": "Query bucket info - Alibaba Cloud OSS"
 ---
 
 You can query a bucket's metadata to retrieve details such as its region, storage class, creation date, ACL, and redundancy type. This is useful for auditing configurations, verifying compliance, and optimizing data access paths.
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - An Alibaba Cloud account with OSS activated
 - An AccessKey pair or STS temporary credentials
 - The `oss:GetBucketInfo` permission
@@ -164,4 +165,4 @@ ossutil api get-bucket-info --bucket examplebucket
 
 - [List buckets](/guides/buckets/list-buckets)
 - [View storage usage](/guides/buckets/storage-capacity)
-- [Regions & endpoints](/get-started/concepts/regions-and-endpoints)
+- [Regions & endpoints](/get-started/concepts/core-concepts)

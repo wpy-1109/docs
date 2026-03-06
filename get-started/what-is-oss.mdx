@@ -1,29 +1,28 @@
 ---
 title: "What is OSS?"
 sidebarTitle: "What is OSS?"
-description: "Learn about Alibaba Cloud Object Storage Service (OSS), its features, and common use cases."
+description: "Alibaba Cloud Object Storage Service (OSS), its features, and common use cases."
 icon: "cloud"
 "og:title": "What is OSS? - Alibaba Cloud OSS"
-"og:description": "Learn about Alibaba Cloud Object Storage Service (OSS), its features, and common use cases."
+"og:description": "Alibaba Cloud Object Storage Service (OSS), its features, and common use cases."
 ---
 
-# What is OSS?
 
 Alibaba Cloud Object Storage Service (OSS) is a secure, cost-effective, and highly reliable cloud storage service. It provides 99.9999999999% (twelve 9s) data durability and 99.995% service availability, with platform-independent APIs that let you store and access data from any application, anytime, anywhere.
 
 ## Key capabilities
 
 <CardGroup cols={2}>
-  <Card title="Massive Scale" icon="database">
+  <Card title="Massive scale" icon="database">
     Store unlimited data with no capacity limits per bucket. Individual objects up to 48.8 TB via multipart upload.
   </Card>
-  <Card title="Multiple Storage Classes" icon="layer-group">
+  <Card title="Multiple storage classes" icon="layer-group">
     Choose from Standard, Infrequent Access, Archive, Cold Archive, and Deep Cold Archive to optimize costs.
   </Card>
-  <Card title="Strong Consistency" icon="shield-check">
+  <Card title="Strong consistency" icon="shield-check">
     Read-after-write consistency for all operations. No stale reads or partial data.
   </Card>
-  <Card title="High Bandwidth" icon="gauge-high">
+  <Card title="High bandwidth" icon="gauge-high">
     Up to 100 Gbps download bandwidth per account in select regions for AI and large-scale data analysis.
   </Card>
 </CardGroup>
@@ -32,13 +31,10 @@ Alibaba Cloud Object Storage Service (OSS) is a secure, cost-effective, and high
 
 OSS stores data as **objects** within **buckets**. Each object consists of a key (unique name), data (the file content), and metadata (key-value pairs describing the object).
 
-```mermaid
-flowchart LR
-  A[Your Application] --> B[OSS Endpoint]
-  B --> C[Bucket]
-  C --> D1[Object 1]
-  C --> D2[Object 2]
-  C --> D3[Object N]
+```
+Your Application  →  OSS Endpoint  →  Bucket  →  Object 1
+                                             →  Object 2
+                                             →  Object N
 ```
 
 Unlike traditional file systems, OSS uses a flat structure -- there are no directories or folders. You simulate folder hierarchies by including forward slashes (`/`) in object keys, such as `images/2024/photo.jpg`.
@@ -68,13 +64,13 @@ Unlike traditional file systems, OSS uses a flat structure -- there are no direc
 ## Ways to access OSS
 
 <CardGroup cols={2}>
-  <Card title="OSS Console" icon="browser" href="/get-started/quickstart/console">
+  <Card title="OSS console" icon="browser" href="/quickstart">
     Web-based GUI for managing buckets and objects. No installation required.
   </Card>
-  <Card title="ossutil CLI" icon="terminal" href="/get-started/quickstart/cli">
+  <Card title="ossutil CLI" icon="terminal" href="/quickstart">
     Command-line tool for batch operations, scripting, and automation.
   </Card>
-  <Card title="SDKs" icon="code" href="/get-started/quickstart/sdk">
+  <Card title="SDKs" icon="code" href="/quickstart">
     Libraries for Java, Python, Go, Node.js, PHP, .NET, C++, and more.
   </Card>
   <Card title="REST API" icon="globe" href="/api-reference/overview">
@@ -105,10 +101,10 @@ For detailed pricing, see [Pricing](/resources/pricing/overview).
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart: Console" icon="rocket" href="/get-started/quickstart/console">
+  <Card title="Quickstart: console" icon="rocket" href="/quickstart">
     Create your first bucket and upload a file in minutes.
   </Card>
-  <Card title="Core Concepts" icon="lightbulb" href="/get-started/concepts/buckets">
+  <Card title="Core concepts" icon="lightbulb" href="/get-started/concepts/core-concepts">
     Learn about buckets, objects, regions, and storage classes.
   </Card>
 </CardGroup>

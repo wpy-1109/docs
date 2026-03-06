@@ -1,7 +1,7 @@
 ---
 title: "CORS"
 sidebarTitle: "CORS"
-description: "Learn how to configure Cross-Origin Resource Sharing (CORS) rules for Alibaba Cloud OSS buckets."
+description: "Configure Cross-Origin Resource Sharing (CORS) rules for Alibaba Cloud OSS buckets."
 "og:title": "CORS - Alibaba Cloud OSS"
 ---
 
@@ -35,6 +35,10 @@ CORS is required when your web application makes direct requests to OSS from the
   </Step>
 </Steps>
 
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
+
 ## Using an SDK
 
 <Tabs>
@@ -67,6 +71,7 @@ CORS is required when your web application makes direct requests to OSS from the
   </Tab>
   <Tab title="Java">
     ```java title="CorsConfig.java"
+    // Initialize ossClient: /sdks/java/initialization
     SetBucketCORSRequest request = new SetBucketCORSRequest("examplebucket");
     SetBucketCORSRequest.CORSRule rule = new SetBucketCORSRequest.CORSRule();
     rule.addAllowdOrigin("https://example.com");

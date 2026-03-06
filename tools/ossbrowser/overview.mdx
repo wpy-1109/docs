@@ -1,40 +1,104 @@
 ---
-title: 'ossbrowser'
-description: 'GUI tool for managing OSS buckets and objects visually'
+title: "ossbrowser: GUI Tool for OSS Management"
+sidebarTitle: "ossbrowser"
+description: "Install and configure ossbrowser, the graphical desktop tool for managing Alibaba Cloud OSS buckets, objects, and permissions on Windows, macOS, and Linux."
+icon: "desktop"
 ---
 
-ossbrowser is the official graphical management tool for OSS. It provides a visual, desktop-based way to manage buckets and objects, similar to a file explorer.
+ossbrowser is the official graphical management tool for Alibaba Cloud OSS. It provides a visual, desktop-based way to manage buckets and objects with drag-and-drop uploads, file previews, and access control -- similar to a file explorer.
 
-## Download
+<Warning>
+When uploading or downloading files larger than 10 GB over the public internet, network instability may cause transfer failures. For large file transfers, use [ossutil](/tools/ossutil/overview) (CLI) instead.
+</Warning>
 
-| Platform | Architecture | Format |
-|----------|-------------|--------|
-| Windows | x86-64 | `.exe` installer |
-| macOS | Universal | `.dmg` installer |
-| Linux | x86-64 | `.AppImage` |
+## System requirements
 
-Download from the [Alibaba Cloud OSS documentation portal](https://www.alibabacloud.com/help/en/oss/developer-reference/ossbrowser-2-0-overview/).
+| Platform | Architecture | Supported |
+|----------|-------------|-----------|
+| Windows | x86 (32-bit), x86-64 (64-bit) | Yes |
+| macOS | x86-64 | Yes |
+| Linux | x86-64 (requires GUI desktop) | Yes |
 
 ## Installation
 
-<Steps>
-  <Step title="Download the installer">
-    Download the appropriate installer for your operating system.
-  </Step>
-  <Step title="Run the installer">
-    - **Windows**: Run the `.exe` installer and follow the prompts
-    - **macOS**: Open the `.dmg` and drag ossbrowser to Applications
-    - **Linux**: Make the `.AppImage` executable with `chmod +x` and run it
-  </Step>
-  <Step title="Configure credentials">
-    On first launch, enter your access credentials to connect to OSS.
-  </Step>
-</Steps>
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Download the installer">
+        Download the package for your system architecture:
+
+        | Architecture | Download |
+        |-------------|----------|
+        | Windows x64 | [oss-browser-win32-x64.zip](https://gosspublic.alicdn.com/ossbrowser/1.18.0/oss-browser-win32-x64.zip) |
+        | Windows x32 | [oss-browser-win32-ia32.zip](https://gosspublic.alicdn.com/ossbrowser/1.18.0/oss-browser-win32-ia32.zip) |
+      </Step>
+      <Step title="Extract the archive">
+        Unzip the downloaded file to a folder of your choice.
+      </Step>
+      <Step title="Launch ossbrowser">
+        Open the extracted folder and double-click `oss-browser.exe`.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="macOS">
+    <Steps>
+      <Step title="Download the package">
+        Download [oss-browser-darwin-x64.zip](https://gosspublic.alicdn.com/ossbrowser/1.18.0/oss-browser-darwin-x64.zip).
+      </Step>
+      <Step title="Extract the archive">
+        Unzip the downloaded file.
+      </Step>
+      <Step title="Launch ossbrowser">
+        In the `oss-browser-darwin-x64` folder, right-click `oss-browser.app` and select **Open**.
+      </Step>
+      <Step title="Approve Gatekeeper">
+        macOS may show a security dialog. Click **Open** to allow the app, then click **Allow** if prompted.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Linux">
+    <Steps>
+      <Step title="Install a GUI desktop">
+        ossbrowser requires a graphical desktop environment. If your Linux server does not have one, install a desktop environment first (e.g., GNOME or XFCE).
+      </Step>
+      <Step title="Install dependencies">
+        Install the required shared libraries:
+
+        ```bash
+        # Ubuntu / Debian
+        sudo apt update
+        sudo apt install libx11-xcb1 libxtst6 libxss1 libgconf-2-4 libgtk2.0-0
+
+        # CentOS / RHEL
+        sudo yum install libXtst libXScrnSaver gtk2 GConf2
+        ```
+      </Step>
+      <Step title="Download and extract">
+        ```bash
+        wget https://gosspublic.alicdn.com/ossbrowser/1.18.0/oss-browser-linux-x64.zip
+        unzip oss-browser-linux-x64.zip
+        ```
+      </Step>
+      <Step title="Launch ossbrowser">
+        ```bash
+        cd oss-browser-linux-x64
+        ./oss-browser
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+For all versions and release notes, see the [ossbrowser GitHub releases](https://github.com/aliyun/ossbrowser/releases).
+
+<Tip>
+The current version is **1.18.0**. ossbrowser is best suited for ad-hoc management tasks with small-to-medium files. For scripting, automation, or files larger than 10 GB, use [ossutil](/tools/ossutil/overview) instead.
+</Tip>
 
 ## Login methods
 
 <Tabs>
-  <Tab title="AccessKey Login">
+  <Tab title="AccessKey login">
     Use your AccessKey ID and AccessKey Secret for full account access.
 
     1. Select **AK Login** mode
@@ -43,16 +107,13 @@ Download from the [Alibaba Cloud OSS documentation portal](https://www.alibabacl
     4. Select the region/endpoint
     5. Click **Login**
   </Tab>
-  <Tab title="STS Token Login">
+  <Tab title="STS token login">
     Use temporary security credentials for scoped, time-limited access. Ideal for granting limited access to sub-users.
 
     1. Select **STS Token Login** mode
     2. Enter the temporary AccessKey ID, Secret, and Security Token
     3. Set the preset OSS path
     4. Click **Login**
-  </Tab>
-  <Tab title="Preset OSS Path">
-    Restrict access to a specific bucket or directory path. Useful for providing access to only certain resources.
   </Tab>
 </Tabs>
 
@@ -68,14 +129,6 @@ Download from the [Alibaba Cloud OSS documentation portal](https://www.alibabacl
 | Search and filter | Locate files within buckets |
 | Directory-like view | Browse objects in a folder-style hierarchy |
 | Operation logs | View detailed logs of operations performed |
-
-## Preview support
-
-ossbrowser supports in-app preview for:
-
-- **Images**: JPEG, PNG, GIF, BMP, WebP
-- **Text files**: TXT, JSON, XML, CSV
-- **Documents**: Depends on format support
 
 ## Common operations
 
@@ -98,6 +151,16 @@ ossbrowser supports in-app preview for:
 2. Select **Set ACL** from the context menu
 3. Choose from `private`, `public-read`, or `public-read-write`
 
-<Note>
-For production workloads with frequent or automated operations, use [ossutil](/tools/ossutil/overview) (CLI) or an SDK instead.
-</Note>
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="ossutil CLI" icon="terminal" href="/tools/ossutil/overview">
+    Use the command-line tool for scripting, automation, and large file transfers.
+  </Card>
+  <Card title="OSS console" icon="browser" href="https://oss.console.aliyun.com">
+    Manage OSS from the web-based console.
+  </Card>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Get started uploading objects to OSS.
+  </Card>
+</CardGroup>

@@ -1,7 +1,7 @@
 ---
 title: "Presigned URLs"
 sidebarTitle: "Presigned URLs"
-description: "Learn how to generate presigned URLs for temporary access to Alibaba Cloud OSS objects."
+description: "Generate presigned URLs for temporary access to Alibaba Cloud OSS objects."
 "og:title": "Presigned URLs - Alibaba Cloud OSS"
 ---
 
@@ -13,6 +13,7 @@ Presigned URLs support a maximum validity period of **7 days** (604,800 seconds)
 
 ## Prerequisites
 
+- SDK installed and configured ([quickstart](/quickstart))
 - An AccessKey pair or STS temporary credentials
 - The `oss:GetObject` or `oss:PutObject` permission
 
@@ -41,6 +42,7 @@ Presigned URLs support a maximum validity period of **7 days** (604,800 seconds)
   </Tab>
   <Tab title="Java">
     ```java title="PresignedDownload.java"
+    // Initialize ossClient: /sdks/java/initialization
     import java.util.Date;
     import java.net.URL;
 
@@ -51,6 +53,7 @@ Presigned URLs support a maximum validity period of **7 days** (604,800 seconds)
   </Tab>
   <Tab title="Go">
     ```go title="presigned_download.go"
+    // Initialize client: /sdks/go/initialization
     result, err := client.Presign(context.TODO(), &oss.GetObjectRequest{
         Bucket: oss.Ptr("examplebucket"),
         Key:    oss.Ptr("example.txt"),
@@ -61,6 +64,7 @@ Presigned URLs support a maximum validity period of **7 days** (604,800 seconds)
   </Tab>
   <Tab title="Node.js">
     ```javascript title="presignedDownload.js"
+    // Initialize client: /sdks/nodejs/initialization
     const url = client.signatureUrl('example.txt', {
       expires: 3600, // 1 hour
       method: 'GET',
@@ -86,6 +90,7 @@ Presigned URLs support a maximum validity period of **7 days** (604,800 seconds)
   </Tab>
   <Tab title="Java">
     ```java
+    // Initialize ossClient: /sdks/java/initialization
     GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(
         "examplebucket", "uploads/user-file.txt", HttpMethod.PUT);
     request.setExpiration(new Date(System.currentTimeMillis() + 3600 * 1000));

@@ -1,26 +1,25 @@
 ---
-title: "Access Control Overview"
-sidebarTitle: "Access Control"
+title: "Access control overview"
+sidebarTitle: "Access control"
 description: "Understand the access control mechanisms in Alibaba Cloud OSS: ACL, RAM policies, bucket policies, and STS."
 icon: "shield-halved"
-"og:title": "Access Control Overview - Alibaba Cloud OSS"
+"og:title": "Access control overview - Alibaba Cloud OSS"
 "og:description": "Understand the access control mechanisms in Alibaba Cloud OSS: ACL, RAM policies, bucket policies, and STS."
 ---
 
-# Access Control Overview
 
 OSS provides a multi-layered access control model that lets you secure your data at different levels. You can combine these mechanisms to implement least-privilege access for your users and applications.
 
 ## Access control mechanisms
 
 <CardGroup cols={2}>
-  <Card title="Block Public Access" icon="ban">
+  <Card title="Block public access" icon="ban">
     A master switch that blocks all public access to your bucket, overriding any other permissions. Enabled by default.
   </Card>
-  <Card title="Bucket Policies" icon="file-shield">
+  <Card title="Bucket policies" icon="file-shield">
     Resource-based policies that grant fine-grained access to specific users, accounts, or anonymous users.
   </Card>
-  <Card title="RAM Policies" icon="user-shield">
+  <Card title="RAM policies" icon="user-shield">
     User-based policies that control which OSS resources your RAM users and roles can access.
   </Card>
   <Card title="Bucket ACL" icon="list-check">
@@ -32,24 +31,24 @@ OSS provides a multi-layered access control model that lets you secure your data
 
 When a request arrives, OSS evaluates access control in this order:
 
-```mermaid
-flowchart TD
-    A[Incoming Request] --> B{Block Public Access enabled?}
-    B -->|Yes & public request| C[Denied]
-    B -->|No or authenticated| D{Bucket Policy?}
-    D -->|Explicit Deny| C
-    D -->|Explicit Allow| E[Allowed]
-    D -->|No match| F{RAM Policy?}
-    F -->|Explicit Deny| C
-    F -->|Explicit Allow| E
-    F -->|No match| G{Bucket ACL?}
-    G -->|Allows access| E
-    G -->|Denies access| C
-```
+<Steps>
+  <Step title="Block public access">
+    If Block Public Access is enabled and the request is unauthenticated, the request is **denied**.
+  </Step>
+  <Step title="Bucket policy">
+    OSS checks bucket policies. An explicit **Deny** stops evaluation. An explicit **Allow** grants access.
+  </Step>
+  <Step title="RAM policy">
+    If no bucket policy matches, OSS checks RAM policies attached to the user or role.
+  </Step>
+  <Step title="Bucket ACL">
+    If no RAM policy matches, OSS falls back to the bucket ACL setting.
+  </Step>
+</Steps>
 
-<Note>
+<Warning>
 An explicit **Deny** in any policy always takes precedence over any Allow. Design your policies with this in mind.
-</Note>
+</Warning>
 
 ## Comparison
 

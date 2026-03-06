@@ -1,8 +1,8 @@
 ---
-title: "Access Logging"
-sidebarTitle: "Access Logging"
-description: "Learn how to enable access logging to record all requests to your Alibaba Cloud OSS bucket."
-"og:title": "Access Logging - Alibaba Cloud OSS"
+title: "Access logging"
+sidebarTitle: "Access logging"
+description: "Enable access logging to record all requests to your Alibaba Cloud OSS bucket."
+"og:title": "Access logging - Alibaba Cloud OSS"
 ---
 
 Access logging creates hourly log files that record all requests made to your bucket. Log files are stored in a designated bucket using a fixed naming convention, providing an audit trail for security analysis, compliance, and troubleshooting.
@@ -32,6 +32,10 @@ Each log entry includes fields such as the remote IP, request time, operation ty
 Store log files in a separate bucket from your source data to avoid recursive logging and simplify access control.
 </Tip>
 
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
+
 ## Using the SDK
 
 <Tabs>
@@ -52,6 +56,7 @@ Store log files in a separate bucket from your source data to avoid recursive lo
   </Tab>
   <Tab title="Java">
     ```java
+    // Initialize ossClient: /sdks/java/initialization
     SetBucketLoggingRequest request = new SetBucketLoggingRequest("examplebucket");
     request.setTargetBucket("log-bucket");
     request.setTargetPrefix("examplebucket-logs/");

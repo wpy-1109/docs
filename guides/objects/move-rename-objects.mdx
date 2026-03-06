@@ -1,11 +1,15 @@
 ---
-title: "Move / Rename Objects"
-sidebarTitle: "Move / Rename"
-description: "Learn how to move or rename objects in Alibaba Cloud OSS."
-"og:title": "Move / Rename Objects - Alibaba Cloud OSS"
+title: "Move or rename objects"
+sidebarTitle: "Move / rename"
+description: "Move or rename objects in Alibaba Cloud OSS."
+"og:title": "Move / rename objects - Alibaba Cloud OSS"
 ---
 
 OSS does not provide a native move or rename operation. To move or rename an object, you copy it to the new location and delete the original. For buckets with hierarchical namespace enabled, OSS provides a native Rename API.
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Method 1: copy and delete
 
@@ -42,6 +46,7 @@ For standard buckets, move or rename by copying and then deleting the source:
   </Tab>
   <Tab title="Java">
     ```java title="MoveObject.java"
+    // Initialize ossClient: /sdks/java/initialization
     // Step 1: Copy
     ossClient.copyObject("examplebucket", "old-name.txt",
                          "examplebucket", "new-name.txt");

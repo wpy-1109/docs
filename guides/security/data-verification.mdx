@@ -1,8 +1,8 @@
 ---
-title: "Data Verification"
-sidebarTitle: "Data Verification"
-description: "Learn how to verify data integrity using CRC-64 and Content-MD5 in Alibaba Cloud OSS."
-"og:title": "Data Verification - Alibaba Cloud OSS"
+title: "Data verification"
+sidebarTitle: "Data verification"
+description: "Verify data integrity using CRC-64 and Content-MD5 in Alibaba Cloud OSS."
+"og:title": "Data verification - Alibaba Cloud OSS"
 ---
 
 Data verification ensures data integrity during upload and download using checksums.
@@ -13,6 +13,10 @@ Data verification ensures data integrity during upload and download using checks
 |--------|-------------|
 | **CRC-64** | OSS calculates and returns a CRC-64 checksum. SDKs verify it automatically. |
 | **Content-MD5** | You provide an MD5 hash. OSS compares it against the uploaded data. |
+
+## Prerequisites
+
+- SDK installed and configured ([quickstart](/quickstart))
 
 ## Using Content-MD5
 

@@ -1,0 +1,153 @@
+---
+title: "Core concepts"
+sidebarTitle: "Core concepts"
+description: "Understand buckets, objects, regions, and storage classes — the building blocks of Alibaba Cloud OSS."
+icon: "lightbulb"
+"og:title": "Core concepts - Alibaba Cloud OSS"
+"og:description": "Understand buckets, objects, regions, and storage classes — the building blocks of Alibaba Cloud OSS."
+---
+
+OSS stores data as **objects** inside **buckets**. Each bucket lives in a **region** and uses a **storage class** that matches your access pattern. This page covers all four concepts.
+
+## Buckets
+
+A bucket is the top-level container for objects. Every object belongs to exactly one bucket.
+
+| Property | Description | Changeable? |
+|----------|-------------|-------------|
+| **Name** | Globally unique identifier (3–63 chars, lowercase, digits, hyphens) | No |
+| **Region** | Physical data center location | No |
+| **Storage class** | Default storage tier for new objects | No |
+| **Redundancy** | LRS (11 nines durability) or ZRS (12 nines) | Upgrade only |
+| **ACL** | Private, public-read, or public-read-write | Yes |
+| **Versioning** | Keep historical versions of objects | Yes |
+
+Buckets use a **flat namespace**. Forward slashes in object keys simulate folder hierarchies, but the underlying storage is flat.
+
+<Tip>
+Include project, environment, and region in bucket names: `myapp-prod-cn-hangzhou`.
+</Tip>
+
+### Bucket limits
+
+| Limit | Value |
+|-------|-------|
+| Buckets per region (per account) | 100 (adjustable via [Quota Center](https://quotas.console.alibabacloud.com/products/oss/quotas)) |
+| Capacity per bucket | Unlimited |
+| Lifecycle rules per bucket | 1,000 |
+| Domain names per bucket | 100 |
+
+## Objects
+
+An object is the basic unit of data storage — any file you upload (document, image, video, binary) is stored as an object.
+
+Every object has four components:
+
+| Component | Description |
+|-----------|-------------|
+| **Key** | Unique name within the bucket (1–1,023 bytes, UTF-8, case-sensitive) |
+| **Data** | The file content |
+| **Metadata** | Key-value pairs (content type, custom headers via `x-oss-meta-*`) |
+| **Version ID** | Assigned when versioning is enabled |
+
+### Object types
+
+| Type | Created by | Max size |
+|------|-----------|----------|
+| **Normal** | Simple upload (`PutObject`) | 5 GB |
+| **Multipart** | Multipart upload | 48.8 TB |
+| **Appendable** | Append upload (`AppendObject`) | 5 GB |
+| **Symlink** | `PutSymlink` | N/A |
+
+<Note>
+Object type cannot be changed after creation. Use multipart upload for files larger than 100 MB.
+</Note>
+
+### Overwrite behavior
+
+Uploading an object with an existing key **overwrites** the previous data. Prevent this by enabling versioning or setting the `x-oss-forbid-overwrite` header to `true`.
+
+## Regions and endpoints
+
+A **region** is an Alibaba Cloud data center location. An **endpoint** is the domain name for accessing OSS in that region.
+
+### Choose a region
+
+| Factor | Guidance |
+|--------|----------|
+| **Proximity** | Choose the region closest to your users |
+| **Internal access** | Same-region ECS instances use internal endpoints (no bandwidth charges) |
+| **Cost** | Prices vary by region |
+| **Compliance** | Select regions that meet data residency requirements |
+
+### Endpoint formats
+
+| Type | Format | When to use |
+|------|--------|-------------|
+| **Public** | `oss-{region-id}.aliyuncs.com` | Access from the internet |
+| **Internal** | `oss-{region-id}-internal.aliyuncs.com` | Access from same-region Alibaba Cloud services |
+| **Bucket-level** | `{bucket}.oss-{region-id}.aliyuncs.com` | Access a specific bucket |
+
+<Warning>
+Always use internal endpoints from same-region ECS instances. This avoids bandwidth charges and provides lower latency.
+</Warning>
+
+### Key regions
+
+| Region | Region ID | Public endpoint |
+|--------|-----------|-----------------|
+| China (Hangzhou) | `cn-hangzhou` | `oss-cn-hangzhou.aliyuncs.com` |
+| China (Shanghai) | `cn-shanghai` | `oss-cn-shanghai.aliyuncs.com` |
+| China (Beijing) | `cn-beijing` | `oss-cn-beijing.aliyuncs.com` |
+| Singapore | `ap-southeast-1` | `oss-ap-southeast-1.aliyuncs.com` |
+| US (Virginia) | `us-east-1` | `oss-us-east-1.aliyuncs.com` |
+| Germany (Frankfurt) | `eu-central-1` | `oss-eu-central-1.aliyuncs.com` |
+
+For the full region list, see [Regions and endpoints](#regions-and-endpoints).
+
+## Storage classes
+
+Five storage classes match different access patterns:
+
+| Class | Access frequency | Min duration | First-byte latency | Use case |
+|-------|-----------------|-------------|-------------------|----------|
+| **Standard** | Frequent | None | Milliseconds | App data, websites |
+| **Infrequent Access** | 1–2×/month | 30 days | Milliseconds | Logs, backups |
+| **Archive** | 1–2×/year | 60 days | Minutes (after restore) | Compliance records |
+| **Cold Archive** | Rarely | 180 days | 1–12 hours | Tape replacement |
+| **Deep Cold Archive** | Almost never | 180 days | 12–48 hours | Historical records |
+
+Archive and colder classes require a **restore** before you can read the data. Use [lifecycle rules](/guides/data-management/lifecycle-rules) to automatically transition objects to cheaper tiers as they age.
+
+<Tip>
+Lifecycle rules on log buckets can reduce storage costs by 60–80% compared to keeping everything in Standard.
+</Tip>
+
+## How these concepts relate
+
+```
+Account
+  └── Bucket (region + storage class + ACL)
+        ├── Object (key + data + metadata)
+        ├── Object
+        └── ...
+```
+
+You create a bucket in a region, set its default storage class, then upload objects into it. Each object inherits the bucket's storage class unless you specify a different one at upload time.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Access control overview" icon="shield-halved" href="/get-started/concepts/access-control-overview">
+    Learn how RAM policies, bucket policies, and ACLs protect your data.
+  </Card>
+  <Card title="Naming conventions and limits" icon="pen-ruler" href="/get-started/concepts/naming-and-limits">
+    Naming rules and service limits to know before you build.
+  </Card>
+  <Card title="Create a bucket" icon="folder-plus" href="/guides/buckets/create-bucket">
+    Create your first bucket with the console, CLI, or SDK.
+  </Card>
+  <Card title="Upload objects" icon="upload" href="/guides/objects/upload-objects">
+    Upload your first file to OSS.
+  </Card>
+</CardGroup>

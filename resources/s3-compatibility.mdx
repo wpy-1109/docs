@@ -1,15 +1,373 @@
 ---
-title: 'S3 Compatibility'
-description: 'Amazon S3 API compatibility reference for Alibaba Cloud OSS'
+title: "S3 Compatibility with Alibaba Cloud OSS"
+sidebarTitle: "S3 Compatibility"
+description: "Use AWS SDKs and S3-compatible tools with OSS. Includes SDK configuration for 10+ languages, API tables, and troubleshooting."
+icon: "arrow-right-arrow-left"
 ---
 
-Alibaba Cloud OSS provides compatibility with a subset of the Amazon S3 API, allowing many S3-compatible tools and applications to work with OSS with minimal changes.
+Alibaba Cloud OSS is compatible with the Amazon S3 API. You can use AWS SDKs, S3-compatible tools, and existing S3 applications to access OSS by configuring the endpoint and access credentials.
 
 <Note>
-For S3 API calls, the `x-oss-process` parameter is limited to `image/` and `style/` types. Other processing types such as `video/` are not supported via the S3 protocol.
+OSS uses S3-compatible endpoints in the format `https://s3.oss-{region}.aliyuncs.com`. This is different from the standard OSS endpoint `https://oss-{region}.aliyuncs.com`. Use the S3-compatible endpoint when connecting with AWS SDKs.
 </Note>
 
+<Warning>
+**China mainland custom domain policy (March 2025)**: New users who activated OSS after March 2025 must bind a custom domain name (CNAME) before performing data operations on buckets in Chinese mainland regions. This applies to both native OSS SDKs and S3-compatible access. See [Custom domain names](/guides/networking/custom-domain-names) for setup instructions.
+</Warning>
+
+## Quick start: connect with an AWS SDK
+
+To access OSS with an AWS SDK, you need two things:
+
+1. **S3-compatible endpoint**: `https://s3.oss-{region}.aliyuncs.com` (public) or `https://s3.oss-{region}-internal.aliyuncs.com` (internal/VPC)
+2. **OSS AccessKey pair**: Create one in the [RAM console](https://ram.console.alibabacloud.com/users/create). AWS credentials and OSS credentials are separate systems and cannot be used interchangeably.
+
+```python
+import boto3
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://s3.oss-cn-hangzhou.aliyuncs.com',
+    aws_access_key_id='LTAI5t...',
+    aws_secret_access_key='yourAccessKeySecret',
+    config=Config(
+        signature_version='s3',
+        s3={'addressing_style': 'virtual'}
+    )
+)
+
+# List all buckets
+for bucket in s3.list_buckets()['Buckets']:
+    print(bucket['Name'])
+```
+
+## SDK configuration by language
+
+### Server-side SDKs
+
+Configure the S3-compatible endpoint in your AWS SDK. Replace `cn-hangzhou` with your bucket's region.
+
+<Tabs>
+  <Tab title="Java">
+    <CodeGroup>
+
+```java Java 2.x
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import java.net.URI;
+
+S3Client s3Client = S3Client.builder()
+    .endpointOverride(URI.create("https://s3.oss-cn-hangzhou.aliyuncs.com"))
+    .region(Region.AWS_GLOBAL)
+    .serviceConfiguration(
+        S3Configuration.builder()
+            .pathStyleAccessEnabled(false)
+            .chunkedEncodingEnabled(false)
+            .build()
+    )
+    .build();
+```
+
+```java Java 1.x
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+
+AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+    .withEndpointConfiguration(new EndpointConfiguration(
+        "https://s3.oss-cn-hangzhou.aliyuncs.com",
+        "cn-hangzhou"))
+    .withPathStyleAccessEnabled(false)
+    .withChunkedEncodingDisabled(true)
+    .build();
+```
+
+    </CodeGroup>
+
+When using AWS SDK for Java 1.x, calling `close()` on the `S3ObjectInputStream` returned by `getObject` immediately discards unread data. Read the data completely before closing the stream.
+  </Tab>
+  <Tab title="Python">
+```python Python (boto3)
+import boto3
+from botocore.config import Config
+
+s3 = boto3.client(
+    's3',
+    endpoint_url='https://s3.oss-cn-hangzhou.aliyuncs.com',
+    config=Config(
+        signature_version='s3',
+        s3={'addressing_style': 'virtual'}
+    )
+)
+```
+
+Python boto3 requires `signature_version='s3'` (Signature V2). The boto3 Signature V4 implementation is tightly coupled with chunked encoding, which OSS does not support.
+  </Tab>
+  <Tab title="Go">
+    <CodeGroup>
+
+```go Go 2.x
+import (
+    "context"
+    "github.com/aws/aws-sdk-go-v2/aws"
+    awsconfig "github.com/aws/aws-sdk-go-v2/config"
+    "github.com/aws/aws-sdk-go-v2/service/s3"
+)
+
+cfg, _ := awsconfig.LoadDefaultConfig(context.TODO(),
+    awsconfig.WithEndpointResolverWithOptions(
+        aws.EndpointResolverWithOptionsFunc(
+            func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+                return aws.Endpoint{
+                    URL: "https://s3.oss-cn-hangzhou.aliyuncs.com",
+                }, nil
+            }),
+    ),
+)
+client := s3.NewFromConfig(cfg)
+```
+
+```go Go 1.x
+import (
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/aws/aws-sdk-go/service/s3"
+)
+
+sess := session.Must(session.NewSessionWithOptions(session.Options{
+    Config: aws.Config{
+        Endpoint: aws.String("https://s3.oss-cn-hangzhou.aliyuncs.com"),
+        Region:   aws.String("cn-hangzhou"),
+    },
+    SharedConfigState: session.SharedConfigEnable,
+}))
+svc := s3.New(sess)
+```
+
+    </CodeGroup>
+  </Tab>
+  <Tab title="Node.js">
+    <CodeGroup>
+
+```javascript Node.js v3
+import { S3Client } from '@aws-sdk/client-s3';
+
+const client = new S3Client({
+    endpoint: 'https://s3.oss-cn-hangzhou.aliyuncs.com',
+    region: 'cn-hangzhou'
+});
+```
+
+```javascript Node.js v2
+const AWS = require('aws-sdk');
+
+const s3 = new AWS.S3({
+    endpoint: 'https://s3.oss-cn-hangzhou.aliyuncs.com',
+    region: 'cn-hangzhou'
+});
+```
+
+    </CodeGroup>
+  </Tab>
+  <Tab title=".NET">
+```csharp .NET
+using Amazon.S3;
+
+var config = new AmazonS3Config
+{
+    ServiceURL = "https://s3.oss-cn-hangzhou.aliyuncs.com"
+};
+var client = new AmazonS3Client(config);
+```
+  </Tab>
+  <Tab title="PHP">
+    <CodeGroup>
+
+```php PHP 3.x
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+use Aws\S3\S3Client;
+
+$s3Client = new S3Client([
+    'version' => '2006-03-01',
+    'region'  => 'cn-hangzhou',
+    'endpoint' => 'https://s3.oss-cn-hangzhou.aliyuncs.com'
+]);
+```
+
+```php PHP 2.x
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+use Aws\S3\S3Client;
+
+$s3Client = S3Client::factory([
+    'version' => '2006-03-01',
+    'region'  => 'cn-hangzhou',
+    'base_url' => 'https://s3.oss-cn-hangzhou.aliyuncs.com'
+]);
+```
+
+    </CodeGroup>
+  </Tab>
+  <Tab title="Ruby">
+    <CodeGroup>
+
+```ruby Ruby 3.x
+require 'aws-sdk-s3'
+
+s3 = Aws::S3::Client.new(
+  endpoint: 'https://s3.oss-cn-hangzhou.aliyuncs.com',
+  region: 'cn-hangzhou'
+)
+```
+
+```ruby Ruby 2.x
+require 'aws-sdk'
+
+s3 = AWS::S3::Client.new(
+  s3_endpoint: 's3.oss-cn-hangzhou.aliyuncs.com',
+  region: 'cn-hangzhou',
+  s3_force_path_style: false
+)
+```
+
+    </CodeGroup>
+  </Tab>
+  <Tab title="C++">
+```cpp C++ (SDK 1.7.68+)
+#include <aws/s3/S3Client.h>
+#include <aws/core/client/ClientConfiguration.h>
+
+Aws::Client::ClientConfiguration config;
+config.endpointOverride = "s3.oss-cn-hangzhou.aliyuncs.com";
+config.region = "cn-hangzhou";
+
+Aws::S3::S3Client s3_client(config);
+```
+  </Tab>
+</Tabs>
+
+### Client-side SDKs
+
+<Warning>
+Never hard-code permanent AccessKey credentials in client-side applications (browser, Android, iOS). Use [STS temporary credentials](/guides/access-control/sts-temporary-credentials) obtained from your server.
+</Warning>
+
+<Tabs>
+  <Tab title="Browser">
+```javascript Browser (AWS SDK v3)
+import { S3Client } from '@aws-sdk/client-s3';
+
+// Obtain STS temporary credentials from your server
+async function getSTSCredentials() {
+    const response = await fetch('https://your-server.com/api/sts-token');
+    return await response.json();
+}
+
+const client = new S3Client({
+    region: 'cn-hangzhou',
+    endpoint: 'https://s3.oss-cn-hangzhou.aliyuncs.com',
+    credentials: async () => {
+        const creds = await getSTSCredentials();
+        return {
+            accessKeyId: creds.accessKeyId,
+            secretAccessKey: creds.secretAccessKey,
+            sessionToken: creds.securityToken,
+            expiration: new Date(creds.expiration)
+        };
+    }
+});
+```
+  </Tab>
+  <Tab title="Android">
+```java Android (AWS SDK)
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+
+// Implement a credentials provider that fetches STS tokens from your server
+public class OSSCredentialsProvider implements AWSCredentialsProvider {
+    @Override
+    public AWSCredentials getCredentials() {
+        String accessKeyId = fetchFromServer("accessKeyId");
+        String secretKeyId = fetchFromServer("secretKeyId");
+        String securityToken = fetchFromServer("securityToken");
+        return new BasicSessionCredentials(accessKeyId, secretKeyId, securityToken);
+    }
+
+    @Override
+    public void refresh() { }
+}
+
+AmazonS3 s3Client = AmazonS3Client.builder()
+    .withCredentials(new OSSCredentialsProvider())
+    .withEndpointConfiguration(new EndpointConfiguration(
+        "https://s3.oss-cn-hangzhou.aliyuncs.com", ""))
+    .build();
+
+s3Client.putObject("examplebucket", "test.txt", "Hello OSS");
+```
+  </Tab>
+  <Tab title="iOS">
+```objectivec iOS (AWS SDK)
+#import <AWSS3/AWSS3.h>
+
+// Implement the credentials provider
+@interface OSSCredentialsProvider : NSObject <AWSCredentialsProvider>
+@end
+
+@implementation OSSCredentialsProvider
+- (AWSTask<AWSCredentials *> *)credentials {
+    return [[AWSTask taskWithResult:nil] continueWithBlock:^id(AWSTask *task) {
+        NSString *accessKey = [self fetchFromServer:@"accessKeyId"];
+        NSString *secretKey = [self fetchFromServer:@"secretKeyId"];
+        NSString *sessionToken = [self fetchFromServer:@"securityToken"];
+
+        AWSCredentials *credentials = [[AWSCredentials alloc]
+            initWithAccessKey:accessKey
+            secretKey:secretKey
+            sessionKey:sessionToken
+            expiration:[NSDate dateWithTimeIntervalSinceNow:3600]];
+        return [AWSTask taskWithResult:credentials];
+    }];
+}
+@end
+
+// Configure the S3 client
+AWSEndpoint *endpoint = [[AWSEndpoint alloc]
+    initWithURLString:@"https://s3.oss-cn-hangzhou.aliyuncs.com"];
+AWSServiceConfiguration *configuration = [[AWSServiceConfiguration alloc]
+    initWithRegion:AWSRegionUnknown
+    endpoint:endpoint
+    credentialsProvider:[[OSSCredentialsProvider alloc] init]];
+
+[AWSS3 registerS3WithConfiguration:configuration forKey:@"OSS"];
+AWSS3 *s3 = [AWSS3 S3ForKey:@"OSS"];
+
+AWSS3PutObjectRequest *request = [AWSS3PutObjectRequest new];
+request.bucket = @"examplebucket";
+request.key = @"test.txt";
+request.body = [@"Hello OSS" dataUsingEncoding:NSUTF8StringEncoding];
+
+[[s3 putObject:request] continueWithBlock:^id(AWSTask *task) {
+    if (task.error) {
+        NSLog(@"Error: %@", task.error);
+    } else {
+        NSLog(@"Upload successful");
+    }
+    return nil;
+}];
+```
+  </Tab>
+</Tabs>
+
 ## Compatible S3 API operations
+
+OSS supports the following S3 API operations. For S3 API calls, the `x-oss-process` parameter is limited to `image/` and `style/` types. Other processing types such as `video/` are not supported via the S3 protocol.
 
 ### Bucket operations
 
@@ -53,32 +411,40 @@ For S3 API calls, the `x-oss-process` parameter is limited to `image/` and `styl
 | UploadPart | UploadPart | Supported |
 | UploadPartCopy | UploadPartCopy | Supported |
 
-## Key differences
+## Key differences from S3
 
-### Request style
+### Endpoint format
 
-S3 supports both virtual-hosted and path-style request addressing. OSS supports **only virtual-hosted style** requests, where the bucket name is a subdomain in the endpoint.
+OSS uses region-specific S3-compatible endpoints. Replace `{region}` with the region where your bucket is located, such as `cn-hangzhou` or `ap-southeast-1`.
+
+| Endpoint Type | Format | Example |
+|--------------|--------|---------|
+| **S3-compatible public** | `https://s3.oss-{region}.aliyuncs.com` | `https://s3.oss-cn-hangzhou.aliyuncs.com` |
+| **S3-compatible internal** | `https://s3.oss-{region}-internal.aliyuncs.com` | `https://s3.oss-cn-hangzhou-internal.aliyuncs.com` |
+| **Standard OSS public** | `https://oss-{region}.aliyuncs.com` | `https://oss-cn-hangzhou.aliyuncs.com` |
+
+For a complete list of regions, see [Regions and endpoints](/get-started/concepts/regions-and-endpoints).
+
+### Request style (virtual-hosted only)
+
+OSS supports **only virtual-hosted style** requests. Path-style requests are not supported. The bucket name must be a subdomain in the endpoint URL.
 
 ```
-# S3 path-style (NOT supported by OSS)
-https://s3.amazonaws.com/my-bucket/my-object
+# Virtual-hosted style (supported by OSS)
+https://examplebucket.oss-cn-hangzhou.aliyuncs.com/example.txt
 
-# Virtual-hosted style (supported by both S3 and OSS)
-https://my-bucket.oss-cn-hangzhou.aliyuncs.com/my-object
+# Path style (NOT supported by OSS)
+https://s3.oss-cn-hangzhou.aliyuncs.com/examplebucket/example.txt
 ```
 
-<Warning>
-After migrating from S3 to OSS, all client applications and S3-compatible tools must be configured to use virtual-hosted style requests. Path-style requests will be denied.
-</Warning>
-
-### ACL differences
+### ACL mapping
 
 OSS supports only three ACL modes from S3: `private`, `public-read`, and `public-read-write`.
 
 | Level | Permission | S3 Behavior | OSS Behavior |
 |-------|-----------|-------------|--------------|
-| Bucket | READ | List buckets | Read objects (if no object ACL is set) |
-| Bucket | WRITE | Write or overwrite objects | Create or overwrite objects; uses InitiateMultipartUpload |
+| Bucket | READ | List bucket contents | Read objects (if no object ACL is set) |
+| Bucket | WRITE | Write or overwrite objects | Create or overwrite objects |
 | Bucket | READ_ACP | Read bucket ACL | Owner and authorized RAM users only |
 | Bucket | WRITE_ACP | Configure bucket ACL | Owner and authorized RAM users only |
 | Object | READ | Read an object | Read an object |
@@ -90,64 +456,145 @@ OSS supports only three ACL modes from S3: `private`, `public-read`, and `public
 
 | S3 Storage Class | OSS Storage Class | Notes |
 |-----------------|-------------------|-------|
-| STANDARD | Standard | Direct equivalent |
-| STANDARD_IA | IA (Infrequent Access) | Direct equivalent |
-| GLACIER | Archive | Restore required before access (unless real-time access is enabled) |
-| DEEP_ARCHIVE | Cold Archive / Deep Cold Archive | OSS has two tiers for deep archival |
+| `STANDARD` | Standard | Direct equivalent |
+| `STANDARD_IA` | IA (Infrequent Access) | Direct equivalent |
+| `GLACIER` | Archive | Restore required unless direct read is enabled |
+| `DEEP_ARCHIVE` | Cold Archive / Deep Cold Archive | OSS has two tiers for deep archival |
 
-<Note>
-OSS ignores the restoration duration configured in S3 API operations. By default, the restored state lasts one day and can be extended up to seven days, after which the object returns to the frozen state.
-</Note>
+OSS ignores the restoration duration configured in S3 API operations. By default, the restored state lasts one day and can be extended up to seven days.
 
 ### ETag differences
 
-- **PUT uploads**: OSS returns ETags in **uppercase** letters; S3 returns ETags in **lowercase** letters. Configure your client to perform case-insensitive ETag comparison.
+- **PUT uploads**: OSS returns ETags in **uppercase**; S3 returns ETags in **lowercase**. Configure your client for case-insensitive ETag comparison.
 - **Multipart uploads**: OSS calculates ETag values using a different method than S3.
 
-## Using AWS SDKs with OSS
+## Troubleshooting
 
-You can use AWS SDKs to access OSS by configuring the endpoint to point to OSS:
+<AccordionGroup>
+  <Accordion title="InvalidArgument: aws-chunked encoding is not supported">
+    **Symptom**: Upload fails with the error:
 
-```python
-import boto3
+    ```
+    InvalidArgument: aws-chunked encoding is not supported
+    with the specified x-amz-content-sha256 value
+    ```
 
-client = boto3.client(
-    's3',
-    endpoint_url='https://oss-cn-hangzhou.aliyuncs.com',
-    aws_access_key_id='your-oss-access-key-id',
-    aws_secret_access_key='your-oss-access-key-secret',
-    region_name='oss-cn-hangzhou'
-)
+    **Cause**: OSS supports AWS Signature V4 but does not support the `Transfer-Encoding: chunked` transfer method. Some AWS SDKs tie Signature V4 to chunked encoding by default.
 
-# List buckets
-response = client.list_buckets()
-for bucket in response['Buckets']:
-    print(bucket['Name'])
-```
+    **Solution by SDK**:
 
-```javascript
-const { S3Client, ListBucketsCommand } = require('@aws-sdk/client-s3');
+    | SDK | Solution | Reason |
+    |-----|----------|--------|
+    | **Python (boto3)** | Use `signature_version='s3'` (V2) | boto3's V4 implementation is tightly coupled with chunked encoding |
+    | **Java 1.x** | `.withChunkedEncodingDisabled(true)` | Chunked encoding can be disabled independently |
+    | **Java 2.x** | `.chunkedEncodingEnabled(false)` | Chunked encoding can be disabled independently |
+    | **Go v1/v2** | No action needed | Does not use chunked encoding by default |
+    | **Node.js v3** | No action needed | Does not use chunked encoding by default |
 
-const client = new S3Client({
-  endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
-  region: 'oss-cn-hangzhou',
-  credentials: {
-    accessKeyId: 'your-oss-access-key-id',
-    secretAccessKey: 'your-oss-access-key-secret',
-  },
-  forcePathStyle: false, // Must use virtual-hosted style
-});
+    **Python fix example**:
 
-const response = await client.send(new ListBucketsCommand({}));
-```
+    ```python
+    # Incorrect: boto3 V4 uses chunked encoding (fails with OSS)
+    s3 = boto3.client('s3',
+        endpoint_url='https://s3.oss-cn-hangzhou.aliyuncs.com',
+        config=Config(signature_version='v4'))
+
+    # Correct: use V2 signature to avoid chunked encoding
+    s3 = boto3.client('s3',
+        endpoint_url='https://s3.oss-cn-hangzhou.aliyuncs.com',
+        config=Config(signature_version='s3'))
+    ```
+  </Accordion>
+  <Accordion title="SignatureDoesNotMatch">
+    **Symptom**: All requests fail with `SignatureDoesNotMatch`.
+
+    **Common causes and solutions**:
+
+    1. **Wrong credentials**: You are using an AWS AccessKey instead of an OSS AccessKey. These are separate credential systems. Create an AccessKey pair in the [RAM console](https://ram.console.alibabacloud.com/users/create).
+
+    2. **Clock drift**: The OSS server rejects requests with timestamps more than 15 minutes off. Check your server time with `date -u` and sync with NTP if needed.
+
+    3. **Wrong endpoint**: The signature fails if the endpoint points to an AWS domain (e.g., `s3.amazonaws.com`) or the wrong OSS region. Use `https://s3.oss-{region}.aliyuncs.com` where the region matches your bucket.
+
+    4. **Missing boto3 config**: If using Python boto3 without `Config(signature_version='s3')`, boto3 defaults to Signature V4, which causes failures.
+
+    **Verify your configuration** with ossutil:
+
+    ```bash
+    ossutil ls oss://examplebucket \
+      --access-key-id LTAI5t... \
+      --access-key-secret yourAccessKeySecret \
+      --endpoint oss-cn-hangzhou.aliyuncs.com
+    ```
+
+    If this command succeeds, your credentials and endpoint are correct -- the issue is in your SDK configuration.
+  </Accordion>
+  <Accordion title="NoSuchBucket or AccessDenied">
+    **Symptom**: Requests fail with `NoSuchBucket` (404) or `AccessDenied` (403).
+
+    **Common causes and solutions**:
+
+    1. **Region mismatch**: Each OSS bucket belongs to a specific region. The endpoint must match the bucket's region exactly. OSS does not support cross-region access or automatic redirection like S3. If your bucket is in `cn-hangzhou`, you must use `s3.oss-cn-hangzhou.aliyuncs.com`.
+
+    2. **Insufficient RAM permissions**: Verify that the RAM user has the necessary permissions (`oss:ListObjects`, `oss:GetObject`, `oss:PutObject`) for the target bucket.
+
+    3. **Bucket naming with underscores**: When using virtual-hosted style, bucket names must comply with DNS conventions (no underscores). If your bucket name contains `_`, either use path-style in your SDK configuration or create a new bucket with a compliant name.
+  </Accordion>
+</AccordionGroup>
+
+## Performance optimization
+
+AWS SDKs provide transfer acceleration features that work with OSS. These mechanisms use the S3 Multipart Upload API, which OSS fully supports.
+
+| SDK | Feature | Description |
+|-----|---------|-------------|
+| **Python (boto3)** | `TransferConfig` | Configure `multipart_threshold`, `max_concurrency`, and `multipart_chunksize` for automatic concurrent multipart uploads |
+| **Java** | `TransferManager` | Encapsulates multipart upload, concurrent transfers, and automatic retries. Selects optimal transfer strategy based on file size |
+| **Go** | `s3manager.Uploader` | Built-in concurrent multipart upload with automatic part splitting and retry logic |
+| **Node.js** | `Upload` from `@aws-sdk/lib-storage` | Supports streaming uploads to reduce memory usage for large files |
+
+## SDK and signature version reference
+
+Use this table when selecting the SDK version and signature configuration for a new project or migration.
+
+| Language | SDK Version | Signature Version | Key Configuration |
+|----------|-------------|-------------------|-------------------|
+| **Python** | Latest boto3 | V2 (`signature_version='s3'`) | boto3 V4 is not compatible with OSS |
+| **Java 1.x** | Latest 1.x | V4 | Must disable chunked encoding |
+| **Java 2.x** | Latest 2.x | V4 | Must disable chunked encoding |
+| **Node.js** | v3 | V4 (default) | No special configuration needed |
+| **Go v1** | Latest v1 | V4 (default) | No special configuration needed |
+| **Go v2** | Latest v2 | V4 (default) | Note: Manager may use chunked encoding for large files |
+| **.NET** | Latest 3.x | V4 (default) | No special configuration needed |
+| **PHP** | Latest 3.x | V4 (default) | No special configuration needed |
+| **Ruby** | Latest 3.x | V4 (default) | No special configuration needed |
+| **C++** | 1.7.68+ | V4 (default) | No special configuration needed |
 
 ## Migration considerations
 
 When migrating from S3 to OSS:
 
-1. **Switch to virtual-hosted style** requests in all client applications
-2. **Update ACL configurations** -- OSS supports only `private`, `public-read`, and `public-read-write`
-3. **Handle ETag case differences** -- ensure case-insensitive comparison
-4. **Map storage classes** -- update any storage class references to OSS equivalents
-5. **Update endpoints** -- replace S3 endpoints with the appropriate OSS regional endpoint
-6. **Review unsupported operations** -- verify that your application does not rely on S3 operations not listed above
+1. **Update endpoints** -- Replace S3 endpoints with `https://s3.oss-{region}.aliyuncs.com`
+2. **Switch to virtual-hosted style** -- OSS does not support path-style requests
+3. **Update ACL configurations** -- OSS supports only `private`, `public-read`, and `public-read-write`
+4. **Handle ETag differences** -- Use case-insensitive ETag comparison
+5. **Map storage classes** -- Update any storage class references to OSS equivalents
+6. **Review unsupported operations** -- Verify your application does not rely on S3 operations not listed in the compatibility tables above
+7. **Configure signature version** -- Use Signature V2 for Python boto3; disable chunked encoding for Java SDKs
+
+For a comprehensive migration guide, see [Migrate from S3 to OSS](/resources/best-practices/migration-from-s3).
+
+<CardGroup cols={2}>
+  <Card title="SDK overview" icon="code" href="/sdks/overview">
+    Use the native Alibaba Cloud OSS SDKs for full feature access.
+  </Card>
+  <Card title="Authentication" icon="key" href="/guides/advanced/authentication">
+    Learn about OSS authentication and signature mechanisms.
+  </Card>
+  <Card title="Migration from S3" icon="truck" href="/resources/best-practices/migration-from-s3">
+    Step-by-step guide to migrating your data and applications from S3 to OSS.
+  </Card>
+  <Card title="Error codes" icon="circle-exclamation" href="/resources/troubleshooting/error-codes">
+    Complete reference of OSS error codes with solutions.
+  </Card>
+</CardGroup>
