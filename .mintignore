@@ -2,20 +2,12 @@
 # .git, .github, .claude, .agents, .idea, node_modules,
 # README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md
 
+# Deprecated documentation (moved from active site)
+deprecated/
+
 # Draft content
 drafts/
 *.draft.mdx
 
-# Non-documentation files (raw crawled sources, architecture notes, etc.)
-crawled-oss-docs/
-architecture/
-research/
-AGENTS.md
-EDITORIAL-GUIDELINES.md
-CONTRIBUTING.md
-validate.py
-*.md
-**/*.md
-architecture-proposals/
-ux-evaluation-report.md
-validation-report.md
+# Non-documentation files
+CLAUDE.md
