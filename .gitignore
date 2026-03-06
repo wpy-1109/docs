@@ -15,7 +15,22 @@ skills-lock.json
 firebase-debug.log
 docs.json.bak
 crawled-docs/
+crawled-oss-docs/
 architecture-proposals/
+architecture/
+research/
 validate.py
 validation-report.md
 ux-evaluation-report.md
+
+# Reports and non-doc files
+AGENTS.md
+CONTRIBUTING.md
+EDITORIAL-GUIDELINES.md
+development.mdx
+editorial-review-report.md
+optimization-report.md
+review-report.md
+ux-test-report.md
+LICENSE
+README.md
