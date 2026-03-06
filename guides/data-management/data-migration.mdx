@@ -1,0 +1,157 @@
+1---
+title: "Data migration"
+sidebarTitle: "Data migration"
+description: "Migrate data to OSS from other cloud providers, on-premises storage, HDFS clusters, or between OSS buckets."
+---
+
+Data often lives in multiple places: on-premises data centers, third-party cloud storage, or OSS buckets spread across regions and accounts. Migrating to a single destination bucket reduces operational overhead and simplifies access control.
+
+This guide covers each migration scenario and helps you pick the right tool.
+
+## Choose your migration path
+
+<CardGroup cols={2}>
+  <Card title="Between OSS buckets" icon="arrow-right-arrow-left" href="#migrate-between-oss-buckets">
+    Same-region or cross-region replication between Alibaba Cloud OSS buckets.
+  </Card>
+  <Card title="From third-party cloud storage" icon="cloud" href="#migrate-from-third-party-cloud-storage">
+    Transfer data from AWS S3, Google Cloud Storage, Azure Blob, and other providers.
+  </Card>
+  <Card title="From local storage" icon="hard-drive" href="#migrate-from-local-storage">
+    Upload files from on-premises systems to OSS, from gigabytes to petabytes.
+  </Card>
+  <Card title="From HTTP/HTTPS sources" icon="globe" href="#migrate-from-httphttps-sources">
+    Pull data from web-accessible endpoints into OSS.
+  </Card>
+  <Card title="From big data storage to OSS" icon="database" href="#migrate-big-data-storage-to-oss">
+    Move HDFS data or OSS external table data to standard OSS buckets.
+  </Card>
+  <Card title="From HDFS to OSS-HDFS" icon="server" href="#migrate-to-oss-hdfs">
+    Transition to the cloud-native JindoFS data lake storage service.
+  </Card>
+</CardGroup>
+
+<Tip>
+  To avoid downtime during any migration, configure [mirroring-based back-to-origin](#configure-zero-downtime-migration) so that the destination bucket automatically fetches not-yet-migrated data from the source.
+</Tip>
+
+## Migrate between OSS buckets
+
+Choose a method based on whether the source and destination buckets are in the same region or different regions.
+
+<Tabs>
+  <Tab title="Same region">
+    **Same-account, small to medium data volumes** --- Use the [`ossutil cp` command](https://www.alibabacloud.com/help/en/oss/developer-reference/cp-1) to copy files between buckets. This command supports batch operations and resumable transfers.
+
+    **Cross-account or large data volumes** --- Enable [same-region replication (SRR)](https://www.alibabacloud.com/help/en/oss/user-guide/srr/). SRR automatically syncs objects to the destination bucket when you add, modify, or delete them in the source bucket. You do not need intermediate downloads or external network transfers.
+
+    SRR works well for centralizing data across teams or subsidiaries under different accounts.
+  </Tab>
+  <Tab title="Cross-region">
+    Enable [cross-region replication (CRR)](https://www.alibabacloud.com/help/en/oss/user-guide/cross-region-replication-overview/) to sync data between buckets in different regions --- for example, from China (Hangzhou) to China (Beijing).
+
+    CRR transfers data over the Alibaba Cloud internal network and automatically syncs objects when you add, modify, or delete them in the source bucket.
+
+    CRR works well for multi-site collaboration and real-time backups.
+  </Tab>
+</Tabs>
+
+## Migrate from third-party cloud storage
+
+Use [Data Online Migration](https://www.alibabacloud.com/help/en/data-online-migration/product-overview/what-is-data-online-migration) to transfer data from other cloud providers to OSS. The service supports:
+
+- AWS S3
+- Google Cloud Storage (GCS)
+- Microsoft Azure Blob Storage
+- Tencent Cloud COS
+- Huawei Cloud OBS
+- Volcano Engine TOS
+- Any S3-compatible object storage
+
+You do not need to set up a migration environment. Create migration tasks from the console and monitor progress in real time.
+
+See the [online migration tutorials](https://www.alibabacloud.com/help/en/data-online-migration/user-guide/migration-tutorials/) for provider-specific instructions.
+
+## Migrate from local storage
+
+The right tool depends on how much data you need to transfer.
+
+| Data volume | Recommended method | When to use |
+|---|---|---|
+| Under 5 GB | [OSS console upload](https://oss.console.alibabacloud.com/overview) | One-off uploads, test data, or infrequent transfers |
+| 5 GB -- several TB | [`ossutil cp` (upload)](https://www.alibabacloud.com/help/en/oss/developer-reference/cp-upload-file) | Regular business data, log files, backups. Supports batch uploads, resumable transfers, and concurrent acceleration. |
+| Several TB -- PB (network) | [Data Online Migration](https://www.alibabacloud.com/help/en/data-online-migration/user-guide/migration-tutorial-from-localfs-to-oss/) | Managed migration with task scheduling, monitoring, and centralized control. No local environment setup needed. |
+| Several TB -- PB (limited bandwidth) | [Data Transport (offline)](https://www.alibabacloud.com/help/en/data-transport/product-overview/what-is-data-transport) | Physical device-based transfer for data center migrations, large archives, or when public bandwidth is a bottleneck. Handles terabyte- to petabyte-scale workloads. |
+
+<Note>
+  For medium and large migrations, you can also use [Data Online Migration](https://www.alibabacloud.com/help/en/data-online-migration/product-overview/what-is-data-online-migration) if your on-premises network is complex or you need cloud-based task scheduling. It provides a fully managed migration pipeline with built-in monitoring.
+</Note>
+
+## Migrate from HTTP/HTTPS sources
+
+Use [Data Online Migration](https://www.alibabacloud.com/help/en/data-online-migration/user-guide/tutorial-for-data-migration-from-http-or-https-servers-to-oss/) to pull data from HTTP or HTTPS endpoints into OSS. Create the migration task from the console and track its progress without setting up any additional infrastructure.
+
+## Migrate big data storage to OSS
+
+### HDFS data
+
+Use [Jindo DistCp](https://www.alibabacloud.com/help/en/oss/user-guide/migrate-data-from-hdfs-to-oss#task-1938603) to transfer data from Hadoop Distributed File System (HDFS) clusters to OSS. Jindo DistCp is a MapReduce-based distributed copy tool that:
+
+- Splits file lists into parallel tasks across the cluster
+- Supports resumable transfers and automatic error recovery
+- Handles terabyte- and petabyte-scale workloads
+
+This method suits big data computing and data lake construction.
+
+### OSS external tables (gpossext)
+
+Use [AnalyticDB for PostgreSQL](https://www.alibabacloud.com/help/en/analyticdb/analyticdb-for-postgresql/user-guide/use-oss-external-tables-to-export-data-to-oss#task-2100743) to import or export data between OSS and your data warehouse in parallel using the `gpossext` interface. The distributed architecture provides high concurrency and throughput for large-scale analytics, archiving, and cross-system data exchange.
+
+## Migrate to OSS-HDFS
+
+OSS-HDFS (also called JindoFS) is a cloud-native data lake storage service. It provides unified metadata management, full HDFS interface compatibility, and POSIX support --- making it a strong fit for big data computing and AI training workloads.
+
+<Accordion title="What is OSS-HDFS?">
+  OSS-HDFS is a managed data lake storage layer built on OSS. It is fully compatible with the HDFS file system interface while providing cloud-native scalability and cost benefits. Use it when your workloads depend on HDFS semantics but you want to run on cloud storage.
+</Accordion>
+
+### From HDFS clusters
+
+Use [Jindo DistCp to migrate HDFS data to OSS-HDFS](https://www.alibabacloud.com/help/en/oss/user-guide/migrate-data-from-hdfs-to-oss-hdfs). The tool handles large-scale distributed file copying with automatic error detection, retries, and task recovery.
+
+### Between OSS-HDFS buckets
+
+Use [Jindo DistCp to copy data between OSS-HDFS buckets](https://www.alibabacloud.com/help/en/oss/user-guide/migrate-data-across-multiple-buckets-in-oss-hdfs#task-2218900) when you need to reorganize data partitions, optimize storage resources, or redistribute data across regions.
+
+### From semi-managed JindoFS clusters
+
+Use the [JindoDistJob tool](https://www.alibabacloud.com/help/en/oss/user-guide/migrate-data-from-a-semi-hosted-jindofs-cluster-to-oss-hdfs#task-2231351) to transition from a semi-managed JindoFS cluster to the fully managed OSS-HDFS service. The tool supports full and incremental migration and does not require migrating individual data blocks.
+
+### Hive tables and partitions
+
+Use the [`JindoTable MoveTo` command](https://www.alibabacloud.com/help/en/oss/user-guide/use-the-jindotable-moveto-command-to-migrate-hive-tables-and-partitions-to-oss-hdfs#task-2231743) to migrate Hive table and partition data to OSS-HDFS. After copying the underlying data, the command automatically updates metadata so that tables and partitions point to the new location. It supports conditional filtering to migrate specific partitions and includes data validation checks.
+
+## Configure zero-downtime migration
+
+To maintain business continuity during migration, configure [mirroring-based back-to-origin](https://www.alibabacloud.com/help/en/oss/back-to-origin-configuration-overview#concept-n34-q1z-5db) on your destination bucket.
+
+After you switch traffic to OSS, the destination bucket automatically fetches any requested object that has not yet been migrated from the original source. This eliminates downtime during the transition period.
+
+<Steps>
+  <Step title="Complete the initial migration">
+    Run the bulk data migration using any of the methods described above.
+  </Step>
+  <Step title="Configure mirroring-based back-to-origin">
+    Set up a back-to-origin rule on the destination bucket that points to your original storage location.
+  </Step>
+  <Step title="Switch traffic to OSS">
+    Update your application endpoints to read from the OSS bucket. The back-to-origin rule transparently proxies requests for not-yet-migrated objects to the source.
+  </Step>
+  <Step title="Wait for backfill to complete">
+    As users request objects, OSS fetches them from the source and stores them locally. Over time, all accessed data backfills into the destination bucket.
+  </Step>
+</Steps>
+
+<Warning>
+  Mirroring-based back-to-origin only fetches objects on demand. If you have data that is rarely accessed, you still need to complete the bulk migration to ensure all objects are present in OSS.
+</Warning>

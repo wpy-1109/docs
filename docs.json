@@ -83,7 +83,8 @@
           {
             "group": "Best Practices",
             "pages": [
-              "resources/best-practices/cost-optimization"
+              "resources/best-practices/cost-optimization",
+              "guides/data-management/data-migration"
             ]
           },
           {
