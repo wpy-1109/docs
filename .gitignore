@@ -3,6 +3,9 @@ node_modules/
 .mintlify/
 *.png
 
+# Deprecated docs (local only, never sync to remotes)
+deprecated/
+
 # Tool/IDE config
 .agents/
 .claude/
