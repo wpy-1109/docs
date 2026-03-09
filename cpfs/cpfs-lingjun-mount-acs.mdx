@@ -1,0 +1,251 @@
+---
+title: "Mount CPFS for Lingjun in ACS"
+description: "Use CPFS for Lingjun as shared, persistent storage in Container Compute Service"
+---
+
+Use a statically provisioned CPFS for Lingjun file system in Container Compute Service (ACS) for shared, persistent storage. This topic walks through PV/PVC setup and verification.
+
+## Why CPFS for Lingjun in ACS?
+
+ACS uses CSI to integrate with Alibaba Cloud storage. For high-throughput, low-latency workloads (AIGC, autonomous driving), CPFS for Lingjun is the recommended PV solution. It uses a distributed parallel architecture, RoCE RDMA, and multi-level caching.
+
+## Prerequisites
+
+- A CPFS for Lingjun file system. See [Create a file system](https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/create-a-file-system).
+- VPC mount target: required for CPU pods; not required for GPU pods (RDMA).
+- [managed-csiprovisioner](https://www.alibabacloud.com/help/en/cs/user-guide/csi-provisioner) installed in the ACS cluster.
+
+## Usage notes
+
+- CPFS is shared storage. One volume can mount to multiple pods.
+- Two access methods:
+  - **VPC**: Compatible with CPU and GPU pods.
+  - **RDMA**: Max throughput, low latency. GPU pods only. See [Supported GPU cards in ACS](https://www.alibabacloud.com/help/en/cs/user-guide/gpu/#aa46c1c4c408c).
+- For Lingjun GPUs, CPFS and GPU must be in the same zone and cluster.
+
+## Get started
+
+### Step 1: Create PV and PVC
+
+Choose the YAML for your pod type.
+
+<Tabs>
+  <Tab title="GPU pod">
+    <Warning>
+    Only supported for specific GPU models. See [Supported GPU models in ACS](https://www.alibabacloud.com/help/en/cs/user-guide/gpu/#4d301af0f6e0c).
+    </Warning>
+
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: cpfs-test
+      labels:
+        alicloud-pvname: cpfs-test
+    spec:
+      accessModes:
+      - ReadWriteMany
+      capacity:
+        storage: 10Ti
+      csi:
+        driver: povplugin.csi.alibabacloud.com
+        volumeAttributes:
+          filesystemId: bmcpfs-*****
+          path: /
+        volumeHandle: bmcpfs-*****
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: cpfs-test
+    spec:
+      accessModes:
+      - ReadWriteMany
+      selector:
+        matchLabels:
+          alicloud-pvname: cpfs-test
+      resources:
+        requests:
+          storage: 10Ti
+    ```
+  </Tab>
+  <Tab title="CPU pod">
+    ```yaml
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: cpfs-test
+      labels:
+        alicloud-pvname: cpfs-test
+    spec:
+      accessModes:
+      - ReadWriteMany
+      capacity:
+        storage: 10Ti
+      csi:
+        driver: nasplugin.csi.alibabacloud.com
+        volumeAttributes:
+          mountProtocol: efc
+          server: cpfs-***-vpc-***.cn-wulanchabu.cpfs.aliyuncs.com
+          path: /
+        volumeHandle: bmcpfs-*****
+    ---
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: cpfs-test
+    spec:
+      accessModes:
+      - ReadWriteMany
+      selector:
+        matchLabels:
+          alicloud-pvname: cpfs-test
+      resources:
+        requests:
+          storage: 10Ti
+    ```
+  </Tab>
+</Tabs>
+
+#### PV and PVC parameters
+
+| Parameter | GPU pod | CPU pod |
+|-----------|---------|---------|
+| `csi.driver` | `povplugin.csi.alibabacloud.com` | `nasplugin.csi.alibabacloud.com` |
+| `csi.volumeAttributes` | `filesystemId`, `path` (default `/`) | `mountProtocol: efc`, `server` (VPC mount target domain), `path` |
+| `csi.volumeHandle` | CPFS file system ID | CPFS file system ID |
+
+Common: `labels` (for PVC binding), `accessModes`, `capacity.storage`, `selector`, `resources.requests.storage`.
+
+Create and verify:
+
+```shell
+kubectl create -f cpfs-pv-pvc.yaml
+kubectl get pvc cpfs-test
+```
+
+<Note>
+**Console**: Clusters → cluster name → Volumes → Persistent Volume Claims → Create. Console does not support CPFS for Lingjun PVC for CPU pods. Use kubectl.
+</Note>
+
+### Step 2: Create Deployment and mount volume
+
+<Tabs>
+  <Tab title="GPU Deployment">
+    Set `alibabacloud.com/compute-class: gpu` and `alibabacloud.com/gpu-model-series`:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: cpfs-test
+      labels:
+        app: cpfs-test
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+          app: cpfs-test
+      template:
+        metadata:
+          labels:
+            app: cpfs-test
+            alibabacloud.com/compute-class: gpu
+            alibabacloud.com/gpu-model-series: T4
+            alibabacloud.com/compute-qos: default
+        spec:
+          containers:
+          - name: nginx
+            image: registry.cn-hangzhou.aliyuncs.com/acs-sample/nginx:latest
+            ports:
+            - containerPort: 80
+            volumeMounts:
+              - name: pvc-cpfs
+                mountPath: /data
+          volumes:
+            - name: pvc-cpfs
+              persistentVolumeClaim:
+                claimName: cpfs-test
+    ```
+  </Tab>
+  <Tab title="CPU Deployment">
+    Omit GPU labels:
+
+    ```yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: cpfs-test
+      labels:
+        app: cpfs-test
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+          app: cpfs-test
+      template:
+        metadata:
+          labels:
+            app: cpfs-test
+        spec:
+          containers:
+          - name: nginx
+            image: registry.cn-hangzhou.aliyuncs.com/acs-sample/nginx:latest
+            ports:
+            - containerPort: 80
+            volumeMounts:
+              - name: pvc-cpfs
+                mountPath: /data
+          volumes:
+            - name: pvc-cpfs
+              persistentVolumeClaim:
+                claimName: cpfs-test
+    ```
+  </Tab>
+</Tabs>
+
+```shell
+kubectl create -f cpfs-test.yaml
+kubectl get pod | grep cpfs-test
+kubectl exec cpfs-test-****-***a -- ls /data
+```
+
+## Verify shared and persistent storage
+
+Two pods mount the same CPFS. Verify:
+
+<Steps>
+  <Step title="Verify shared storage">
+    Create a file in one pod, list in the other.
+
+    ```shell
+    kubectl exec cpfs-test-****-***a -- touch /data/test.txt
+    kubectl exec cpfs-test-****-***b -- ls /data
+    # Expected: test.txt
+    ```
+  </Step>
+  <Step title="Verify persistent storage">
+    Restart Deployment, check data remains.
+
+    ```shell
+    kubectl rollout restart deploy cpfs-test
+    kubectl get pod | grep cpfs-test
+    kubectl exec cpfs-test-****-***c -- ls /data
+    # Expected: test.txt
+    ```
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create a file system" icon="plus" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/create-a-file-system">
+    Get started with CPFS
+  </Card>
+  <Card title="Manage VPC mount targets" icon="network-wired" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/manage-vpc-mount-points-1">
+    Configure network access
+  </Card>
+  <Card title="Data flow" icon="arrows-rotate" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/cpfs-for-lingjun-data-flow-overview/">
+    Sync data with OSS
+  </Card>
+</CardGroup>

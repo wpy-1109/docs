@@ -1,0 +1,78 @@
+---
+title: "Mount CPFS for Lingjun in PAI"
+description: "Use CPFS for Lingjun with DLC, DSW, and EAS in Platform for AI"
+---
+
+CPFS for Lingjun integrates with Platform for AI (PAI). Use it in Deep Learning Containers (DLC), Data Science Workshop (DSW), and Elastic Algorithm Service (EAS) to store datasets and results. This topic shows how to mount CPFS for Lingjun in each module.
+
+## Prerequisites
+
+- A CPFS for Lingjun file system. See [Create a file system](https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/create-a-file-system).
+
+<Note>
+For single-tenant Lingjun clusters, configure CPFS on the **CPFS** tab when creating the cluster. The system mounts CPFS automatically. See [Create a Lingjun cluster with ACK activated](https://www.alibabacloud.com/help/en/pai/user-guide/create-a-cluster-2).
+</Note>
+
+## Get started
+
+### Create a dataset (DLC and DSW only)
+
+EAS does not require a dataset. For DLC and DSW, [create a basic dataset](https://www.alibabacloud.com/help/en/pai/user-guide/create-and-manage-datasets#125deaaded3ib) first.
+
+| Parameter | Description |
+|-----------|-------------|
+| Storage type | CPFS for Lingjun |
+| File system | CPFS for Lingjun file system ID. Find it in the [NAS console](https://nas.console.alibabacloud.com/) or the dropdown. |
+| File system path | Mount path (e.g. `/`). |
+| Default mount path | Path in DLC/DSW (e.g. `/mnt/data/`). |
+
+<Warning>
+CPFS instance and Lingjun GPU must be in the same zone and cluster.
+</Warning>
+
+## Mount by module
+
+<Tabs>
+  <Tab title="DLC">
+    When [creating a distributed training job](https://www.alibabacloud.com/help/en/pai/user-guide/create-a-training-task/), configure CPFS in **Environment Information**.
+
+    | Method | How to use |
+    |--------|------------|
+    | Custom Dataset | Select CPFS for Lingjun dataset and set Mount Path. Set **Read-only** for permissions. |
+    | Directly Mount (BMCPFS) | Lingjun resources only. Click **BMCPFS**, configure file system and mount path. |
+
+    <Warning>
+    For general computing resources, use the same VPC as CPFS. Otherwise jobs may stay in preparing. If CPFS has no VPC mount target, [add one](https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/manage-vpc-mount-points-1#8fa4ffe6f6xlj).
+    </Warning>
+  </Tab>
+  <Tab title="DSW">
+    When [creating a DSW instance](https://www.alibabacloud.com/help/en/pai/user-guide/create-and-manage-dsw-instances), select your **CPFS for Lingjun** dataset. The **Mount Path** is shown automatically. Use it to access data in DSW.
+
+    <Note>
+    For general computing resources, use the same VPC as CPFS. [Add a VPC mount target](https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/manage-vpc-mount-points-1#8fa4ffe6f6xlj) if needed.
+    </Note>
+  </Tab>
+  <Tab title="EAS">
+    When [deploying an EAS service](https://www.alibabacloud.com/help/en/pai/user-guide/model-service-deployment-by-using-the-pai-console/) with Lingjun resources, set **CPFS for Lingjun** in **Model Settings**:
+
+    | Parameter | Description |
+    |-----------|-------------|
+    | Select a file system | Choose your CPFS file system. |
+    | File system path | Path where files are stored. |
+    | Mount path | Path in the service instance to read files. |
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Data flow" icon="arrows-rotate" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/cpfs-for-lingjun-data-flow-overview/">
+    Sync OSS to CPFS across accounts
+  </Card>
+  <Card title="Fileset quota" icon="chart-pie" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/quota-management">
+    Manage directory capacity and file limits
+  </Card>
+  <Card title="Data monitoring" icon="chart-line" href="https://www.alibabacloud.com/help/en/cpfs/bmcpfs/user-guide/cpfs-monitoring-overview-1/">
+    Understand file system performance
+  </Card>
+</CardGroup>

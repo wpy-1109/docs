@@ -1,0 +1,193 @@
+---
+title: "Configure browser preview behavior"
+description: "Diagnose and fix issues where browsers download OSS objects instead of displaying them inline. Covers security policy overrides, Content-Disposition metadata, and Content-Type MIME type fixes."
+---
+
+When you access an Object Storage Service (OSS) object through a browser, the browser may download the file instead of displaying it. This happens when a security policy, a metadata setting, or an incorrect MIME type overrides the default inline behavior. This topic explains how to diagnose the root cause and apply the correct fix.
+
+## Diagnose the issue
+
+Run the following `curl` command to inspect the HTTP response headers for your object URL. Replace `<your-object-url>` with the actual URL.
+
+```bash
+curl -I "<your-object-url>"
+```
+
+Check the response for two fields: `x-oss-force-download` and `Content-Disposition`. The result tells you which scenario applies:
+
+| Response header | Root cause | Solution |
+|---|---|---|
+| `x-oss-force-download: true` | OSS security policy forces a download on the default domain name or acceleration endpoint | [Use a custom domain name](#scenario-1-security-policy-triggers-a-forced-download) |
+| `Content-Disposition: attachment` (without `x-oss-force-download`) | Object metadata explicitly sets the file as an attachment | [Change `Content-Disposition` to `inline`](#scenario-2-object-metadata-forces-a-download) |
+| Neither field is present, but the file still downloads | The object has a missing or incorrect `Content-Type` | [Set the correct `Content-Type`](#scenario-3-incorrect-content-type-prevents-preview) |
+
+## Scenario 1: Security policy triggers a forced download
+
+**When this happens:** The response contains `x-oss-force-download: true`.
+
+**Why:** To prevent security risks from files such as HTML being executed directly in the browser, OSS enforces a download policy on objects accessed through the **default domain name** or an **acceleration endpoint**. For buckets created after a specific cutoff date, OSS injects `x-oss-force-download: true` and `Content-Disposition: attachment` headers into the response, which forces the browser to download the file.
+
+<Note>
+The exact cutoff dates vary by region and file type. See [Appendix: Forced download rules](#appendix-forced-download-rules) for the full reference table.
+</Note>
+
+**Fix: Access objects through a custom domain name.** A custom domain name bypasses all forced download rules.
+
+<Steps>
+  <Step title="Map a custom domain name">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/). Go to the **Domain Names** page of the target bucket, and map your custom domain name (with a valid ICP filing) to the bucket.
+  </Step>
+  <Step title="Add a CNAME record">
+    Go to your DNS provider (for example, Alibaba Cloud DNS) and add a CNAME record that points your custom domain name to the CNAME address provided by OSS.
+  </Step>
+  <Step title="Access through the custom domain">
+    Access the object using your custom domain name URL. The browser now displays the file inline.
+  </Step>
+</Steps>
+
+<Note>
+If you need global access acceleration, map your custom domain name to an **acceleration endpoint**. This bypasses the forced download policy while still providing accelerated delivery. For step-by-step instructions, see [Access OSS using a custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names).
+</Note>
+
+## Scenario 2: Object metadata forces a download
+
+**When this happens:** The response contains `Content-Disposition: attachment` but does not contain `x-oss-force-download`.
+
+**Why:** The `Content-Disposition` metadata on the object is set to `attachment`, which tells the browser to download the file instead of displaying it inline. This often happens when a temporary download link is generated and the metadata is not reset afterward. All subsequent requests to the object then trigger a download.
+
+**Fix: Change `Content-Disposition` to `inline`.**
+
+### OSS console
+
+<Steps>
+  <Step title="Navigate to the object">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/). In the left-side navigation pane, go to the **Files** > **Objects** page of the target bucket.
+  </Step>
+  <Step title="Open metadata settings">
+    Find the target object. In the Actions column, choose **...** > **Set Object Metadata**.
+  </Step>
+  <Step title="Change Content-Disposition">
+    Find the `Content-Disposition` field and change its value to `inline`.
+  </Step>
+  <Step title="Save">
+    Click **OK**.
+  </Step>
+</Steps>
+
+### ossutil (batch updates)
+
+```bash
+# Set Content-Disposition to inline for a specific object
+ossutil set-props oss://your-bucket/your-object.pdf --content-disposition inline --metadata-directive update
+```
+
+## Scenario 3: Incorrect Content-Type prevents preview
+
+**When this happens:** The response headers look normal (no `x-oss-force-download`, no `Content-Disposition: attachment`), but the browser still downloads the file.
+
+**Why:** The object's `Content-Type` (MIME type) is missing or incorrect. For example, if a JPEG image has its `Content-Type` set to `application/octet-stream`, the browser cannot identify the file type and downloads it as a binary file.
+
+**How Content-Type goes wrong:** When an object is uploaded without specifying a `Content-Type`, the upload tool or SDK may not auto-detect the file type and falls back to `application/octet-stream`. A manual override during upload can also set the wrong value.
+
+**Fix: Set the correct `Content-Type`.**
+
+### OSS console
+
+<Steps>
+  <Step title="Navigate to the object">
+    Log on to the [OSS console](https://oss.console.alibabacloud.com/). In the left-side navigation pane, go to the **Files** > **Objects** page of the target bucket.
+  </Step>
+  <Step title="Open metadata settings">
+    Find the target object. In the Actions column, choose **...** > **Set Object Metadata**.
+  </Step>
+  <Step title="Change Content-Type">
+    Find the `Content-Type` field and change it to the correct MIME type.
+  </Step>
+  <Step title="Save">
+    Click **OK**.
+  </Step>
+</Steps>
+
+### Common MIME types
+
+| File type | Content-Type |
+|---|---|
+| JPEG image | `image/jpeg` |
+| PNG image | `image/png` |
+| GIF image | `image/gif` |
+| WebP image | `image/webp` |
+| MP4 video | `video/mp4` |
+| PDF document | `application/pdf` |
+| HTML file | `text/html` |
+| Plain text | `text/plain` |
+
+### ossutil (batch updates)
+
+```bash
+# Set Content-Type to image/jpeg for a specific object
+ossutil set-props oss://your-bucket/your-object.jpg --content-type image/jpeg --metadata-directive update
+```
+
+## Other scenarios
+
+### Metadata changes do not take effect (CDN cache)
+
+If you use Alibaba Cloud Content Delivery Network (CDN) to accelerate access to OSS, changes to object metadata such as `Content-Type` or `Content-Disposition` may not take effect immediately. CDN points of presence (POPs) may continue serving the cached version with the old headers.
+
+**Fix:** Log on to the CDN console and purge the cache for the object URL. For details, see [Refresh and prefetch resources](https://www.alibabacloud.com/help/en/cdn/user-guide/refresh-and-prefetch-resources).
+
+### Force download instead of preview
+
+To always force a browser download when a user accesses an object, use one of the following methods:
+
+- **Method 1 (Recommended): Set object metadata in OSS.** Set the object's `Content-Disposition` to `attachment`. This applies a permanent download behavior to an individual object, as described in [Scenario 2](#scenario-2-object-metadata-forces-a-download).
+
+- **Method 2: Add a response header in CDN.** In the CDN console, add `Content-Disposition: attachment` as an outbound response header under **Cache Settings**. This approach does not modify the source object in OSS and is useful for flexible, batch configurations based on specific paths or file types.
+
+### Browser does not support the file format
+
+Mainstream browsers cannot preview certain professional file formats such as `.psd`, `.ai`, or `.sketch`. In these cases, the browser downloads the file even when OSS and CDN are configured correctly.
+
+**Options:**
+
+- Install a browser extension that supports the file format.
+- Use a document preview service such as [WebOffice Online Preview](https://www.alibabacloud.com/help/en/oss/user-guide/online-object-preview).
+
+## Appendix: Forced download rules
+
+If an object is downloaded unexpectedly, check the `x-oss-ec` field in the HTTP response header. Use the tables below to identify which rule triggered the download.
+
+- **Error code (x-oss-ec):** The unique identifier for the download rule.
+- **Bucket creation time:** When you use a default domain name, the rule typically applies only to buckets created after the effective date. Buckets created before that date are not affected.
+- **Transfer acceleration enabled time:** After you enable transfer acceleration, the rule typically applies only to buckets for which transfer acceleration was enabled after the effective date.
+
+Using a [custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names) bypasses all forced download rules.
+
+### Default domain names
+
+| Effective time | Bucket region | Affected buckets | Affected file types | Error code |
+|---|---|---|---|---|
+| 08:00, September 28, 2018 | China (Hangzhou), China (Shanghai), China (Qingdao), China (Beijing), China (Zhangjiakou), China (Hohhot), China (Shenzhen), China (Chengdu) | Buckets created after the policy takes effect | text/html | [0048-00000001](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000001#main-2280390) |
+| 12:00, September 25, 2019 | China (Nanjing - Local Region - Phasing Out) China (Ulanqab), China (Heyuan), China (Guangzhou), US (Silicon Valley), US (Virginia), South Korea (Seoul), Singapore, Malaysia (Kuala Lumpur), Indonesia (Jakarta), Philippines (Manila), Thailand (Bangkok), UK (London), UAE (Dubai) | Buckets created after the policy takes effect | text/html | [0048-00000001](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000001#main-2280390) |
+| 14:00, November 25, 2019 | China (Hong Kong) | Buckets created after the policy takes effect | text/html | [0048-00000001](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000001#main-2280390) |
+| 17:00, September 23, 2019 | China (Hohhot) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000100](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000100#main-2292854) |
+| 11:00, September 24, 2019 | China (Qingdao), China (Chengdu) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000101](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000101#main-2292861) |
+| 17:00, September 24, 2019 | China (Zhangjiakou) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000102](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000102#main-2292862) |
+| 17:00, September 29, 2019 | China (Shanghai), China (Shenzhen) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000103](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000103#main-2292863) |
+| 18:00, September 29, 2019 | China (Beijing) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000104](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000104#main-2292875) |
+| 15:00, September 30, 2019 | China (Hangzhou) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic, text/html | [0048-00000105](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000105#main-2292876) |
+| 00:00, October 09, 2022 | [All regions](https://www.alibabacloud.com/help/en/oss/user-guide/regions-and-endpoints) | Buckets created by users who activate OSS for the first time on or after 00:00, October 9, 2022 | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000113](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000113#main-2292898) |
+| 10:00, December 22, 2025 | China (Ulanqab), China (Heyuan), China (Guangzhou), China (Nanjing - Local Region - Phasing Out) | Buckets created after the policy takes effect | image/jpeg, image/gif, image/tiff, image/png, image/webp, image/svg+xml, image/bmp, image/x-ms-bmp, image/x-cmu-raster, image/exr, image/x-icon, image/heic | [0048-00000114](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000114) |
+
+### Acceleration endpoints
+
+| Effective time | Bucket region | Affected buckets | Affected file types | Error code |
+|---|---|---|---|---|
+| 00:00, December 31, 2020 | [All regions](https://www.alibabacloud.com/help/en/oss/user-guide/regions-and-endpoints) | Buckets for which transfer acceleration is enabled after the policy takes effect | text/html | [0048-00000002](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000002#main-2292697) |
+| 12:00, January 07, 2021 | UAE (Dubai) | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000107](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000107#main-2292886) |
+| 18:00, January 07, 2021 | Malaysia (Kuala Lumpur), UK (London) | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000108](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000108#main-2292888) |
+| 18:00, January 08, 2021 | Japan (Tokyo), Indonesia (Jakarta), Germany (Frankfurt) | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000109](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000109#main-2292890) |
+| 12:00, January 14, 2021 | US (Silicon Valley), US (Virginia), Singapore | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000110](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000110#main-2292892) |
+| 00:00, January 16, 2021 | China (Hong Kong) | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000111](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000111#main-2292893) |
+| 00:00, October 09, 2022 | [All regions](https://www.alibabacloud.com/help/en/oss/user-guide/regions-and-endpoints) | Buckets created by users who activate OSS for the first time on or after 00:00, October 9, 2022 | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000113](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000113#main-2292898) |
+| 00:00, February 01, 2023 | South Korea (Seoul), Philippines (Manila), Thailand (Bangkok) | Buckets for which transfer acceleration is enabled after the policy takes effect | [All](https://www.alibabacloud.com/help/en/oss/user-guide/configure-the-content-type-header#concept-5041) | [0048-00000112](https://www.alibabacloud.com/help/en/oss/user-guide/0048-00000112#main-2292895) |

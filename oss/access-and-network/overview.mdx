@@ -1,0 +1,154 @@
+---
+title: "Access domains and network connectivity"
+description: "Choose the right domain type, acceleration strategy, security configuration, and dedicated access option for your OSS storage architecture."
+---
+
+OSS supports multiple access methods for different network environments, performance requirements, and security needs. Use this guide to choose the right domain type, acceleration strategy, security configuration, and dedicated access option for your storage architecture.
+
+## Choose an access method
+
+| Category | Scenario | Recommended solution |
+|----------|----------|----------------------|
+| Basic access | Query endpoints and internal VIP CIDR blocks for all regions | [Regions and endpoints](https://www.alibabacloud.com/help/en/oss/user-guide/regions-and-endpoints) |
+| | Format and usage of public, internal, and acceleration endpoints | [Access OSS using endpoints and bucket domain names](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-via-bucket-domain-name) |
+| | Enable online file preview and unify brand identity | [Access OSS using a custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names) |
+| Performance optimization | Distribute and accelerate static resources (images, audio, video, documents) globally | [Access OSS using Alibaba Cloud CDN](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration) |
+| | Accelerate cross-region and cross-border uploads and downloads | [Access OSS using transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration) |
+| Security | Enable HTTPS encrypted transmission for a custom domain name | [Access OSS using HTTPS](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-by-https-protocol) |
+| | Establish a secure, isolated private connection between your VPC and OSS | [Access OSS over PrivateLink](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-via-privatelink-network) |
+| | Prevent unauthorized hotlinking that causes unexpected traffic costs | [Hotlink protection](https://www.alibabacloud.com/help/en/oss/user-guide/hotlink-protection) |
+| Dedicated access | Access OSS through a fixed IP address | [Access OSS using a reverse proxy on an ECS instance](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-through-ecs-reverse-proxy) |
+| | Grant differentiated permissions to multiple applications or teams accessing the same bucket | [Access points](https://www.alibabacloud.com/help/en/oss/user-guide/access-point/) |
+| Web applications | Host static files from a bucket as a website | [Static website hosting](https://www.alibabacloud.com/help/en/oss/user-guide/hosting-static-websites) |
+| | Resolve cross-origin blocking when browsers load OSS resources | [Cross-origin resource sharing (CORS)](https://www.alibabacloud.com/help/en/oss/user-guide/cors-settings) |
+
+## Domain types
+
+OSS provides different domain types based on network environment and performance requirements. For the format and usage of each domain type, see [Access OSS using endpoints and bucket domain names](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-via-bucket-domain-name). For region-specific endpoints, see [Regions and endpoints](https://www.alibabacloud.com/help/en/oss/user-guide/regions-and-endpoints).
+
+<Warning>
+Due to a [policy change](https://www.alibabacloud.com/en/notice/oss_update_notice_policy_change_in_calling_data_api_operations_via_the_default_public_domain_name_45a) to improve compliance and security, starting March 20, 2025, new OSS users must [use a custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names) (CNAME) to perform data API operations on OSS buckets in Chinese mainland regions. Default public endpoints are restricted for these operations. Refer to the [official announcement](https://www.alibabacloud.com/en/notice/oss_update_notice_policy_change_in_calling_data_api_operations_via_the_default_public_domain_name_45a) for a complete list of affected operations. If you access data over HTTPS, [bind a valid SSL certificate](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-by-https-protocol) to your custom domain. This is mandatory for OSS console access, as the console enforces HTTPS.
+</Warning>
+
+| Domain type | Use case | Billing | Activation |
+|-------------|----------|---------|------------|
+| Public endpoint | Public access from web applications and mobile clients | Outbound traffic over the internet | Available by default |
+| Internal endpoint | Access from within the Alibaba Cloud internal network (for example, Elastic Compute Service (ECS) instances accessing OSS) | Free | Available by default |
+| Acceleration endpoint | High-speed cross-region and cross-border uploads and downloads | Outbound traffic over the internet + [transfer acceleration fees](https://www.alibabacloud.com/help/en/oss/transfer-acceleration-fees) | Enable [transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration) |
+| Dual-stack endpoint | Access OSS over IPv6 networks | Outbound traffic over the internet | Supported in selected regions |
+| CNAME | DNS resolution when binding a custom domain name | Outbound traffic over the internet | [Bind a custom domain name and configure CNAME resolution](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names) |
+
+<Warning>
+When you access HTML files, images, and other objects through an OSS bucket domain name, browsers force downloads instead of online previews. To enable file preview, [bind a custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names). Custom domain names can be bound to a public endpoint, acceleration endpoint, access point, or object FC access point. If your bucket is in the Chinese mainland, the domain name must have an ICP filing.
+</Warning>
+
+## Performance optimization
+
+[CDN acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration) and [transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration) serve different acceleration scenarios. Use them separately or together based on your needs.
+
+| Dimension | CDN acceleration | Transfer acceleration |
+|-----------|-----------------|----------------------|
+| How it works | Caches static resources at global edge nodes and serves requests from the nearest point of presence | Uses intelligent routing over Alibaba Cloud's backbone network to optimize data transmission paths |
+| Best for | Frequent reads of static resources: images, audio, video, and document downloads | Long-distance cross-region and cross-border uploads and downloads |
+| Upload support | Not supported through CDN | Supports accelerated uploads |
+| Cost | [CDN fees](https://www.alibabacloud.com/help/en/cdn/product-overview/billing-overview) + OSS [origin traffic](https://www.alibabacloud.com/help/en/oss/traffic-fees#e573777d57xgf) | Outbound traffic over the internet + [transfer acceleration fees](https://www.alibabacloud.com/help/en/oss/transfer-acceleration-fees) |
+| Combined use | Configure CDN origin fetch to use the acceleration endpoint for dual acceleration: CDN edge caching plus backbone network optimization | |
+
+## Security
+
+### HTTPS
+
+OSS bucket domain names support HTTPS access by default, with no extra configuration required.
+
+When you access OSS using a custom domain name, configure an SSL certificate for that domain:
+
+- **Without CDN**: In the OSS console, configure **Upload Certificate** for the custom domain name bound to the bucket.
+- **With CDN**: In the CDN console, configure an **SSL Certificate** for the CDN-accelerated domain name.
+
+In production environments, enforce HTTPS access by using a bucket policy to deny all HTTP requests. Alibaba Cloud SSL certificates support automatic renewal through certificate hosting. For details, see [Access OSS using HTTPS](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-by-https-protocol).
+
+### PrivateLink
+
+PrivateLink creates a dedicated private endpoint for OSS inside your Virtual Private Cloud (VPC). All traffic flows through Alibaba Cloud's backbone network without traversing the internet.
+
+Compared with the default internal endpoint, PrivateLink provides stronger security isolation:
+
+| Capability | Internal endpoint | PrivateLink |
+|------------|------------------|-------------|
+| Attack surface | Public service entry exposed to all VPCs | Entry resides inside the VPC; other VPCs cannot discover or access it |
+| Network-layer control | Not controllable by security groups | Supports security groups to precisely control source IP access |
+| Audit | Records only successful requests | Supports VPC flow logs to audit all connection attempts |
+| IP planning | Uses the 100.64.0.0/10 CIDR block, which may conflict with on-premises networks | Uses IPs from your VPC CIDR block, following your custom IP plan |
+
+Connect on-premises devices or data centers to your VPC using SSL-VPN or Express Connect, then access OSS through PrivateLink. For details, see [Access OSS over PrivateLink](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-via-privatelink-network).
+
+### Hotlink protection
+
+When hotlinking causes unexpected traffic costs, configure Referer blacklists and whitelists to restrict access sources. OSS enforces access control in this order: **Empty Referer check** > **Blacklist check** > **Whitelist check**.
+
+Hotlink protection applies only to anonymous access and signed URL access. API calls signed with AccessKeys are not restricted.
+
+If you enable CDN acceleration for OSS, configure hotlink protection rules in CDN as well. Otherwise, hotlink requests may hit CDN cache and bypass validation. For details, see [Hotlink protection](https://www.alibabacloud.com/help/en/oss/user-guide/hotlink-protection).
+
+## Dedicated access
+
+### Reverse proxy on an ECS instance
+
+OSS resolves its service endpoints to dynamic IP addresses through DNS. This may cause access restrictions when you configure firewall allowlists or integrate with systems that require a fixed IP address.
+
+Deploy an Nginx reverse proxy on an ECS instance with a static public IP address. Forward requests through this instance to access OSS resources using a fixed IP address. In production environments, use a high-availability architecture with Server Load Balancer (SLB) and an ECS instance group across multiple zones. For details, see [Access OSS using a reverse proxy on an ECS instance](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-through-ecs-reverse-proxy).
+
+### Access points
+
+An access point provides a dedicated access endpoint for a bucket. When multiple applications or teams need to access the same bucket with different permissions, create separate access points for each and manage permissions individually using access point policies (AP policies) instead of maintaining complex permission rules in a single bucket policy.
+
+Each access point has its own alias, access policy, and network source configuration (internet or specified VPC). Access points support three-layer joint authentication with RAM policies and bucket policies. For details, see [Access points](https://www.alibabacloud.com/help/en/oss/user-guide/access-point/).
+
+## Web applications
+
+### Static website hosting
+
+OSS lets you host static files (HTML, CSS, JavaScript, etc.) from a bucket as a publicly accessible website without managing servers. Configure a default index page, subdirectory index pages, and custom 404 error pages. Support single-page applications (SPAs) by setting the 404 page to `index.html` and the response code to `200`. For details, see [Static website hosting](https://www.alibabacloud.com/help/en/oss/user-guide/hosting-static-websites).
+
+<Warning>
+When you access HTML files through an OSS bucket domain name, browsers force downloads. [Bind a custom domain name](https://www.alibabacloud.com/help/en/oss/user-guide/access-buckets-via-custom-domain-names) to enable normal webpage browsing.
+</Warning>
+
+### Cross-origin resource sharing (CORS)
+
+When your website loads OSS resources and the browser shows a `blocked by CORS policy` error, the browser's same-origin policy is restricting cross-origin resource access. Configure CORS rules for your bucket (**Origin**, **Allowed Methods**, **Allowed Headers**, etc.) to authorize specific websites to access OSS resources across origins.
+
+Enable **Vary: Origin** when using multiple origins or wildcard characters to prevent cache pollution. If your bucket uses CDN acceleration, configure cross-origin rules in the CDN console or pass through OSS CORS response headers. For details, see [Cross-origin resource sharing (CORS)](https://www.alibabacloud.com/help/en/oss/user-guide/cors-settings).
+
+## FAQ
+
+### How do I access OSS objects with long-term, unsigned URLs?
+
+Two options:
+
+- **Set objects to public-read**: Anyone can access the objects without restrictions. To prevent malicious hotlinking and unexpected charges, configure [hotlink protection](https://www.alibabacloud.com/help/en/oss/user-guide/hotlink-protection) to restrict access sources. See [Set object ACL](https://www.alibabacloud.com/help/en/oss/user-guide/object-acl).
+
+- **Use CDN with private bucket origin fetch**: Keep objects private and enable private bucket origin fetch in CDN to provide public-read access. CDN delivers better access performance and caching. Configure [hotlink protection](https://www.alibabacloud.com/help/en/cdn/user-guide/configure-a-referer-whitelist-or-blacklist-to-enable-hotlink-protection) in CDN to prevent unauthorized use of resources. See [Access OSS using Alibaba Cloud CDN](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration).
+
+### Why is my upload or download speed slow?
+
+OSS transfer speed depends primarily on client network bandwidth, link quality, and transfer strategy. To troubleshoot:
+
+- **Check bandwidth and link quality**: Confirm that current bandwidth does not exceed the bucket's [bandwidth limit](https://www.alibabacloud.com/help/en/oss/user-guide/limits). Use the [MTR tool](https://www.alibabacloud.com/help/en/ecs/user-guide/use-mtr-tool-for-network-analysis) to analyze packet loss, high latency, or routing anomalies. For cross-border or long-distance transfers, enable [transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration).
+
+- **Use the right tool**: Use [ossutil](https://www.alibabacloud.com/help/en/oss/developer-reference/ossutil-overview/) for large or bulk file transfers. Run the `probe` command to test current network conditions.
+
+- **Tune SDK settings**: Always use [multipart upload](https://www.alibabacloud.com/help/en/oss/user-guide/multipart-upload) and [resumable upload](https://www.alibabacloud.com/help/en/oss/user-guide/resumable-upload) for large files. Set an appropriate part size (`part_size`) and concurrent thread count (`num_threads`). Increase part size when network conditions are good to reduce request count. Disable CRC-64 checksum during client initialization (for example, set `enable_crc=False` in Python) and use the `Content-MD5` request header for integrity verification. This improves transfer performance while maintaining data integrity.
+
+### How do I troubleshoot network errors such as DNS resolution failure or connection timeout?
+
+If the response includes a Request ID, the request reached OSS. Use the [Request ID](https://www.alibabacloud.com/help/en/oss/user-guide/obtain-request-ids) with the [OSS self-diagnostic tool](https://oss.console.alibabacloud.com/tools/diagnose) to diagnose the issue.
+
+If the Request ID is empty, the request did not reach OSS. Troubleshoot by error type:
+
+| Error type | Common causes | Action |
+|------------|---------------|--------|
+| Connection refused | Port unreachable or internal endpoint used across regions | Use the correct public endpoint. Check firewall and network connectivity with `ping` and `telnet`. |
+| ConnectionTimeOut | Poor network conditions or short timeout setting | Increase SDK connection and read timeouts. Enable retry on failure. Use [multipart upload](https://www.alibabacloud.com/help/en/oss/user-guide/multipart-upload) and [resumable upload](https://www.alibabacloud.com/help/en/oss/user-guide/resumable-upload) for large files. Consider [CDN acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration) or [transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration). |
+| Socket timeout / closed | Connection timed out or abnormally closed | Increase socket timeout in the SDK (for example, `ClientConfiguration.setSocketTimeout` in Java SDK). |
+| Connection reset | Incorrect endpoint configuration or bucket security restriction | 1. Check network connectivity with `ping` or the [Alibaba Kunlun diagnostic tool](https://cdn.dns-detect.alicdn.com/https/doc.html). 2. Confirm the endpoint includes the correct protocol prefix (`http://` or `https://`). 3. Confirm the bucket is not placed in [OSS sandbox](https://www.alibabacloud.com/help/en/oss/user-guide/oss-sandbox). 4. Capture packets with Wireshark and contact technical support. |

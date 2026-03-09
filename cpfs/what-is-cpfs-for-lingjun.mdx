@@ -1,0 +1,80 @@
+---
+title: "What is CPFS for Lingjun"
+description: "Alibaba Cloud's high-performance parallel file system for AI workloads with up to 2 TB/s throughput"
+---
+
+CPFS for Lingjun is Alibaba Cloud's high-performance parallel file system built for AI workloads. It delivers up to 2 TB/s throughput and sub-millisecond latency through RDMA networking and tiered caching.
+
+<Note>
+This product is currently in Invitational Preview.
+</Note>
+
+## Why CPFS for Lingjun
+
+AI workloads like large model training, AIGC, and autonomous driving demand extreme I/O performance. CPFS for Lingjun meets these requirements:
+
+| Capability | Specification |
+| --- | --- |
+| Throughput | Up to 2 TB/s (single file system) |
+| IOPS | Up to 30 million |
+| Latency | Sub-millisecond, consistent |
+| File capacity | Up to 10 billion files |
+| Metadata OPS | Over 100,000 per second |
+| OSS integration | Up to 100 GB/s when combined with OSS |
+
+**Cost optimization**: Tiered data flow with OSS reduces storage costs.
+
+**Data protection**: Supports log audit and Cloud Backup.
+
+For detailed specifications, see [Product specifications](/cpfs-lingjun-specifications).
+
+## CPFS for Lingjun vs. General-Purpose edition
+
+| Item | CPFS for Lingjun | General-Purpose edition |
+| --- | --- | --- |
+| Max throughput | 2 TB/s | 100 GB/s |
+| Max IOPS | 30 million | 10 million |
+| Mount targets | PAI, ACS | PAI, ACS, ECS |
+| Protocols | POSIX | POSIX, NFS v3 |
+
+## Supported compute resources
+
+CPFS for Lingjun works with:
+
+- PAI Lingjun resources
+- PAI general computing resources
+- PAI Lingjun resources (single-tenant edition)
+- Container Compute Service (ACS)
+
+<Warning>
+ECS instances created in the ECS console cannot mount CPFS for Lingjun.
+</Warning>
+
+For other limits, see [Limits](/cpfs-lingjun-limits).
+
+## Available regions
+
+China (Hangzhou), China (Shanghai), China (Shenzhen), China (Guangzhou), China (Beijing), China (Ulanqab), China (Hong Kong), Singapore, Germany (Frankfurt), Thailand (Bangkok), Malaysia (Kuala Lumpur), Dubai
+
+## Billing
+
+- No charges until you create a file system.
+- To stop billing, release the file system. Data is permanently deleted.
+- See [Billing overview](https://www.alibabacloud.com/help/en/cpfs/bmcpfs/product-overview/product-billing/) for details.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Product specifications" icon="gauge-high" href="/cpfs-lingjun-specifications">
+    View performance and capacity specs
+  </Card>
+  <Card title="Limits" icon="ban" href="/cpfs-lingjun-limits">
+    Check usage limits
+  </Card>
+  <Card title="Mount in PAI" icon="brain" href="/cpfs-lingjun-mount-pai">
+    Use CPFS with Platform for AI
+  </Card>
+  <Card title="Mount in ACS" icon="cubes" href="/cpfs-lingjun-mount-acs">
+    Use CPFS with Container Compute Service
+  </Card>
+</CardGroup>

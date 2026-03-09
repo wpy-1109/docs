@@ -1,0 +1,280 @@
+---
+title: "Map a custom domain name to a bucket"
+description: "Map your own domain name to an OSS bucket so that you can access objects through a branded URL, preview files in a browser, configure HTTPS, and enable CDN acceleration."
+---
+
+Map your own domain name to an OSS bucket, access point, or Object FC Access Point so that you can access objects through a branded URL, preview files in a browser, configure HTTPS, and enable CDN acceleration.
+
+<Warning>
+Starting March 20, 2025 (00:00:00 UTC+8), new OSS users cannot call data APIs for buckets in Chinese mainland regions through default public endpoints such as `oss-cn-hangzhou.aliyuncs.com`. These requests are rejected with the `PublicEndpointForbidden` error (HTTP 400, error code `0048-00000401`). To continue accessing these APIs over the public network, map a custom domain name to the bucket. For details, see [Upgrade notice](https://www.alibabacloud.com/notice/detail?_p_lc=1&spm=a3c0i.35801494.J_TlTAa0s_LXHOq4tuiO-gv.7.3b627c5bzXVmmH&id=1114).
+</Warning>
+
+## How it works
+
+A CNAME (Canonical Name) record in DNS points your custom domain name to the default endpoint that OSS provides for the bucket. When someone requests your custom domain name, the DNS system resolves the request to the corresponding OSS endpoint, and OSS serves the resource.
+
+The setup takes three steps: **map the domain name in the OSS console, add a CNAME record in DNS, and verify access**.
+
+OSS supports mapping a custom domain name to four types of endpoints. Choose one based on your use case:
+
+| Use case | Endpoint type | Description |
+|----------|--------------|-------------|
+| Host static resources and preview files | Public endpoint | The most common option for basic file access |
+| Accelerate cross-border or long-distance transfers | Acceleration endpoint | Requires [transfer acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration) to be enabled first |
+| Fine-grained policy-based access control | [Access point](https://www.alibabacloud.com/help/en/oss/user-guide/access-point/) | Map to an access point to manage access through customized policies |
+| Process files on access | [Object FC Access Point](https://www.alibabacloud.com/help/en/oss/user-guide/object-fc-access-point-management/) | Map to an Object FC Access Point to process data with Function Compute on read |
+
+<Warning>
+A custom domain name mapped to an OSS bucket is for public network access only. Custom domain mapping creates a CNAME record that points to the public endpoint of the bucket (such as `example-bucket.oss-<region-id>.aliyuncs.com`). Internal endpoints (such as `oss-<region-id>-internal.aliyuncs.com`) are not resolvable by public DNS and cannot be the target of a CNAME record. To access OSS from Alibaba Cloud resources such as Elastic Compute Service (ECS) or Function Compute (FC) in the same region and Virtual Private Cloud (VPC), use the internal endpoint directly.
+</Warning>
+
+## Prerequisites
+
+Before you begin, make sure that you have:
+
+- A registered domain name. If you do not have one, [register a domain name](https://wanwang.aliyun.com/domain)
+- (Chinese mainland buckets only) An [ICP filing](https://beian.aliyun.com/) for the domain name
+
+## Step 1: Map a custom domain name
+
+<Steps>
+  <Step title="Open domain settings">
+    Go to the [Bucket list](https://oss.console.alibabacloud.com/bucket) page, click the name of the target bucket, and then choose **Bucket Settings** > **Domain Names** in the left-side navigation pane. Click **Map Custom Domain Name**.
+  </Step>
+  <Step title="Enter the domain name">
+    Enter the domain name to map. The system automatically checks whether the domain name meets the mapping requirements.
+
+    - If the domain name belongs to the current Alibaba Cloud account, click **Confirm** to complete the mapping.
+    - If the domain name belongs to another Alibaba Cloud account or is managed by a different DNS provider, verify domain ownership by adding a TXT record. The following steps use a domain name purchased from Alibaba Cloud as an example:
+
+      1. Log on to the [Alibaba Cloud DNS console](https://dnsnext.console.alibabacloud.com/authoritative) with the Alibaba Cloud account that owns the domain name. Find the target domain name and click **Settings** in the Actions column.
+
+      2. Click **Add Record** and configure the following fields. Keep the default values for all other fields.
+
+         - **Record Type**: Select **TXT**.
+         - **Hostname**: Enter only the prefix of the host record, such as `_dnsauth`. If you are mapping a subdomain such as `image.example.com`, include the subdomain prefix as well. For example, enter `_dnsauth.image`.
+         - **Record Value**: Enter the value displayed in the OSS console.
+
+      3. Click **OK**. If the **Change Resource Record Confirmation** dialog box appears, click **OK** again.
+
+      4. Return to the OSS console and click **Verify Domain Name Ownership**.
+  </Step>
+</Steps>
+
+<Note>
+DNS records may take a few minutes to propagate. If verification fails, wait and try again. The TXT record is only used for ownership verification. After verification succeeds, you can delete it without affecting subsequent use.
+</Note>
+
+## Step 2: Add a CNAME record
+
+After you map the domain name, the custom domain is not yet active. Add a CNAME record to point the custom domain name to an OSS endpoint.
+
+<Warning>
+Complete Step 1 before you add the CNAME record. If the domain name is not mapped first, OSS cannot identify the correct bucket and returns unexpected content. If you later unmap the domain name, delete the CNAME record promptly.
+</Warning>
+
+If the domain name belongs to the current Alibaba Cloud account, select **Automatically Add CNAME Record** in the OSS console to skip the manual steps below.
+
+<Note>
+If automatic CNAME creation fails because a record with the same hostname already exists, log on to the [Alibaba Cloud DNS console](https://dnsnext.console.alibabacloud.com/authoritative) to check whether the existing record is still in use. If it is not, delete it and try again.
+</Note>
+
+To manually add a CNAME record (using a domain purchased from Alibaba Cloud as an example):
+
+<Steps>
+  <Step title="Open DNS settings">
+    Log on to the [Alibaba Cloud DNS console](https://dnsnext.console.alibabacloud.com/authoritative) with the Alibaba Cloud account that owns the domain name. Find the target domain name and click **Settings** in the Actions column.
+  </Step>
+  <Step title="Add the CNAME record">
+    Click **Add Record** and configure the following fields. Keep the default values for all other fields.
+
+    - **Record Type**: Select **CNAME**.
+
+    - **Hostname**: If you are mapping a root domain, enter `@`. If you are mapping a subdomain such as `image.example.com`, enter the subdomain prefix, for example, `image`.
+
+      <Note>
+      A CNAME record cannot coexist with an A record for the same hostname. Delete the A record before you add the CNAME record. If the A record is in use (for example, pointing to an ECS instance or Web Application Firewall (WAF)), use a new subdomain to map to OSS instead of modifying the existing record.
+      </Note>
+
+    - **Record Value**: Enter the target domain name based on your use case.
+
+      | Use case | Record value |
+      |----------|-------------|
+      | Public access | CNAME (recommended, such as `example-bucket.<region-id>.taihangcda.cn`) or public endpoint |
+      | Transfer acceleration | Acceleration endpoint, such as `example-bucket.oss-accelerate.aliyuncs.com` |
+  </Step>
+  <Step title="Confirm">
+    Click **OK**. If the **Change Resource Record Confirmation** dialog box appears, click **OK** again.
+  </Step>
+</Steps>
+
+<Note>
+DNS propagation time depends on the TTL (Time to Live) setting and can range from several minutes to several hours. If the domain is not accessible immediately, wait or clear your local DNS cache. Run `dig example.com CNAME +short` to check the CNAME record status.
+</Note>
+
+## Step 3: Verify access
+
+After you complete the domain mapping and CNAME configuration, verify that the custom domain name works.
+
+### Public-read and public-read-write buckets
+
+Open the object URL in a browser. For example, `http://image.example.com/example.jpg` accesses the object `example.jpg` in the root directory of the bucket.
+
+### Private buckets
+
+Access URLs for private buckets must include a signature. To get a presigned URL from the console:
+
+1. Go to the [Bucket list](https://oss.console.alibabacloud.com/bucket) page and click the target bucket.
+2. In the Actions column of the target object, click **Details**.
+3. Set **Domain** to **Custom Domain**, select the mapped domain name, and click **Copy Object URL**.
+4. Open the URL in a browser to verify access.
+
+For more information about signatures and how to generate them, see [Signature Version 4 (recommended)](https://www.alibabacloud.com/help/en/oss/developer-reference/add-signatures-to-urls).
+
+## Set up HTTPS for your custom domain
+
+After you map a custom domain name, [configure an SSL certificate](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-by-https-protocol#section-evp-h0m-z2e) to enable HTTPS access. HTTPS uses TLS/SSL to encrypt data in transit, which prevents interception and tampering and eliminates browser "Not Secure" warnings.
+
+## Go live with zero downtime
+
+When you switch from a bucket endpoint to a custom domain name in a production environment, use the following phased strategy to avoid service interruptions:
+
+<Steps>
+  <Step title="Prepare">
+    Complete domain mapping and CNAME configuration. Verify functionality and performance in a staging environment.
+  </Step>
+  <Step title="Canary release (recommended during off-peak hours)">
+    Gradually route a portion of traffic to the custom domain name.
+  </Step>
+  <Step title="Verify">
+    Monitor access logs and error rates to confirm that the service is running as expected.
+  </Step>
+  <Step title="Full release">
+    Route all traffic to the custom domain name.
+  </Step>
+  <Step title="Rollback plan">
+    If any issues occur, immediately switch back to the bucket endpoint, analyze the root cause, and redeploy.
+  </Step>
+</Steps>
+
+## Best practices
+
+- **Isolate services with subdomains**: Assign different subdomains for different purposes, such as `static.example.com` for static web resources and `images.example.com` for image assets. This optimizes browser concurrent connections, enables independent cache policies, and supports fine-grained access control.
+
+- **Configure CORS rules for cross-origin access**: When a front-end application deployed at one domain (such as `https://web.example.com`) accesses OSS resources at a different domain (such as `https://oss.example.com`), [configure CORS rules](https://www.alibabacloud.com/help/en/oss/user-guide/cors-settings) to allow cross-origin requests.
+
+- **Host a static website**: To serve a complete static website (HTML, CSS, and JavaScript) from OSS, configure [static website hosting](https://www.alibabacloud.com/help/en/oss/user-guide/hosting-static-websites) after you map your custom domain name. This enables a default index page and a custom 404 error page.
+
+- **Accelerate with CDN**: For globally distributed static resources, configure [CDN acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration) to cache content on edge nodes, reducing access latency.
+
+- **Protect against hotlinking**: To prevent other websites from embedding your images and videos (which causes unexpected traffic costs), [configure Referer-based hotlink protection](https://www.alibabacloud.com/help/en/oss/user-guide/hotlink-protection) with a whitelist of allowed domains.
+
+- **Enable access logging**: Turn on [real-time log query](https://www.alibabacloud.com/help/en/oss/user-guide/real-time-log-query/) to record access time, source IP, request type, and response status for every request. This supports security audits, performance analysis, and troubleshooting.
+
+## Quotas and limits
+
+| Constraint | Limit |
+|-----------|-------|
+| Maximum custom domain names per bucket | 100 |
+| Domain-to-bucket mapping | One-to-one. A domain can be mapped to only one bucket at a time. To remap it, unmap it from the original bucket first. |
+| Chinese domain names | Not supported |
+| Wildcard domains (such as `*.example.com`) | Not supported. This ensures DNS resolution stability and compatibility. |
+
+<Note>
+For some users of the legacy image processing feature, domains already used for image processing cannot be mapped to a bucket. The new image processing feature does not have this limitation.
+</Note>
+
+<Note>
+When you use CDN to accelerate OSS access, you can map a wildcard domain, but it will not appear in the OSS console.
+</Note>
+
+## FAQ
+
+### How do I control whether a file is previewed or downloaded?
+
+The `Content-Disposition` HTTP response header controls this behavior. When a file is accessed through the default OSS domain name, OSS forces the `Content-Disposition: attachment` header for security, which triggers a download. When accessed through a custom domain name, OSS does not add this header, so you can control the behavior.
+
+**To preview a file**: Access it through a custom domain name. Make sure the object's metadata does not include `Content-Disposition: attachment` and that the `Content-Type` (MIME type) matches the file format. For file types that browsers cannot preview natively:
+
+- For office files (.doc, .ppt, .pdf), integrate the [WebOffice online preview](https://www.alibabacloud.com/help/en/oss/user-guide/online-object-preview) service.
+- For video formats like .mov, use the [video transcoding](https://www.alibabacloud.com/help/en/oss/user-guide/video-transcoding) service to convert them to a web-compatible format.
+- Install a browser extension for the specific file type.
+
+**To force download**: Set the object's `Content-Disposition` metadata to `attachment`.
+
+<Note>
+The `<video>` and `<audio>` HTML tags prioritize media playback and may ignore the `attachment` directive.
+</Note>
+
+### What should I do if the domain is already mapped to another bucket?
+
+Either use a different subdomain (for example, `image.example.com` instead of `example.com`) or unmap the domain from the original bucket first:
+
+1. If CDN acceleration is enabled, modify the origin server configuration in the CDN service so that the accelerated domain name no longer points to the OSS bucket endpoint. This prevents back-to-origin failures. For instructions, see [Configure an origin server](https://www.alibabacloud.com/help/en/cdn/user-guide/configure-an-origin-server).
+2. Go to the [Bucket list](https://oss.console.alibabacloud.com/bucket) page, click the name of the bucket that the domain is currently mapped to, and then choose **Bucket Settings** > **Domain Names**.
+3. Find the domain name and click **Unbind** in the Actions column. Click **OK** to confirm.
+
+### How do I fix the NeedVerifyDomainOwnership error when mapping a domain via API?
+
+This error means domain ownership has not been verified. To resolve it:
+
+1. Call the [CreateCnameToken](https://www.alibabacloud.com/help/en/oss/developer-reference/createcnametoken#reference-2210351) operation to get a `CnameToken` for verification. A `CnameToken` expires 72 hours after creation. If you request a new token before the existing one expires, the existing token is returned.
+2. Add a TXT record with your DNS provider using the token value.
+3. Call the [PutCname](https://www.alibabacloud.com/help/en/oss/developer-reference/putcname#reference-2210550) operation to map the domain name.
+
+### Why is the custom domain not working after configuration?
+
+DNS caching is the most common cause. DNS servers at various levels cache resolution results based on the TTL (Time to Live) value, so changes may take minutes to hours to propagate. Wait 10 minutes and try again, or flush your local DNS cache:
+
+**Windows**
+
+```
+ipconfig /flushdns
+```
+
+**macOS**
+
+```bash
+sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder
+```
+
+**Linux**
+
+```bash
+sudo systemd-resolve --flush-caches
+```
+
+### What should I do if adding a CNAME record conflicts with an existing A record?
+
+A CNAME record cannot coexist with an A record for the same hostname per DNS protocol rules. Two options:
+
+- **Use a new subdomain**: If `example.com` already has an A record, map `oss.example.com` to OSS instead. The two records do not conflict.
+- **Replace the A record**: Delete the A record and add the CNAME record. Before deleting, confirm that no services depend on the A record to avoid disrupting existing services.
+
+### Why does access fail when domain B is CNAMEd to domain A, and domain A is mapped to OSS?
+
+OSS validates the `Host` header in every HTTP request and requires it to match the domain name mapped to the bucket. When you access domain B, the `Host` header contains domain B, which does not match the mapped domain name. Map the domain name that users access directly to the bucket instead of relying on intermediate CNAME chains.
+
+### Can I still access files through the default OSS domain name?
+
+Yes. Mapping a custom domain name does not affect access through the default OSS endpoint. Both methods work simultaneously. To get presigned URLs for the default domain, see [Use a presigned URL to download or preview a file](https://www.alibabacloud.com/help/en/oss/user-guide/how-to-obtain-the-url-of-a-single-object-or-the-urls-of-multiple-objects).
+
+### Why are HTTP requests being redirected to HTTPS?
+
+The force redirect to HTTPS feature is enabled at the CDN level. OSS itself does not support forced redirection. When CDN is configured with your custom domain name and an HTTPS certificate, the force redirect (HTTP to HTTPS) option returns a 301 or 302 response to HTTP requests.
+
+To allow HTTP access to resource files, go to the CDN console, find the relevant domain name, and change the **Redirect Type** to **Default** (which supports both HTTP and HTTPS). For instructions, see [Configure protocol redirection](https://www.alibabacloud.com/help/en/cdn/user-guide/configure-url-redirection).
+
+## References
+
+- [Access OSS over HTTPS](https://www.alibabacloud.com/help/en/oss/user-guide/access-oss-by-https-protocol)
+- [Accelerate access to OSS using CDN](https://www.alibabacloud.com/help/en/oss/user-guide/cdn-acceleration)
+- [Accelerate access to OSS using Transfer Acceleration](https://www.alibabacloud.com/help/en/oss/user-guide/transfer-acceleration)
+- [Static website hosting](https://www.alibabacloud.com/help/en/oss/user-guide/hosting-static-websites)
+- [Access points](https://www.alibabacloud.com/help/en/oss/user-guide/access-point/)
+- [Object FC Access Points](https://www.alibabacloud.com/help/en/oss/user-guide/object-fc-access-point-management/)
+- [CreateCnameToken](https://www.alibabacloud.com/help/en/oss/developer-reference/createcnametoken)
+- [GetCnameToken](https://www.alibabacloud.com/help/en/oss/developer-reference/getcnametoken)
+- [PutCname](https://www.alibabacloud.com/help/en/oss/developer-reference/putcname)
+- [ListCname](https://www.alibabacloud.com/help/en/oss/developer-reference/listcname)
+- [DeleteCname](https://www.alibabacloud.com/help/en/oss/developer-reference/deletecname)
