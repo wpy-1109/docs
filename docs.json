@@ -72,12 +72,20 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Refactored Docs",
+        "tab": "OSS",
         "groups": [
           {
             "group": "Concepts",
             "pages": [
               "get-started/concepts/storage-classes"
+            ]
+          },
+          {
+            "group": "Access and network",
+            "pages": [
+              "oss/access-and-network/overview",
+              "oss/access-and-network/custom-domain-names",
+              "oss/access-and-network/browser-preview"
             ]
           },
           {
@@ -97,19 +105,6 @@
             "group": "Tools",
             "pages": [
               "tools/ossbrowser/overview"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "OSS Access & Network",
-        "groups": [
-          {
-            "group": "Access and network",
-            "pages": [
-              "oss/access-and-network/overview",
-              "oss/access-and-network/custom-domain-names",
-              "oss/access-and-network/browser-preview"
             ]
           }
         ]
