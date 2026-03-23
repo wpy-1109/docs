@@ -1,0 +1,161 @@
+---
+title: "如何为 RAM 用户授权访问指定 OSS Bucket"
+description: "需要让 RAM 用户（子账号）只能访问特定的 OSS Bucket，而无法操作其他 Bucket。本文介绍通过 RAM 权限策略和 Bucket Policy 两种方式实现精细化授权。"
+icon: "book-open"
+---
+
+# 如何为 RAM 用户授权访问指定 OSS Bucket
+
+需要让 RAM 用户（子账号）只能访问特定的 OSS Bucket，而无法操作其他 Bucket。本文介绍通过 RAM 权限策略和 Bucket Policy 两种方式实现精细化授权。
+
+## 适用场景
+
+- 多人协作场景：不同团队成员只能访问各自负责的 Bucket。
+- 第三方应用接入：给外部合作方一个只能操作指定 Bucket 的 AccessKey。
+- 安全合规要求：不希望使用主账号 AK，需要最小权限原则的子账号。
+
+## 前提条件
+
+- 拥有阿里云主账号或具有 RAM 管理权限的 RAM 用户。
+- 已创建目标 Bucket。
+
+## 操作步骤
+
+### 方式一：通过 RAM 自定义权限策略授权
+
+#### 1. 创建 RAM 用户
+
+登录 [RAM 控制台](https://ram.console.aliyun.com/users)，创建新用户并勾选 **OpenAPI 调用访问**，获取 AccessKey。
+
+#### 2. 创建自定义权限策略
+
+进入 RAM 控制台 > **权限策略** > **创建权限策略**，选择**脚本编辑**，输入以下策略：
+
+**只允许上传（适用于仅需上传文件的场景）：**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:PutObject",
+        "oss:PostObject"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name",
+        "acs:oss:*:*:your-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
+
+**允许读写（适用于需要上传和下载的场景）：**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:DeleteObject",
+        "oss:ListObjects",
+        "oss:ListObjectsV2",
+        "oss:GetBucketInfo"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name",
+        "acs:oss:*:*:your-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
+
+**只允许访问指定目录：**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "oss:*",
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name/target-folder/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:ListObjects",
+        "oss:ListObjectsV2"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name"
+      ],
+      "Condition": {
+        "StringLike": {
+          "oss:Prefix": "target-folder/*"
+        }
+      }
+    }
+  ]
+}
+```
+
+#### 3. 将权限策略附加给 RAM 用户
+
+进入 RAM 控制台 > **用户** > 选择目标用户 > **权限管理** > **新增授权**，选择刚创建的自定义策略。
+
+### 方式二：通过 Bucket Policy 授权
+
+适合不想在 RAM 控制台操作的场景，直接在 OSS 控制台配置。
+
+1. 登录 OSS 控制台，进入目标 Bucket。
+2. 点击 **权限控制** > **Bucket 授权策略** > **新增授权**。
+3. 设置：
+   - **授权用户**：选择 RAM 用户，输入用户 UID。
+   - **授权资源**：选择整个 Bucket 或指定前缀目录。
+   - **授权操作**：选择只读、读写或完全控制。
+
+## 验证结果
+
+使用 RAM 用户的 AccessKey 测试访问：
+
+```bash
+# 使用 ossutil 测试
+ossutil64 ls oss://your-bucket-name/ --access-key-id <RAM用户AK> --access-key-secret <RAM用户SK> --endpoint oss-cn-hangzhou.aliyuncs.com
+
+# 测试上传
+ossutil64 cp test.txt oss://your-bucket-name/test.txt --access-key-id <RAM用户AK> --access-key-secret <RAM用户SK> --endpoint oss-cn-hangzhou.aliyuncs.com
+```
+
+## 常见问题
+
+**Q: 创建了自定义权限策略，但 RAM 用户在 ossbrowser 中看不到 Bucket 列表？**
+
+RAM 用户需要 `oss:ListBuckets` 权限才能在控制台或 ossbrowser 中看到 Bucket 列表。可以在策略中追加：
+
+```json
+{
+  "Effect": "Allow",
+  "Action": "oss:ListBuckets",
+  "Resource": "acs:oss:*:*:*"
+}
+```
+
+或者在 ossbrowser 中直接输入 Bucket 名称和路径登录，跳过列表页面。
+
+**Q: RAM 用户可以使用主账号购买的资源包吗？**
+
+可以。主账号购买的 OSS 资源包会自动抵扣该账号下所有 RAM 用户产生的对应计费项，无需额外配置。
+
+**Q: 只想让 RAM 用户上传文件，不想让他删除文件？**
+
+在权限策略的 Action 中只授权 `oss:PutObject` 和 `oss:PostObject`，不要包含 `oss:DeleteObject`。

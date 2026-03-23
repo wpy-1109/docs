@@ -1,0 +1,108 @@
+---
+title: "OSS批量导出文件URL与数据查询"
+description: "- 需要批量导出Bucket中文件的访问URL列表。 - 需要根据已知文件名批量查询文件大小等元数据。 - 需要将OSS中的数据导出到本地或其他存储。"
+icon: "book-open"
+---
+
+# OSS批量导出文件URL与数据查询
+
+## 适用场景
+
+- 需要批量导出Bucket中文件的访问URL列表。
+- 需要根据已知文件名批量查询文件大小等元数据。
+- 需要将OSS中的数据导出到本地或其他存储。
+
+## 前提条件
+
+- 拥有目标Bucket的读取权限（`oss:GetObject`、`oss:ListObjects`）。
+- 如使用ossutil，需提前安装并配置AccessKey。
+
+## 操作步骤
+
+### 方法一：通过控制台导出URL列表
+
+1. 登录[OSS控制台](https://oss.console.aliyun.com)。
+2. 进入目标Bucket，导航到文件所在的目录。
+3. 勾选需要导出URL的文件（控制台每页最多显示100个文件，建议将每页显示数设置为100）。
+4. 点击页面上方的**导出URL列表**按钮。
+
+> **注意**：控制台不支持一键导出整个目录下所有文件的URL，需要分批勾选。如果文件数量较多（如数百或上千个），建议使用ossutil命令行工具。
+
+### 方法二：通过ossutil批量获取URL
+
+使用`sign`命令为文件生成签名URL：
+
+```bash
+# 生成单个文件的签名URL（有效期3600秒）
+ossutil sign oss://bucket-name/path/to/file.jpg --timeout 3600
+
+# 批量生成目录下所有文件的URL列表
+ossutil ls oss://bucket-name/images/ | awk '{print $NF}' > filelist.txt
+```
+
+如果Bucket设置了公共读权限，文件的永久访问URL格式为：
+```
+https://bucket-name.oss-cn-hangzhou.aliyuncs.com/path/to/file.jpg
+```
+
+私有Bucket的文件必须使用签名URL访问，签名URL有过期时间，无法设置为永久有效。如需长期访问，建议将Bucket或特定目录设置为公共读。
+
+### 方法三：批量查询文件大小
+
+OSS没有提供批量查询文件大小的API，需要逐个调用HeadObject接口获取。推荐方式：
+
+```bash
+# 使用ossutil的ls命令列出文件及其大小
+ossutil ls oss://bucket-name/prefix/ --output-format json
+
+# 或使用stat命令查询单个文件的元数据
+ossutil stat oss://bucket-name/path/to/file.jpg
+```
+
+如果需要根据已知文件名列表批量查询，可编写脚本循环调用：
+
+```python
+import oss2
+
+auth = oss2.Auth('your-access-key-id', 'your-access-key-secret')
+bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', 'bucket-name')
+
+with open('filenames.txt', 'r') as f:
+    for line in f:
+        key = line.strip()
+        try:
+            meta = bucket.head_object(key)
+            print(f"{key}\t{meta.content_length}")
+        except oss2.exceptions.NoSuchKey:
+            print(f"{key}\tNOT_FOUND")
+```
+
+### 方法四：批量导出OSS数据到本地
+
+使用ossutil的`cp`命令递归下载整个目录：
+
+```bash
+ossutil cp oss://bucket-name/data/ /local/path/ -r
+```
+
+## 结果验证
+
+- 导出的URL列表可通过浏览器或curl测试访问是否正常。
+- 签名URL在过期时间内可以正常访问，过期后返回403错误。
+
+## 常见问题
+
+**Q：签名URL能设为永久有效吗？**
+
+不能。签名URL的有效期最长为7天（使用V4签名）。如需永久访问链接，需要将Bucket或Object的ACL设置为公共读。
+
+**Q：文件列表太多导致导出很慢怎么办？**
+
+使用ossutil的`ls`命令配合`--marker`参数分页列出，或使用[数据索引](https://help.aliyun.com/document_detail/2743800.html)功能进行高效检索。
+
+---
+
+**Publishing Notes**
+
+- Source tickets: 000DGN2EB9, 0009LMMH4D, 0006SNFAYE
+- Cluster: 3张工单涉及批量文件URL导出、文件大小批量查询和数据导出

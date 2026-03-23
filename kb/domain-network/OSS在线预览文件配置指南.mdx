@@ -1,0 +1,91 @@
+---
+title: "OSS 在线预览文件（图片/PDF/视频）配置指南"
+description: "- 需要在浏览器中直接预览 OSS 中的图片、PDF、视频等文件 - 使用 OSS 默认域名时文件被强制下载 - 上传的图片在浏览器中显示为下载而非显示"
+icon: "book-open"
+---
+
+# OSS 在线预览文件（图片/PDF/视频）配置指南
+
+## 适用场景
+
+- 需要在浏览器中直接预览 OSS 中的图片、PDF、视频等文件
+- 使用 OSS 默认域名时文件被强制下载
+- 上传的图片在浏览器中显示为下载而非显示
+
+## 前提条件
+
+- 了解当前使用的访问域名类型（默认域名 vs 自定义域名）
+
+## 关键规则
+
+> **重要**：OSS 默认域名（`bucket.oss-cn-xxx.aliyuncs.com`）访问任何类型的文件，都会触发下载行为。这是安全策略，无法更改。要实现在线预览，必须使用自定义域名。
+
+## 操作步骤
+
+### 步骤 1：绑定自定义域名
+
+参考「OSS 绑定自定义域名常见问题与配置指南」完成域名绑定。
+
+### 步骤 2：确保文件 Content-Type 正确
+
+文件的 Content-Type 决定了浏览器如何处理文件：
+
+| 文件类型 | 正确的 Content-Type |
+|---------|-------------------|
+| JPEG 图片 | `image/jpeg` |
+| PNG 图片 | `image/png` |
+| PDF 文件 | `application/pdf` |
+| MP4 视频 | `video/mp4` |
+| HTML 页面 | `text/html` |
+
+**常见问题**：通过 ossfs 或某些上传工具上传的文件，Content-Type 可能被错误设置为 `application/octet-stream`，导致浏览器将其作为文件下载。
+
+**修复方法**：
+1. 在 OSS 控制台中修改文件的 HTTP Header，将 Content-Type 设为正确的 MIME 类型
+2. 上传时指定 Content-Type：
+```bash
+# ossutil 上传时指定 Content-Type
+ossutil cp file.jpg oss://bucket/path/ --meta Content-Type:image/jpeg
+```
+
+### 步骤 3：设置 Content-Disposition 为 inline（可选）
+
+如果希望浏览器内联显示而非下载：
+```
+Content-Disposition: inline
+```
+
+如果不设置 Content-Disposition，浏览器会根据 Content-Type 自行决定（大多数情况下图片和 PDF 会内联显示）。
+
+## WebOffice 在线预览
+
+对于 Office 文档（Word、Excel、PPT），需要使用 WebOffice 服务：
+
+1. 开通 [智能媒体管理 IMM](https://help.aliyun.com/zh/imm/) 服务
+2. 通过 IMM 的文档预览接口生成预览 URL
+3. 在前端页面中嵌入预览 URL
+
+**文件大小限制**：WebOffice 预览有文件大小限制（通常 200MB 以内），超大文件建议先转换为 PDF。
+
+## 常见问题
+
+### Q1：图片上传后通过 OSS 链接无法预览？
+
+1. 确认使用自定义域名访问（非 OSS 默认域名）
+2. 检查 Content-Type 是否正确（不能是 `application/octet-stream`）
+3. 检查 Bucket 权限是否为公共读（或使用签名 URL）
+
+### Q2：通过 lsyncd 同步到 OSS 的图片 Content-Type 都是 application/octet-stream？
+
+同步工具可能不会自动识别 MIME 类型。解决方案：
+- 同步后批量修改 Content-Type
+- 使用 ossutil 配合 `--meta` 参数重新上传
+- 在同步工具配置中指定 MIME 类型映射
+
+### Q3：OSS 视频文件可以在线播放吗？
+
+可以，但需满足：
+1. 使用自定义域名或签名 URL
+2. Content-Type 正确（如 `video/mp4`）
+3. 如果视频较大，建议配合 CDN 使用
+4. MP4 文件需要 `moov` atom 在文件头部（否则无法边下载边播放）

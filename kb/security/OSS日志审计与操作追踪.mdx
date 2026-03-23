@@ -1,0 +1,67 @@
+---
+title: "OSS日志审计与操作追踪"
+description: "- 需要追踪 OSS 文件的删除、上传等操作记录 - 发现未知的写请求，需要定位来源 - 需要查询特定时间段内的文件变更日志 - 需要审计 AK（AccessKey）的操作记录"
+icon: "book-open"
+---
+
+### 适用场景
+
+- 需要追踪 OSS 文件的删除、上传等操作记录
+- 发现未知的写请求，需要定位来源
+- 需要查询特定时间段内的文件变更日志
+- 需要审计 AK（AccessKey）的操作记录
+
+### 前提条件
+
+- 需要开启 **实时日志查询** 或 **日志转存** 功能（开启前的操作无法追溯）
+- 阿里云后台仅保留最近 **3 天**的内部日志，超过 3 天的数据需依赖用户自行开启的日志功能
+
+### 操作步骤
+
+#### 方式一：使用实时日志查询（推荐）
+
+实时日志查询基于日志服务（SLS），支持灵活的查询分析。
+
+1. 登录 OSS 管理控制台，进入目标 Bucket。
+2. 在左侧导航栏选择 **日志管理** > **实时日志查询**。
+3. 开启实时日志查询功能。
+4. 使用查询语句查找操作记录：
+
+```sql
+-- 查询删除操作
+* and http_method: DELETE | select request_uri, remote_ip, user_agent, time_local
+
+-- 查询写请求来源
+* and http_method: PUT | select remote_ip, user_agent, access_id, time_local, request_uri
+
+-- 查询指定文件的操作记录
+* and object: "path/to/your/file.txt" | select http_method, remote_ip, time_local, http_status
+```
+
+#### 方式二：使用 ActionTrail
+
+ActionTrail 记录管控面操作（如创建/删除 Bucket、修改权限等），适用于审计管理类操作。
+
+1. 登录 ActionTrail 控制台。
+2. 查询 OSS 相关的事件记录。
+
+### 验证
+
+查询结果中包含以下关键信息：
+- `remote_ip`：操作来源 IP
+- `access_id`：使用的 AccessKey ID
+- `user_agent`：操作工具标识（如 `aliyun-sdk-go`、`ossutil` 等）
+- `time_local`：操作时间
+
+### 常见问题
+
+**Q：为什么在审计日志中看不到写请求？**
+
+可能原因：
+1. 实时日志查询功能未开启，或开启时间晚于操作发生时间
+2. 查询的时间范围不正确
+3. 日志保留期限已过（需要检查 SLS 的数据保留策略）
+
+**Q：能否查询超过 3 天前的操作记录？**
+
+阿里云后台仅保留最近 3 天的内部日志。如需长期审计，请提前开启实时日志查询或日志转存功能，日志会持久化存储到 SLS 或指定 Bucket 中。

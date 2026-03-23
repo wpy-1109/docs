@@ -1,0 +1,62 @@
+---
+title: "OSS数据迁移方式选择与常见问题"
+description: "- 不同 Bucket 之间的数据迁移（同区域或跨区域） - 跨账号的 OSS 数据迁移 - 从其他云服务商迁移到 OSS - 本地大量数据上传到 OSS"
+icon: "book-open"
+---
+
+### 适用场景
+
+- 不同 Bucket 之间的数据迁移（同区域或跨区域）
+- 跨账号的 OSS 数据迁移
+- 从其他云服务商迁移到 OSS
+- 本地大量数据上传到 OSS
+
+### 迁移方式对比
+
+| 迁移方式 | 适用场景 | 数据量 | 特点 |
+|----------|----------|--------|------|
+| **跨区域复制（CRR）** | 同账号不同区域 | 不限 | 自动异步复制，持续同步 |
+| **ossutil cp/sync** | 通用场景 | 中小规模 | 灵活，需手动执行 |
+| **在线迁移服务** | 跨云、大规模迁移 | 大规模 | 托管服务，自动执行 |
+| **ossimport** | 历史工具 | 大规模 | **已停止维护，不建议使用** |
+| **数据万象** | 跨账号同区域 | 中小规模 | 适合一次性迁移 |
+
+### 操作步骤
+
+#### 使用 ossutil 进行数据迁移
+
+```bash
+# 同账号不同 Bucket 之间复制
+ossutil cp -r oss://source-bucket/path/ oss://dest-bucket/path/ -u
+
+# 跨区域迁移（需指定源和目标 Endpoint）
+ossutil cp -r oss://source-bucket/path/ oss://dest-bucket/path/ \
+  --src-endpoint oss-cn-hangzhou.aliyuncs.com \
+  --dest-endpoint oss-cn-beijing.aliyuncs.com
+```
+
+#### 设置跨区域复制（持续同步）
+
+1. 登录 OSS 管理控制台，进入源 Bucket。
+2. 选择 **数据管理** > **跨区域复制**。
+3. 配置目标区域和目标 Bucket。
+4. 选择复制范围（整个 Bucket 或指定前缀）。
+
+### 验证
+
+```bash
+# 对比源和目标的文件数量
+ossutil ls oss://source-bucket/path/ -s | tail -1
+ossutil ls oss://dest-bucket/path/ -s | tail -1
+```
+
+### 常见问题
+
+**Q：ossimport 还能用吗？**
+ossimport 已不再维护，不建议在新项目中使用。增量同步时 Master 节点会全量遍历源端文件，且仅支持单 Master 部署。建议迁移到 ossutil 或使用在线迁移服务。
+
+**Q：跨区域复制的存量数据会自动同步吗？**
+开启跨区域复制时可以选择是否同步历史数据。如果选择"同步历史数据"，存量数据会异步复制到目标 Bucket。
+
+**Q：迁移过程中如何保证数据一致性？**
+建议使用 ossutil 的 `-u` 参数进行增量同步。迁移完成后，对比源和目标的文件列表和文件大小，确认一致。

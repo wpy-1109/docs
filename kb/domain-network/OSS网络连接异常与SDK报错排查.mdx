@@ -1,0 +1,126 @@
+---
+title: "OSS 网络连接异常与 SDK 报错排查"
+description: "- SDK 上传/下载报错 `Connection error due to: null` 或 `ClientException` - OSS 内网域名 ping 不通"
+icon: "wrench"
+---
+
+# OSS 网络连接异常与 SDK 报错排查
+
+## 症状
+
+- SDK 上传/下载报错 `Connection error due to: null` 或 `ClientException`
+- OSS 内网域名 ping 不通
+- 请求间歇性超时或偶发失败
+- DNS 解析失败，域名无法访问
+- 移动端/部分设备无法访问 OSS 资源
+
+## 按场景排查
+
+### 场景 1：OSS 内网域名 ping 不通
+
+**结论**：这是正常的。OSS 内网域名不响应 ICMP ping 请求。
+
+**正确的连通性验证方式**：
+```bash
+# 用 telnet 或 curl 测试 HTTP 连通性
+telnet bucket.oss-cn-beijing-internal.aliyuncs.com 80
+curl -v http://bucket.oss-cn-beijing-internal.aliyuncs.com
+
+# 用 nslookup 确认域名可解析
+nslookup bucket.oss-cn-beijing-internal.aliyuncs.com
+```
+
+**内网访问的前提条件**：
+- ECS 和 OSS Bucket 必须在同一地域
+- 使用 `-internal` 后缀的 Endpoint
+- 本地通过 SSL VPN 接入 VPC 后**无法**使用 OSS 内网域名，只能用外网域名
+- 如需从 VPC 内网访问，使用 PrivateLink 方案
+
+### 场景 2：SDK 报 Connection error 或 ClientException
+
+这类错误说明请求**未到达 OSS 服务端**，问题在客户端侧。
+
+**排查步骤**：
+1. **检查 Endpoint 配置**：确认地域是否与 Bucket 所在地域一致
+   ```
+   # 常见错误：Bucket 在上海，但 Endpoint 写了杭州
+   oss-cn-hangzhou.aliyuncs.com  ← 错误
+   oss-cn-shanghai.aliyuncs.com  ← 正确
+   ```
+
+2. **测试 DNS 解析**：
+   ```bash
+   nslookup bucket.oss-cn-shanghai.aliyuncs.com
+   ```
+   如果解析失败，检查 DNS 服务器配置
+
+3. **检查网络稳定性**：批量操作时偶发失败，通常是网络抖动导致
+   - 在代码中加入重试机制（SDK 默认有重试，但次数可能不够）
+   - 检查是否有防火墙/安全组限制
+
+4. **检查 SDK 版本**：使用最新版 SDK 可避免已知的连接管理问题
+
+### 场景 3：间歇性上传失败
+
+**常见原因**：
+- 客户端网络不稳定（特别是移动网络环境）
+- 单连接上传大文件超时
+- DNS 缓存过期导致短暂解析失败
+
+**解决方案**：
+- 使用分片上传代替简单上传（大文件场景）
+- SDK 中配置重试策略和超时时间：
+  ```java
+  // Java SDK 示例
+  ClientBuilderConfiguration conf = new ClientBuilderConfiguration();
+  conf.setMaxErrorRetry(3);
+  conf.setConnectionTimeout(5000);
+  conf.setSocketTimeout(10000);
+  ```
+
+### 场景 4：移动端无法访问但 PC 正常
+
+**排查方向**：
+1. 移动端 DNS 解析可能与 PC 不同，使用 [阿里云拨测](https://boce.aliyun.com/detect/http) 检查各地解析情况
+2. 如果使用自定义域名，检查 CNAME 解析是否生效
+3. 移动端 APP 如果显示「APP 状态异常」而非 HTTP 错误，问题在应用层而非 OSS
+4. 清除移动端 DNS 缓存后重试
+
+### 场景 5：回调（Callback）报 500 错误
+
+OSS 上传完成后调用用户配置的回调 URL 时，收到非 200 响应。
+
+**排查方法**：
+```bash
+# 手动模拟 OSS 回调请求，测试回调服务是否正常
+curl -v -d '{"size": 157323, "mimeType": "image/jpeg"}' http://your-callback-url/api/callback
+```
+
+**常见原因**：
+- 回调服务器代码异常（返回 500）
+- 回调 URL 不可公网访问（防火墙/安全组未放行）
+- 回调 URL 格式错误或域名过期
+
+## 通用排查工具
+
+```bash
+# 1. 测试 DNS 解析
+nslookup bucket.oss-cn-xxx.aliyuncs.com
+
+# 2. 测试 HTTP 连通性（含响应头）
+curl -v https://bucket.oss-cn-xxx.aliyuncs.com/test.txt 2>&1
+
+# 3. 测试网络延迟（注意 OSS 不响应 ping，但可以看到 DNS 解析结果）
+ping bucket.oss-cn-xxx.aliyuncs.com
+
+# 4. 使用阿里云拨测检查各地访问
+# https://boce.aliyun.com/detect/http
+```
+
+## 仍有问题？
+
+请提供以下信息提交工单：
+1. SDK 完整错误日志（包含 RequestId，如果有的话）
+2. Endpoint 和 Bucket 名称
+3. 客户端环境（ECS/本地、地域、网络类型）
+4. `nslookup` 和 `curl -v` 的输出

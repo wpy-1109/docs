@@ -1,0 +1,82 @@
+---
+title: "OSS 内网访问与 VPC Endpoint 配置"
+description: "需要从 ECS、ACK 或其他阿里云产品通过内网访问 OSS，避免产生公网流量费用。本文介绍内网访问的配置方法和常见问题。"
+icon: "book-open"
+---
+
+# OSS 内网访问与 VPC Endpoint 配置
+
+需要从 ECS、ACK 或其他阿里云产品通过内网访问 OSS，避免产生公网流量费用。本文介绍内网访问的配置方法和常见问题。
+
+## 适用场景
+
+- ECS 上的应用需要高速、免流量费地访问同地域的 OSS。
+- ACK 集群中的 Pod 需要通过内网读写 OSS。
+- 不希望 OSS 流量经过公网，保障安全性。
+
+## 前提条件
+
+- ECS/ACK 等云产品与 OSS Bucket 在**同一地域**。
+- ECS/ACK 位于 VPC 网络中。
+
+## 操作步骤
+
+### 使用内网 Endpoint
+
+将 OSS Endpoint 从外网域名改为内网域名：
+
+| 类型 | Endpoint 格式 | 示例 |
+|------|--------------|------|
+| 外网 | `oss-{region}.aliyuncs.com` | `oss-cn-hangzhou.aliyuncs.com` |
+| 内网 | `oss-{region}-internal.aliyuncs.com` | `oss-cn-hangzhou-internal.aliyuncs.com` |
+
+在 SDK 或 ossutil 中配置内网 Endpoint：
+
+```python
+# Python SDK
+bucket = oss2.Bucket(auth, 'oss-cn-hangzhou-internal.aliyuncs.com', 'your-bucket')
+```
+
+```bash
+# ossutil
+ossutil64 cp test.txt oss://your-bucket/ --endpoint oss-cn-hangzhou-internal.aliyuncs.com
+```
+
+### 确认内网连通性
+
+在 ECS 上测试内网 Endpoint 是否可达：
+
+```bash
+ping oss-cn-hangzhou-internal.aliyuncs.com
+curl -I https://oss-cn-hangzhou-internal.aliyuncs.com
+```
+
+## 验证结果
+
+- 上传/下载文件正常完成。
+- OSS 账单中不产生**外网流出流量**费用。
+- 可在 OSS 日志中确认请求来源为内网 IP。
+
+## 常见问题
+
+**Q: ECS 和 OSS 不在同一地域，能用内网 Endpoint 吗？**
+
+不能。内网 Endpoint 仅支持同地域访问。跨地域只能使用外网 Endpoint，会产生外网流量费用。
+
+**Q: 使用了内网 Endpoint 但仍产生外网流量？**
+
+检查以下几点：
+1. 代码或配置中是否仍有部分请求使用了外网 Endpoint。
+2. 本地开发环境的请求可能走了外网（本地机器无法访问阿里云内网）。
+3. 确认 ECS 和 Bucket 确实在同一地域。
+
+**Q: ACK Pod 无法通过内网访问 OSS？**
+
+1. 确认 ACK 集群和 OSS Bucket 在同一地域。
+2. 确认使用的是内网 Endpoint。
+3. 检查 ACK 集群的安全组是否允许出站到 OSS 内网 IP。
+4. 如果是 ACK Serverless（ECI），确认 ECI 实例所在的 VSwitch 有到 OSS 内网的路由。
+
+**Q: Bucket 创建时选错了地域，能修改吗？**
+
+不能。Bucket 创建后地域无法更改。需要在正确地域创建新 Bucket，然后使用 ossutil 或数据复制功能迁移数据。

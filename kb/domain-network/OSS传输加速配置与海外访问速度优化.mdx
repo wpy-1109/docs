@@ -1,0 +1,93 @@
+---
+title: "OSS 传输加速配置与海外访问速度优化"
+description: "- 海外用户上传/下载国内 OSS Bucket 的文件速度慢 - 国内用户访问海外地域（如中国香港、新加坡）OSS 的资源慢 - 跨境数据传输不稳定或失败 - 阿塞拜疆、南美等偏远地区访问 OSS 延迟高"
+icon: "book-open"
+---
+
+# OSS 传输加速配置与海外访问速度优化
+
+## 适用场景
+
+- 海外用户上传/下载国内 OSS Bucket 的文件速度慢
+- 国内用户访问海外地域（如中国香港、新加坡）OSS 的资源慢
+- 跨境数据传输不稳定或失败
+- 阿塞拜疆、南美等偏远地区访问 OSS 延迟高
+
+## 前提条件
+
+- 已创建 OSS Bucket
+- 了解当前使用的 Endpoint 类型
+
+## 操作步骤
+
+### 步骤 1：开启传输加速
+
+1. 登录 [OSS 控制台](https://oss.console.aliyun.com/)
+2. 进入目标 Bucket >「Bucket 配置」>「传输管理」>「传输加速」
+3. 点击开启传输加速
+4. 系统会分配两个加速 Endpoint：
+   - 全球加速 Endpoint：`bucket-name.oss-accelerate.aliyuncs.com`
+   - 中国内地与海外加速 Endpoint：`bucket-name.oss-accelerate-overseas.aliyuncs.com`
+
+### 步骤 2：替换访问 Endpoint
+
+将代码或配置中的普通 Endpoint 替换为加速 Endpoint：
+
+```
+# 替换前（普通 Endpoint）
+endpoint = "oss-cn-hangzhou.aliyuncs.com"
+
+# 替换后（全球加速 Endpoint）
+endpoint = "oss-accelerate.aliyuncs.com"
+```
+
+### 步骤 3：验证加速效果
+
+使用 OSS 提供的测速工具对比普通 Endpoint 和加速 Endpoint 的速度：
+```bash
+# 使用 curl 测试下载速度
+time curl -o /dev/null "https://bucket-name.oss-accelerate.aliyuncs.com/test-file"
+time curl -o /dev/null "https://bucket-name.oss-cn-hangzhou.aliyuncs.com/test-file"
+```
+
+## 加速 Endpoint 选择
+
+| Endpoint | 适用场景 | 费用 |
+|----------|---------|------|
+| `oss-accelerate.aliyuncs.com` | 全球任意位置的加速访问 | 按传输加速流量计费 |
+| `oss-accelerate-overseas.aliyuncs.com` | 仅中国内地与海外之间的加速 | 按传输加速流量计费 |
+| `oss-cn-xxx.aliyuncs.com` | 同地域或国内访问 | 普通流量费用 |
+
+## 常见问题
+
+### Q1：开启传输加速后外网访问速率还是慢？
+
+排查要点：
+1. 确认代码中使用的是加速 Endpoint（`oss-accelerate.aliyuncs.com`），而非普通 Endpoint
+2. 检查客户端网络环境：传输加速优化的是骨干网链路，如果客户端本地网络带宽不足，加速效果有限
+3. 确认 DNS 解析正常：`nslookup bucket-name.oss-accelerate.aliyuncs.com` 应能正常解析
+
+### Q2：部分国家/地区传输加速不生效？
+
+传输加速的覆盖范围受全球加速节点分布影响。对于部分偏远地区（如阿塞拜疆、中亚等），加速节点覆盖可能有限。建议：
+1. 先用测速工具确认加速效果
+2. 如果效果不明显，考虑使用「全球加速 GA」产品
+3. 或将 Bucket 创建在距离用户更近的地域
+
+### Q3：传输加速与 CDN 有什么区别？
+
+| 特性 | 传输加速 | CDN |
+|------|---------|-----|
+| 加速方式 | 骨干网链路优化 | 边缘节点缓存 |
+| 适用场景 | 动态上传/下载 | 静态资源分发 |
+| 费用 | 按传输加速流量计费 | 按 CDN 流量计费 |
+| 缓存 | 不缓存 | 缓存 |
+
+### Q4：从国内访问香港/新加坡 OSS，需要传输加速吗？
+
+跨境访问属于公网访问，网络质量可能不稳定。建议使用传输加速或全球加速 GA 优化体验。
+
+## 相关文档
+
+- [传输加速](https://help.aliyun.com/zh/oss/user-guide/transfer-acceleration)
+- [全球加速 GA](https://help.aliyun.com/zh/ga/)

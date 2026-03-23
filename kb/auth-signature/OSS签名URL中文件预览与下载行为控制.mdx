@@ -1,0 +1,147 @@
+---
+title: "OSS 签名 URL 中文件预览与下载行为控制"
+description: "- 希望用户点击链接后直接在浏览器中预览图片/PDF，而不是触发下载 - 希望用户点击链接后直接触发下载，而不是在浏览器中打开 - APK/EXE 等文件通过 OSS 链接下载时报错或被拦截"
+icon: "book-open"
+---
+
+## 适用场景
+
+- 希望用户点击链接后直接在浏览器中预览图片/PDF，而不是触发下载
+- 希望用户点击链接后直接触发下载，而不是在浏览器中打开
+- APK/EXE 等文件通过 OSS 链接下载时报错或被拦截
+
+---
+
+## 原理
+
+浏览器是否预览或下载文件，取决于 HTTP 响应中的两个 Header：
+
+| Header | 值 | 浏览器行为 |
+|--------|-----|-----------|
+| Content-Disposition | `inline` | 浏览器尝试在页面内预览（图片、PDF、文本等） |
+| Content-Disposition | `attachment` 或 `attachment; filename="xxx"` | 浏览器触发下载 |
+| Content-Type | `image/jpeg`, `application/pdf` 等 | 浏览器根据 MIME 类型决定能否预览 |
+| Content-Type | `application/octet-stream` | 浏览器通常触发下载 |
+
+---
+
+## 操作方法
+
+### 方法一：上传时设置文件元数据
+
+上传文件时指定 Content-Disposition 和 Content-Type：
+
+```python
+import oss2
+
+bucket.put_object('report.pdf', open('report.pdf', 'rb'),
+    headers={
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline'  # 浏览器内预览
+    })
+```
+
+### 方法二：通过签名 URL 参数覆盖
+
+在生成预签名 URL 时，通过 `response-content-disposition` 和 `response-content-type` 参数覆盖元数据：
+
+```java
+// Java SDK 示例 - 生成在线预览 URL
+GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, objectName);
+request.setExpiration(expiration);
+request.addQueryParameter("response-content-disposition", "inline");
+request.addQueryParameter("response-content-type", "application/pdf");
+String url = ossClient.generatePresignedUrl(request).toString();
+```
+
+**重要提示**：`response-content-disposition` 和 `response-content-type` 参数会参与签名计算，必须通过 SDK 的方法添加，不能在生成 URL 后手动拼接。
+
+### 方法三：在 OSS 控制台修改已有文件的元数据
+
+OSS 控制台 → 进入 Bucket → 选择文件 → 设置文件元信息 → 修改 Content-Disposition 为 `inline`。
+
+---
+
+## 常见问题
+
+### Q1：设置了 Content-Disposition=inline 后仍然触发下载
+
+**可能原因**：
+
+1. **自定义域名配置了强制下载**：如果通过 CDN 或自定义域名访问，CDN 配置中可能覆盖了 Content-Disposition
+2. **Content-Type 不正确**：文件的 Content-Type 为 `application/octet-stream`，即使 Content-Disposition 是 inline，浏览器也无法预览
+3. **修改未生效**：在 OSS 控制台修改元数据后，CDN 缓存了旧响应，需要刷新 CDN 缓存
+4. **安卓浏览器行为差异**：安卓浏览器对 PDF 的 inline 预览支持不如 iOS/桌面浏览器，部分安卓浏览器仍会触发下载
+
+**解决方案**：
+1. 确认 Content-Type 设置正确（如 PDF 应为 `application/pdf`，不是 `application/octet-stream`）
+2. 清除 CDN 缓存后重新测试
+3. 安卓端 PDF 预览可考虑使用第三方 PDF 渲染库（如 PDF.js）在前端展示
+
+---
+
+### Q2：OSS 配置了自定义域名后，预览仍然自动下载
+
+**原因**：Bucket 的读写权限如果不是"公共读"，通过自定义域名访问时需要携带签名。如果签名 URL 中未正确设置 response-content-disposition，默认行为可能是下载。
+
+**解决方案**：
+1. 通过 SDK 生成带 `response-content-disposition=inline` 参数的签名 URL
+2. 或将 Bucket 中文件的 Content-Disposition 元数据批量修改为 `inline`
+
+---
+
+### Q3：APK 文件通过 OSS 公网 Endpoint 下载报错
+
+错误信息：该 APK 文件不允许通过公共网络使用 OSS Endpoint 进行分发，请使用 CNAME 代替。
+
+**原因**：出于安全合规考虑，OSS 限制通过默认 Endpoint（`bucket.oss-cn-xxx.aliyuncs.com`）直接分发 APK 等可执行文件。
+
+**解决方案**：
+1. 为 Bucket 绑定自定义域名（CNAME），通过自定义域名访问
+2. 或使用 CDN 加速域名分发 APK 文件
+
+---
+
+### Q4：.img 后缀的旧域名格式无法访问
+
+旧格式域名（如 `bucket.img-cn-hangzhou.aliyuncs.com`）已不再支持。
+
+**解决方案**：迁移到标准域名格式 `bucket.oss-cn-hangzhou.aliyuncs.com`，并使用 `x-oss-process=image/xxx` 参数进行图片处理。
+
+---
+
+### Q5：WebOffice 在线预览链接变成下载
+
+**原因**：WebOffice 预览需要使用 `x-oss-process=doc/preview` 参数，如果参数不正确或缺失，OSS 会返回原始文件（触发下载）。
+
+**解决方案**：
+```
+https://bucket.oss-cn-hangzhou.aliyuncs.com/file.docx?x-oss-process=doc/preview
+```
+
+确保 URL 中包含 `x-oss-process=doc/preview` 参数，且该参数参与了签名计算。
+
+---
+
+### Q6：如何生成带自定义域名的签名 URL？
+
+默认情况下，SDK 生成的签名 URL 使用 OSS 原始域名。要使用自定义域名：
+
+```java
+// Java SDK 示例
+ClientBuilderConfiguration conf = new ClientBuilderConfiguration();
+conf.setSupportCname(true); // 启用 CNAME 支持
+OSS ossClient = new OSSClientBuilder().build("https://your-custom-domain.com", ak, sk, conf);
+
+// 生成的 URL 将使用自定义域名
+String url = ossClient.generatePresignedUrl(bucketName, objectName, expiration).toString();
+```
+
+---
+
+## 预防措施
+
+- 上传文件时根据实际需求设置 Content-Type 和 Content-Disposition
+- 批量上传工具中默认设置 Content-Type 映射表，避免所有文件都被设为 `application/octet-stream`
+- 使用 CDN 加速时，注意 CDN 缓存可能延迟元数据变更的生效
+- APK/EXE 等可执行文件分发必须使用自定义域名

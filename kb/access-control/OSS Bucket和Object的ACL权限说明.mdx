@@ -1,0 +1,69 @@
+---
+title: "OSS Bucket 和 Object 的 ACL 权限说明"
+description: "OSS 的 ACL（访问控制列表）决定了谁可以匿名访问你的资源。本文解释 Bucket ACL 和 Object ACL 的区别、各权限级别的含义，以及如何正确设置。"
+icon: "message-circle-question"
+---
+
+# OSS Bucket 和 Object 的 ACL 权限说明
+
+OSS 的 ACL（访问控制列表）决定了谁可以匿名访问你的资源。本文解释 Bucket ACL 和 Object ACL 的区别、各权限级别的含义，以及如何正确设置。
+
+## 详细说明
+
+### Bucket ACL 三种级别
+
+| ACL 值 | 说明 | 匿名读 | 匿名写 |
+|--------|------|--------|--------|
+| `private`（私有） | 所有请求必须携带签名认证 | 否 | 否 |
+| `public-read`（公共读） | 任何人可读取，写入需认证 | 是 | 否 |
+| `public-read-write`（公共读写） | 任何人可读写 | 是 | 是 |
+
+### Object ACL
+
+Object ACL 可以覆盖 Bucket ACL 对单个文件的访问控制：
+
+| ACL 值 | 说明 |
+|--------|------|
+| `default`（继承） | 跟随 Bucket ACL 设置 |
+| `private` | 该文件必须签名认证才能访问 |
+| `public-read` | 该文件可被任何人读取 |
+| `public-read-write` | 该文件可被任何人读写 |
+
+### 权限判断优先级
+
+OSS 访问权限的判断遵循以下顺序：
+1. **阻止公共访问**（最高优先级）：如果开启，所有公共 ACL 无效。
+2. **Bucket Policy 显式 Deny**：明确拒绝的策略。
+3. **RAM Policy 显式 Deny**：明确拒绝的策略。
+4. **Object ACL**：如果 Object 设置了非 default 的 ACL。
+5. **Bucket Policy Allow**：允许的策略。
+6. **RAM Policy Allow**：允许的策略。
+7. **Bucket ACL**：Bucket 层面的公共访问设置。
+
+## 相关问题
+
+**Q: 修改 Object ACL 会更新文件的 LastModified 吗？**
+
+会。使用 `PutObjectACL` 接口修改 Object 的 ACL 会更新该 Object 的 `LastModified` 时间。需要注意，如果 Object 的存储类型为低频访问、归档等，修改 ACL 导致 LastModified 变化可能会重新触发最小存储天数计费。
+
+**Q: Bucket ACL 设置为公共读后，为什么还是无法访问？**
+
+可能原因：
+1. Bucket 或账号层面开启了"阻止公共访问"功能。
+2. Bucket Policy 中有显式 Deny 策略。
+3. Object 的 ACL 单独设置为了 `private`。
+
+**Q: Bucket 从公共读改为私有后，已有的文件链接会立即失效吗？**
+
+是的。修改 Bucket ACL 为私有后立即生效，之前通过裸 URL 访问的所有文件链接都会返回 `AccessDenied`。
+
+**Q: 安全体检提示 Bucket 为公共读写是高危，应该怎么处理？**
+
+建议将 Bucket ACL 改为私有，并开启阻止公共访问。通过以下方式替代公共访问：
+- 网站静态资源：使用 CDN + 私有 Bucket 回源。
+- 文件分享：使用预签名 URL。
+- 应用内访问：使用 SDK 认证或 STS 临时凭证。
+
+**Q: 创建多个 Bucket 会产生额外费用吗？**
+
+不会。创建 Bucket 本身免费，费用根据存储量计算。两个 Bucket 各存 10GB 和一个 Bucket 存 20GB 的费用相同。

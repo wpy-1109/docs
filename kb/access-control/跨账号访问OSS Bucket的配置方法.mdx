@@ -1,0 +1,104 @@
+---
+title: "跨账号访问 OSS Bucket 的配置方法"
+description: "账号 A 的用户需要访问账号 B 的 OSS Bucket，或者需要将数据从一个账号迁移到另一个账号。本文介绍跨账号访问 OSS 的几种配置方式。"
+icon: "book-open"
+---
+
+# 跨账号访问 OSS Bucket 的配置方法
+
+账号 A 的用户需要访问账号 B 的 OSS Bucket，或者需要将数据从一个账号迁移到另一个账号。本文介绍跨账号访问 OSS 的几种配置方式。
+
+## 适用场景
+
+- 多个阿里云账号间共享 OSS 数据。
+- 跨账号数据迁移或同步。
+- 集团内不同子公司的账号需要互相访问 OSS 资源。
+
+## 前提条件
+
+- 拥有源账号和目标账号的管理权限。
+- 已知对方账号的 UID（阿里云账号 ID）。
+
+## 操作步骤
+
+### 方式一：通过 Bucket Policy 授权（推荐）
+
+在目标 Bucket 的 Bucket Policy 中授权源账号访问：
+
+1. 登录 OSS 控制台（Bucket 所有者的账号）。
+2. 进入目标 Bucket > **权限控制** > **Bucket 授权策略** > **新增授权**。
+3. 授权用户选择**其他账号**，输入源账号的 UID。
+4. 配置授权资源和操作。
+
+或使用语法配置：
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": ["源账号UID"],
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:ListObjects"
+      ],
+      "Resource": [
+        "acs:oss:*:*:target-bucket",
+        "acs:oss:*:*:target-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+### 方式二：通过 RAM 角色跨账号授权
+
+适用于需要更精细控制的场景：
+
+1. 在目标账号（Bucket 所有者）中创建 RAM 角色，信任实体选择**其他云账号**，填入源账号 UID。
+2. 为该角色附加 OSS 访问权限策略。
+3. 在源账号中，RAM 用户调用 AssumeRole 扮演目标账号的角色，获取临时凭证后访问 Bucket。
+
+### 方式三：跨账号数据复制
+
+如果是大规模数据迁移场景，使用 OSS 数据复制功能：
+
+1. 确保源 Bucket 和目标 Bucket 的版本控制状态一致（均开启或均关闭）。
+2. 在目标账号的 Bucket Policy 中授权 `AliyunOSSRole` 角色。
+3. 在源 Bucket 中配置复制规则，指定目标账号和目标 Bucket。
+
+## 验证结果
+
+使用源账号的 AccessKey 访问目标 Bucket：
+
+```bash
+ossutil64 ls oss://target-bucket/ \
+  --access-key-id <源账号AK> \
+  --access-key-secret <源账号SK> \
+  --endpoint oss-cn-hangzhou.aliyuncs.com
+```
+
+如果返回文件列表，说明跨账号授权成功。
+
+## 常见问题
+
+**Q: 使用的 AccessKey 和 Bucket 不在同一个账号下，报 AccessDenied？**
+
+这是最常见的跨账号问题。AK/SK 属于 A 账号，Bucket 属于 B 账号，需要在 B 账号的 Bucket Policy 中显式授权 A 账号的 UID。
+
+**Q: 怎么确认 AccessKey 属于哪个账号？**
+
+- 登录 RAM 控制台的 [AccessKey 管理页面](https://ram.console.aliyun.com/profile/access-keys) 查看当前账号的 AK。
+- OSS 无法通过 AK 反查所属账号，需要逐个账号检查。
+
+**Q: 公司有多个账号，找不到某个 Bucket 在哪个账号下？**
+
+- 通过 Bucket 的外网域名可以判断地域，但无法判断所属账号。
+- `outin-` 开头的 Bucket 通常是视频点播（VOD）自动创建的。
+- 需要逐个登录账号查找，或检查应用配置中使用的 AK 反推账号。
+
+**Q: 跨账号数据迁移完成后，需要关闭复制规则吗？**
+
+建议迁移完成后**先关闭复制规则**，再进行后续操作。如果源 Bucket 配置了"增/删/改同步"，在删除源 Bucket 中的数据之前必须先关闭复制规则，否则删除操作会同步到目标 Bucket。

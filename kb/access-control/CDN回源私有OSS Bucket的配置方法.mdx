@@ -1,0 +1,82 @@
+---
+title: "CDN 回源私有 OSS Bucket 的配置方法"
+description: "Bucket 设为私有权限以保障数据安全，同时通过 CDN 对外提供访问，避免直接暴露 OSS 域名和产生 OSS 外网流量费用。本文介绍完整的配置流程。"
+icon: "book-open"
+---
+
+# CDN 回源私有 OSS Bucket 的配置方法
+
+Bucket 设为私有权限以保障数据安全，同时通过 CDN 对外提供访问，避免直接暴露 OSS 域名和产生 OSS 外网流量费用。本文介绍完整的配置流程。
+
+## 适用场景
+
+- 网站图片、视频等静态资源托管在 OSS，通过 CDN 加速对外访问。
+- 不希望用户直接通过 OSS 域名访问文件（避免流量盗刷和费用异常）。
+- 需要降低流量费用：CDN 流量费通常低于 OSS 外网流出流量费。
+
+## 前提条件
+
+- 已创建 OSS Bucket（权限设为私有）。
+- 已开通 CDN 服务并添加加速域名。
+- CDN 加速域名已完成 CNAME 解析。
+
+## 操作步骤
+
+### 1. 将 Bucket 设为私有权限
+
+登录 OSS 控制台 > 目标 Bucket > **权限控制** > **读写权限**，设为**私有（private）**。
+
+### 2. 在 CDN 中配置私有 Bucket 回源
+
+1. 登录 CDN 控制台 > **域名管理** > 选择目标域名 > **回源配置**。
+2. 源站类型选择 **OSS 域名**，填入 Bucket 的外网域名（如 `your-bucket.oss-cn-hangzhou.aliyuncs.com`）。
+3. 开启**私有 Bucket 回源**功能。
+4. 系统会自动向 OSS 发起授权请求，确认授权。
+
+### 3. 业务侧切换域名
+
+将应用中所有 OSS 文件 URL 替换为 CDN 加速域名：
+
+```
+# 替换前（OSS 域名，会产生 OSS 外网流量费）
+https://your-bucket.oss-cn-hangzhou.aliyuncs.com/images/photo.jpg
+
+# 替换后（CDN 域名，走 CDN 流量计费）
+https://cdn.example.com/images/photo.jpg
+```
+
+### 4.（可选）防止直接访问 OSS 域名
+
+配置 Bucket Policy，拒绝非 CDN 来源的请求，避免用户绕过 CDN 直接访问 OSS：
+
+- 方案一：配置 Referer 防盗链，只允许 CDN 域名的 Referer。
+- 方案二：开启阻止公共访问，确保只有 CDN 回源（带签名）的请求能访问。
+
+## 验证结果
+
+1. 通过 CDN 域名访问文件，应能正常返回。
+2. 直接通过 OSS 域名访问文件，应返回 `AccessDenied`（确认私有权限生效）。
+3. 检查 OSS 账单，确认外网流出流量下降，费用从 CDN 侧产生。
+
+## 常见问题
+
+**Q: 配置了 CDN 回源后，OSS 仍然产生外网流出流量费用？**
+
+可能原因：
+1. 应用中部分 URL 仍在使用 OSS 默认域名而非 CDN 域名，需全量替换。
+2. Bucket 为公共读权限，搜索引擎或其他爬虫直接通过 OSS 域名访问。解决方法：将 Bucket 改为私有权限。
+3. 存在第三方通过 OSS 域名直接引用资源的情况。
+
+**Q: 第三方 CDN 可以回源阿里云 OSS 吗？**
+
+可以。如果 Bucket 是公共读，第三方 CDN 可以直接配置 OSS 域名作为源站。如果 Bucket 是私有的，需要在第三方 CDN 侧配置 AccessKey 等鉴权信息（取决于第三方是否支持），如果不支持，则需要将 Bucket 设为公共读。
+
+**Q: CDN 访问 OSS 返回 403 或 401？**
+
+- 检查是否开启了"私有 Bucket 回源"功能。
+- 检查 CDN 是否完成了 OSS 回源授权。
+- 检查 Bucket Policy 是否有显式 Deny 规则阻止了 CDN 回源请求。
+
+**Q: ESA（边缘安全加速）可以对接私有 OSS 吗？**
+
+可以。ESA 支持私有 Bucket 回源，配置方法与 CDN 类似。ESA 还可以在边缘设置额外的安全策略（如 WAF、Bot 管理）。

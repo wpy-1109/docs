@@ -1,0 +1,130 @@
+---
+title: "OSS AccessDenied 403 错误排查指南"
+description: "通过浏览器、SDK、ossutil 或 API 访问 OSS 资源时，返回 HTTP 403 和 `AccessDenied` 错误，提示无权访问。本文帮助你快速定位原因并修复。"
+icon: "wrench"
+---
+
+# OSS 访问报错 AccessDenied（403）排查指南
+
+通过浏览器、SDK、ossutil 或 API 访问 OSS 资源时，返回 HTTP 403 和 `AccessDenied` 错误，提示无权访问。本文帮助你快速定位原因并修复。
+
+## 常见症状
+
+访问 OSS 资源时收到以下错误信息：
+
+```xml
+<Error>
+  <Code>AccessDenied</Code>
+  <Message>You have no right to access this object because of bucket acl.</Message>
+  <EC>0003-00000001</EC>
+</Error>
+```
+
+或在浏览器中看到：
+
+```
+AccessDenied
+You have no right to access this object because of bucket acl.
+```
+
+## 原因
+
+OSS 返回 AccessDenied 403 错误通常有以下几种原因（按出现频率排列）：
+
+1. **Bucket 或 Object 为私有权限，且请求未携带签名**：直接通过 URL 访问私有 Bucket 中的文件，未使用签名 URL 或未传入 AccessKey 认证。
+2. **阻止公共访问已开启**：Bucket 开启了"阻止公共访问"功能，即使 ACL 设为公共读也无法匿名访问。
+3. **RAM 用户/角色权限不足**：使用 RAM 用户或 STS 临时凭证访问，但该身份未被授予目标操作（如 `oss:PutObject`、`oss:GetObject`）的权限。
+4. **Bucket Policy 限制**：Bucket Policy 中仅授权了部分操作（如只有读权限没有写权限），或设置了 IP/VPC 条件限制。
+5. **AccessKey 与 Bucket 不在同一账号**：使用的 AK/SK 属于 A 账号，但 Bucket 属于 B 账号，属于跨账号访问未授权。
+6. **防盗链（Referer）拒绝**：Bucket 配置了防盗链规则，请求的 Referer 不在白名单中或为空 Referer 被拒绝。
+7. **签名 URL 已过期**：预签名 URL 的有效期已过（EC 码 `0002-00000236`）。
+
+## 解决方案
+
+### 方案一：确认 Bucket/Object 的 ACL 和访问方式
+
+1. 登录 OSS 控制台，检查 Bucket 的**读写权限（ACL）**设置：
+   - **私有（private）**：所有请求必须携带签名认证，不能通过裸 URL 直接访问。
+   - **公共读（public-read）**：允许匿名读取，但写操作仍需认证。
+
+2. 如果 Bucket 是私有的，使用以下方式访问：
+   - **预签名 URL**：通过 SDK 或 ossutil 生成带签名的临时访问链接。
+   - **SDK 认证访问**：在代码中配置 AccessKey ID 和 AccessKey Secret。
+   - **STS 临时凭证**：通过 AssumeRole 获取临时访问凭证。
+
+### 方案二：检查"阻止公共访问"设置
+
+1. 进入 OSS 控制台 > 目标 Bucket > **权限控制** > **阻止公共访问**。
+2. 如果该功能已开启，即使 Bucket ACL 设为公共读，匿名请求也会被拒绝。
+3. 如需允许公共访问，关闭"阻止公共访问"后再修改 ACL。
+
+> EC 码 `0015-00000501` 表示因阻止公共访问功能导致无法设置公共 ACL。
+
+### 方案三：检查 RAM 权限策略
+
+1. 登录 RAM 控制台，检查当前使用的 RAM 用户或角色是否有目标 Bucket 的操作权限。
+2. 确保权限策略中包含所需操作，例如：
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:ListObjects"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name",
+        "acs:oss:*:*:your-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
+
+3. 注意：Resource 必须同时包含 Bucket 本身（`acs:oss:*:*:bucket-name`）和 Bucket 下的 Object（`acs:oss:*:*:bucket-name/*`）。
+
+### 方案四：检查 Bucket Policy
+
+1. 进入 OSS 控制台 > 目标 Bucket > **权限控制** > **Bucket 授权策略**。
+2. 确认 Policy 中是否有显式 Deny 规则拦截了请求。
+3. 确认 Policy 中 Action 是否包含你需要的操作（上传需要 `oss:PutObject`，下载需要 `oss:GetObject`）。
+
+### 方案五：确认 AccessKey 所属账号
+
+确认使用的 AccessKey ID/Secret 与目标 Bucket 属于同一阿里云账号。如果是跨账号访问，需要在目标 Bucket 的 Bucket Policy 中授权源账号。
+
+### 方案六：检查防盗链配置
+
+1. 进入 OSS 控制台 > 目标 Bucket > **权限控制** > **防盗链**。
+2. 如果使用 ossbrowser 等工具访问时报 AccessDenied，检查是否需要允许空 Referer。
+
+## 排查工具
+
+通过 RequestId 可以快速定位具体原因：
+- 在 OSS 控制台 > 目标 Bucket > **日志管理** > **实时查询** 中，搜索 RequestId。
+- 阿里云诊断工具：`https://api.aliyun.com/troubleshoot?q=0003-00000001`
+
+## 常见 EC 码对照
+
+| EC 码 | 含义 |
+|--------|------|
+| `0003-00000001` | Bucket ACL 或认证信息不正确，无权执行操作 |
+| `0015-00000501` | 阻止公共访问已开启，不允许设置公共 ACL |
+| `0002-00000236` | 预签名 URL 已过期 |
+
+## 预防措施
+
+- 生产环境使用 RAM 用户而非主账号的 AccessKey，遵循最小权限原则。
+- 私有 Bucket 始终通过签名 URL 或 SDK 认证方式访问，不要依赖公共读权限。
+- 定期检查 Bucket Policy 和 RAM 权限策略，避免权限配置遗漏。
+
+## 仍有问题？
+
+如果以上方案未能解决，请提供以下信息提交工单：
+- 完整的错误信息（包含 RequestId 和 EC 码）
+- 使用的访问方式（SDK/ossutil/控制台/浏览器）
+- Bucket 名称和 Region

@@ -1,0 +1,100 @@
+---
+title: "RAM 用户只授权访问指定目录的配置方法"
+description: "需要让 RAM 用户只能操作 Bucket 下的特定目录（如 `project-a/`），不能访问其他目录的文件。本文介绍通过 RAM Policy 和 Bucket Policy 两种方式实现目录级权限控制。"
+icon: "book-open"
+---
+
+# RAM 用户只授权访问指定目录的配置方法
+
+需要让 RAM 用户只能操作 Bucket 下的特定目录（如 `project-a/`），不能访问其他目录的文件。本文介绍通过 RAM Policy 和 Bucket Policy 两种方式实现目录级权限控制。
+
+## 适用场景
+
+- 不同部门的用户只能访问各自目录下的文件。
+- 第三方合作方只能读写指定的上传目录。
+- 使用 ossbrowser 给用户分配特定目录的访问权限。
+
+## 前提条件
+
+- 已创建 RAM 用户。
+- 已确定需要授权的目录路径。
+
+## 操作步骤
+
+### 方式一：通过 RAM Policy
+
+创建如下自定义权限策略：
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:DeleteObject"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket/target-folder/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:ListObjects",
+        "oss:ListObjectsV2"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket"
+      ],
+      "Condition": {
+        "StringLike": {
+          "oss:Prefix": [
+            "target-folder/*",
+            "target-folder"
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+### 方式二：通过 Bucket Policy
+
+1. 进入 OSS 控制台 > 目标 Bucket > **权限控制** > **Bucket 授权策略**。
+2. 新增授权：
+   - 授权用户：目标 RAM 用户的 UID
+   - 授权资源：`target-folder/*`
+   - 授权操作：只读 或 读写
+
+### 使用 ossbrowser 访问
+
+RAM 用户在 ossbrowser 中配置：
+- **Endpoint**：选择 Bucket 所在地域。
+- **预设 OSS 路径**：填写 `oss://your-bucket/target-folder/`。
+
+这样登录后直接进入目标目录，不需要 `ListBuckets` 权限。
+
+## 验证结果
+
+- RAM 用户可以在 `target-folder/` 下正常上传、下载文件。
+- 尝试访问其他目录下的文件，应返回 `AccessDenied`。
+
+## 常见问题
+
+**Q: 授权了目录权限后，SDK 初始化报 AccessDenied？**
+
+某些 SDK 在初始化时会自动调用 `GetBucketAcl`、`GetBucketInfo` 等 Bucket 级别的 API。只授权了目录级权限时，这些调用会失败。解决方法：
+1. 在 SDK 初始化时关闭自动探测功能。
+2. 额外授予 `oss:GetBucketInfo` 权限。
+
+**Q: 用户在 ossbrowser 中点击"返回上级目录"后能看到整个 Bucket？**
+
+`ListObjects` 的 Condition 限制了 Prefix，只返回授权目录下的内容。但如果用户手动修改路径或不带 Prefix 列举，会被拒绝。
+
+**Q: 只让用户上传到 RAM 用户在 Bucket Policy 的直接授权页面中设置的 Resource 不支持写到文件后缀（如 `*.html`），只能写到目录级别（如 `folder/*`）。**
+
+这是 OSS Bucket Policy 的限制。如需按文件类型控制上传，需要在应用层实现校验。

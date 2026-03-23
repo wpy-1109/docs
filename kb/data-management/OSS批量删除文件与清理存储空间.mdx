@@ -1,0 +1,56 @@
+---
+title: "OSS批量删除文件与清理存储空间"
+description: "- 需要批量删除大量文件 - 需要按条件过滤删除（如无后缀文件、指定前缀、指定时间之前的文件） - Bucket 存储容量过大需要清理"
+icon: "book-open"
+---
+
+### 适用场景
+
+- 需要批量删除大量文件
+- 需要按条件过滤删除（如无后缀文件、指定前缀、指定时间之前的文件）
+- Bucket 存储容量过大需要清理
+
+### 方式一：使用 ossutil 批量删除
+
+```bash
+# 删除指定目录下所有文件
+ossutil rm oss://your-bucket/path/to/delete/ -r -f
+
+# 删除指定前缀的文件
+ossutil rm oss://your-bucket/ --include "*.log" -r -f
+
+# 删除整个 Bucket 的所有文件（谨慎操作）
+ossutil rm oss://your-bucket/ -r -f --all-versions
+```
+
+### 方式二：使用生命周期规则自动删除
+
+适用于定期清理的场景：
+1. 在 Bucket 的 **基础设置** > **生命周期** 中创建规则。
+2. 设置文件过期策略，如 1 天后删除（最快方式）。
+3. 等待规则执行（24 小时内）。
+
+### 方式三：通过 SDK 按条件过滤删除
+
+对于无法通过前缀匹配的文件（如删除没有后缀名的文件），需要通过 SDK 实现：
+
+```python
+import oss2
+
+# 初始化
+auth = oss2.Auth('your-access-key-id', 'your-access-key-secret')
+bucket = oss2.Bucket(auth, 'oss-cn-hangzhou.aliyuncs.com', 'your-bucket')
+
+# 遍历所有文件，过滤并删除无后缀文件
+for obj in oss2.ObjectIterator(bucket):
+    if '.' not in obj.key.split('/')[-1]:  # 文件名不含后缀
+        bucket.delete_object(obj.key)
+        print(f'Deleted: {obj.key}')
+```
+
+### 注意事项
+
+- 删除操作不可逆（除非开启了版本控制）
+- 大量文件删除操作会产生请求费用
+- 如果 Bucket 开启了版本控制，`rm` 命令默认只添加删除标记，需要加 `--all-versions` 才能彻底删除
+- 建议先在小范围测试，确认无误后再大规模执行

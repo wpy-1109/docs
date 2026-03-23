@@ -1,0 +1,57 @@
+---
+title: "OSS文件下载与批量下载方法"
+description: "- 需要从 OSS 下载大量文件或整个文件夹 - 控制台逐个下载效率低 - 大文件下载失败或速度慢"
+icon: "book-open"
+---
+
+### 适用场景
+
+- 需要从 OSS 下载大量文件或整个文件夹
+- 控制台逐个下载效率低
+- 大文件下载失败或速度慢
+
+### 方式一：控制台批量下载
+
+适用于少量文件（几十个以内）：
+1. 进入文件夹，勾选文件前的复选框。
+2. 点击批量下载。
+
+> **注意：** 控制台不支持直接下载文件夹，需要进入文件夹后逐批选择文件。
+
+### 方式二：使用 ossbrowser（推荐小数据量）
+
+适用于文件总量不大的场景：
+1. 下载并安装 [ossbrowser](https://help.aliyun.com/document_detail/61872.html)。
+2. 使用 AccessKey 登录。
+3. 找到目标文件或文件夹，右键选择下载，支持保留目录结构。
+
+### 方式三：使用 ossutil（推荐大数据量）
+
+适用于大量文件或大文件下载：
+
+```bash
+# 下载整个目录到本地
+ossutil cp -r oss://your-bucket/path/to/folder/ /local/download/path/
+
+# 增量下载（仅下载新增或变更的文件）
+ossutil cp -r oss://your-bucket/path/ /local/path/ -u
+```
+
+### 验证
+
+下载完成后，对比本地文件数量和 OSS 文件数量：
+
+```bash
+# 统计 OSS 目录下的文件数
+ossutil ls oss://your-bucket/path/ -s | tail -1
+```
+
+### 常见问题
+
+**Q：ossbrowser 下载速度慢或下载失败怎么办？**
+- 检查 ossbrowser 的 Endpoint 配置是否正确
+- 如果文件较大（超过 1GB），建议改用 ossutil
+- 检查本地网络状况，尝试使用内网 Endpoint（ECS 同地域场景）
+
+**Q：下载时提示 The specified key does not exist**
+说明文件不存在。请在 OSS 控制台确认文件是否真正上传成功，检查文件的完整路径是否正确。

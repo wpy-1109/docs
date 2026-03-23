@@ -1,0 +1,94 @@
+---
+title: "OSS 自定义域名 HTTPS 证书配置与常见报错处理"
+description: "访问绑定了自定义域名的 OSS 资源时，浏览器报以下错误之一："
+icon: "wrench"
+---
+
+# OSS 自定义域名 HTTPS 证书配置与常见报错处理
+
+## 症状
+
+访问绑定了自定义域名的 OSS 资源时，浏览器报以下错误之一：
+
+```
+ERR_SSL_PROTOCOL_ERROR
+```
+```
+NET::ERR_CERT_COMMON_NAME_INVALID
+```
+```
+此站点的连接不安全 / Your connection is not private
+```
+
+或者浏览器地址栏显示"不安全"。
+
+## 原因
+
+1. **域名未配置 SSL 证书**：自定义域名绑定后未托管 HTTPS 证书
+2. **证书域名不匹配**：证书签发的域名与当前访问的域名不一致（如证书是 `*.example.site` 但域名是 `www.example.com`）
+3. **证书已过期**：SSL 证书超过有效期
+4. **证书配置位置错误**：域名解析到 CDN，但证书配置在 OSS 而非 CDN（或反之）
+5. **公钥私钥填反**：手动上传证书时将 PEM 公钥和 KEY 私钥的内容填反
+
+## 解决方案
+
+### 方案 1：在 OSS 控制台配置证书（域名直接解析到 OSS）
+
+1. 登录 [OSS 控制台](https://oss.console.aliyun.com/)
+2. 进入目标 Bucket >「Bucket 配置」>「域名管理」
+3. 找到自定义域名，点击「证书托管」
+4. 选择方式：
+   - **选择已有证书**：从阿里云证书服务中选择匹配的证书
+   - **手动上传**：上传 PEM 格式公钥（.pem 文件内容）和私钥（.key 文件内容）
+
+> **注意**：证书下拉列表中看不到证书？检查证书绑定的域名是否与 OSS 自定义域名一致。
+
+### 方案 2：在 CDN 控制台配置证书（域名解析到 CDN）
+
+如果域名的 DNS 解析指向 CDN 而非直接指向 OSS：
+
+1. 登录 [CDN 控制台](https://cdn.console.aliyun.com/domain/list)
+2. 找到加速域名，点击「管理」
+3. 在「HTTPS 配置」中上传或选择证书
+4. 确保证书域名与 CDN 加速域名完全匹配
+
+### 方案 3：证书域名不匹配
+
+证书只能用于其签发时指定的域名。例如：
+- `*.example.com` 的证书可用于 `www.example.com`、`img.example.com`
+- 但不能用于 `example.com`（裸域名）或 `sub.img.example.com`（多级子域名）
+- 也不能用于 `www.example.net`（不同域名）
+
+**解决方案**：为实际使用的域名重新申请 SSL 证书。
+
+### 方案 4：更新过期证书
+
+1. 在 [数字证书管理服务](https://yundun.console.aliyun.com/?p=cas) 中检查证书状态
+2. 续费或重新申请证书
+3. 在 OSS 或 CDN 控制台重新托管新证书
+
+### 判断证书应配置在 OSS 还是 CDN
+
+| 场景 | 证书配置位置 |
+|------|------------|
+| 域名 CNAME 直接解析到 OSS Bucket | OSS 控制台 |
+| 域名 CNAME 解析到 CDN | CDN 控制台 |
+| 同时使用 CDN 和 OSS | CDN 控制台（CDN 终止 HTTPS） |
+
+**检查方法**：使用 `nslookup yourdomain.com` 查看解析目标：
+- 解析到 `xxx.oss-cn-xxx.aliyuncs.com` → 配置在 OSS
+- 解析到 `xxx.cdn.dnsv1.com` 或 CDN 节点 → 配置在 CDN
+
+## 预防建议
+
+- 设置证书过期提醒，提前 30 天续费
+- 使用阿里云证书服务的自动续费功能
+- 申请证书时建议使用泛域名证书（`*.yourdomain.com`），覆盖所有子域名
+
+## 仍有问题？
+
+请提供以下信息提交工单：
+1. 访问的完整 URL
+2. 浏览器显示的具体错误信息截图
+3. 域名的 DNS 解析记录截图
+4. 证书信息截图（域名、有效期）

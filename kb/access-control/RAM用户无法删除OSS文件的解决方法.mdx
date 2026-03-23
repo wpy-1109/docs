@@ -1,0 +1,74 @@
+---
+title: "RAM 用户无法删除 OSS 文件的解决方法"
+description: "RAM 用户在 ossbrowser、控制台或 SDK 中删除 OSS 文件时提示权限不足。本文介绍原因和解决方法。"
+icon: "wrench"
+---
+
+# RAM 用户无法删除 OSS 文件的解决方法
+
+RAM 用户在 ossbrowser、控制台或 SDK 中删除 OSS 文件时提示权限不足。本文介绍原因和解决方法。
+
+## 常见症状
+
+使用 RAM 用户的身份删除 OSS 文件时，收到以下提示：
+- ossbrowser 提示"部分目录或文件无法删除"
+- API 返回 `AccessDenied`
+- 控制台显示"没有相应的访问权限"
+
+## 原因
+
+RAM 用户的读写权限并不自动包含删除权限。OSS 的常见操作对应不同的 Action：
+
+| 操作 | 需要的权限（Action） |
+|------|---------------------|
+| 上传文件 | `oss:PutObject` |
+| 下载文件 | `oss:GetObject` |
+| 列举文件 | `oss:ListObjects` |
+| **删除文件** | **`oss:DeleteObject`** |
+| 删除多个文件 | `oss:DeleteObject` |
+
+即使拥有读写权限（如 `AliyunOSSReadWriteAccess`），也需要确认策略中包含 `oss:DeleteObject`。
+
+## 解决方案
+
+### 方案一：为 RAM 用户添加删除权限
+
+在 RAM 控制台创建或修改自定义权限策略，确保包含 `oss:DeleteObject`：
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:DeleteObject",
+        "oss:ListObjects"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket",
+        "acs:oss:*:*:your-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+### 方案二：检查是否有 Deny 策略
+
+如果已授权 `oss:DeleteObject` 但仍无法删除，检查是否有更高优先级的 Deny 策略：
+
+1. 检查 Bucket Policy 中是否有对 `oss:DeleteObject` 的显式 Deny。
+2. 检查 RAM Policy 中是否有其他策略包含对 OSS 的 Deny 规则。
+3. 显式 Deny 始终优先于 Allow。
+
+### 方案三：使用系统策略
+
+如果希望给 RAM 用户 OSS 全部操作权限，可以直接附加系统策略 `AliyunOSSFullAccess`。但不建议在生产环境这样做，应遵循最小权限原则。
+
+## 预防措施
+
+- 在授权时明确列出需要的操作类型，不要假设"读写"包含"删除"。
+- 对于 ossbrowser 等工具的用户，如需完整操作能力，至少授权 `oss:GetObject`、`oss:PutObject`、`oss:DeleteObject`、`oss:ListObjects`。

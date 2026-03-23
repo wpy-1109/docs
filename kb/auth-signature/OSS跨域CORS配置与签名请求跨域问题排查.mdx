@@ -1,0 +1,115 @@
+---
+title: "OSS 跨域（CORS）配置与签名请求的跨域问题排查"
+description: "浏览器端通过 JavaScript 访问 OSS 资源或上传文件时，控制台出现以下错误："
+icon: "wrench"
+---
+
+## 症状
+
+浏览器端通过 JavaScript 访问 OSS 资源或上传文件时，控制台出现以下错误：
+
+```
+Access to XMLHttpRequest at 'https://bucket.oss-cn-hangzhou.aliyuncs.com/...'
+from origin 'https://your-domain.com' has been blocked by CORS policy:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.
+```
+
+或者 OPTIONS 预检请求返回 403。
+
+---
+
+## 原因
+
+浏览器的同源策略（Same-Origin Policy）阻止了跨域请求。当前端代码从 `your-domain.com` 发起对 `bucket.oss-cn-hangzhou.aliyuncs.com` 的请求时，浏览器会先发送 OPTIONS 预检请求。如果 OSS Bucket 未配置 CORS 规则，预检请求被拒绝，后续的实际请求也不会发送。
+
+---
+
+## 解决方案
+
+### Step 1：在 OSS Bucket 中配置 CORS 规则
+
+登录 OSS 控制台 → 选择 Bucket → 数据安全 → 跨域设置 → 创建规则：
+
+| 配置项 | 推荐值 | 说明 |
+|--------|--------|------|
+| 来源 (AllowedOrigin) | `https://your-domain.com` 或 `*` | 生产环境建议指定具体域名 |
+| 允许 Methods | GET, POST, PUT, HEAD, DELETE | 根据实际需要选择 |
+| 允许 Headers | `*` | 允许所有请求头 |
+| 暴露 Headers | `ETag, x-oss-request-id, Content-Length` | 允许前端读取的响应头 |
+| 缓存时间 (MaxAge) | 600 | OPTIONS 响应缓存时间（秒） |
+
+### Step 2：验证配置
+
+```bash
+# 使用 curl 发送 OPTIONS 预检请求验证
+curl -X OPTIONS \
+  -H "Origin: https://your-domain.com" \
+  -H "Access-Control-Request-Method: PUT" \
+  -H "Access-Control-Request-Headers: Content-Type" \
+  https://bucket.oss-cn-hangzhou.aliyuncs.com/ -v
+
+# 预期响应头中应包含：
+# Access-Control-Allow-Origin: https://your-domain.com
+# Access-Control-Allow-Methods: GET, POST, PUT, HEAD, DELETE
+```
+
+---
+
+## 常见问题
+
+### Q1：已配置 CORS 规则但仍报跨域错误
+
+**排查步骤**：
+
+1. **检查 Allowed Origin 是否匹配**：浏览器发送的 Origin 必须与 CORS 规则中的 AllowedOrigin 完全匹配。注意 `http` 和 `https` 是不同的 Origin。
+2. **检查 Allowed Methods 是否包含实际请求方法**：如果请求是 PUT（上传），CORS 规则中必须包含 PUT。
+3. **检查是否使用了 CDN**：如果通过 CDN 域名访问 OSS，CORS 配置需要在 CDN 侧也进行设置，或在 CDN 回源时传递 Origin 头。
+4. **检查签名 URL 是否包含 CORS 相关 Header**：签名计算中如果包含了某些 Header，实际请求时必须一致。
+
+---
+
+### Q2：STS Token 上传时 OPTIONS 返回 403
+
+这通常不是 STS Token 的问题，而是 CORS 配置缺失。OPTIONS 预检请求不携带 Authorization 头，OSS 需要通过 CORS 配置来响应预检请求。
+
+**解决方案**：在 Bucket 中添加 CORS 规则（见上方配置表格）。
+
+---
+
+### Q3：使用 CDN 域名访问 OSS 视频只能播放几秒就报 406
+
+**原因**：CDN 缓存了 CORS 响应头，在不同来源请求时可能返回不匹配的 Access-Control-Allow-Origin。
+
+**解决方案**：
+1. 在 CDN 配置中开启"Origin 头回源"
+2. 在 CDN 的 HTTP 头配置中添加 `Vary: Origin`，确保不同 Origin 的请求不共享缓存
+
+---
+
+### Q4：前端通过 H5 下载 OSS 图片报跨域
+
+**原因**：使用 `<a download>` 或 `fetch` 下载 OSS 图片时触发跨域检查。
+
+**解决方案**：
+1. 在 OSS Bucket 配置 CORS 规则，暴露 `Content-Disposition` Header
+2. 或使用服务端中转下载，由后端获取文件后返回给前端
+
+---
+
+### Q5：C++ 客户端访问 OSS 会有跨域问题吗？
+
+**不会**。CORS 是浏览器强制执行的安全策略。非浏览器环境（C++、Java、Python 等服务端程序、移动端原生 App）不受 CORS 限制，可以直接发送跨域请求。
+
+只有以下场景需要配置 CORS：
+- 浏览器中的 JavaScript 代码（包括 AJAX、Fetch API）
+- 部分 WebView 中的请求
+- 微信小程序（由平台侧控制）
+
+---
+
+## 预防措施
+
+- 前端直传场景必须在项目初期就配置 CORS 规则
+- 生产环境避免使用 `AllowedOrigin: *`，指定具体域名
+- 如果使用 CDN 加速，需要在 CDN 侧同步配置 CORS 相关策略
+- CORS 规则变更后可能需要几分钟生效，同时清除浏览器缓存再测试

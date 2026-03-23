@@ -1,0 +1,169 @@
+---
+title: "OSS 预签名 URL 的生成、使用与常见报错处理"
+description: "- 服务端生成带时效性的文件下载/上传链接，分发给前端或第三方用户 - 不希望暴露 AccessKey，但需要授权特定对象的临时访问 - 浏览器直接打开链接下载/预览文件"
+icon: "book-open"
+---
+
+## 适用场景
+
+- 服务端生成带时效性的文件下载/上传链接，分发给前端或第三方用户
+- 不希望暴露 AccessKey，但需要授权特定对象的临时访问
+- 浏览器直接打开链接下载/预览文件
+
+---
+
+## 前提条件
+
+- 已初始化 OSS 客户端（使用长期 AK 或 STS 临时凭证均可）
+- 知道目标文件所在的 Bucket 和 Object Key
+
+---
+
+## 生成预签名 URL
+
+### 下载（GET）预签名 URL
+
+```java
+// Java SDK 示例
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import java.util.Date;
+
+OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+
+// 设置过期时间（1 小时后）
+Date expiration = new Date(System.currentTimeMillis() + 3600 * 1000);
+String url = ossClient.generatePresignedUrl(bucketName, objectName, expiration).toString();
+
+ossClient.shutdown();
+```
+
+```python
+# Python SDK 示例
+import oss2
+
+auth = oss2.Auth(access_key_id, access_key_secret)
+bucket = oss2.Bucket(auth, endpoint, bucket_name)
+
+# 有效期 3600 秒
+url = bucket.sign_url('GET', object_name, 3600)
+```
+
+### 上传（PUT）预签名 URL
+
+```java
+// Java SDK 示例
+GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, objectName, HttpMethod.PUT);
+request.setExpiration(expiration);
+request.setContentType("application/octet-stream"); // 建议明确指定
+String url = ossClient.generatePresignedUrl(request).toString();
+```
+
+---
+
+## 常见问题与排查
+
+### 问题一：预签名 URL 在浏览器可访问，但在服务器 curl 请求返回 403
+
+**原因**：使用 `curl -I`（HEAD 请求）访问 GET 签名的 URL 时，HTTP Method 不匹配，导致签名验证失败。
+
+**解决方案**：
+- GET 签名的 URL 用 `curl -o /dev/null` 或浏览器访问
+- 如果需要 HEAD 操作，单独生成 HEAD 方法的预签名 URL
+
+---
+
+### 问题二：预签名 URL 打开后自动下载，而不是在浏览器中预览
+
+**原因**：OSS 默认的 Content-Disposition 为 `attachment`，浏览器会触发下载。
+
+**解决方案**：
+
+1. 上传文件时设置元数据 `Content-Disposition: inline`
+2. 或在生成预签名 URL 时通过 `response-content-disposition` 参数覆盖：
+   ```
+   ?response-content-disposition=inline
+   ```
+3. **注意**：设置了 `response-content-disposition` 或 `response-content-type` 参数后，该参数也会参与签名计算，必须在生成签名时一并包含。
+
+---
+
+### 问题三：报错"获取 OSS 的签名 URL 地址时，指定了 response-content-type"
+
+**原因**：2024 年起 OSS 加强了安全策略，预签名 URL 中使用 `response-content-type` 参数时，该参数必须参与签名计算。如果 URL 是手动拼接而非 SDK 生成的，容易漏掉这个参数的签名。
+
+**解决方案**：使用官方 SDK 的 `generatePresignedUrl` 方法并通过 `ResponseHeaders` 设置 response-content-type，SDK 会自动将其纳入签名计算。
+
+---
+
+### 问题四：预签名 URL 希望永不过期
+
+**V1 签名**（旧版）：Expires 参数使用 Unix 时间戳，理论上可以设置一个很大的值（如 2099 年），但不推荐。
+
+**V4 签名**（推荐）：最长有效期为 7 天（604800 秒），无法设置更长。
+
+**长期访问的替代方案**：
+- 将 Bucket 或特定文件设为公共读（不推荐敏感数据）
+- 使用自定义域名 + CDN 分发
+- 配合 Bucket Policy 控制访问来源
+
+---
+
+### 问题五：预签名 URL 生成的协议是 HTTP 而非 HTTPS
+
+**原因**：SDK 生成的预签名 URL 协议取决于初始化 OSS 客户端时使用的 Endpoint 协议。
+
+**解决方案**：初始化 OSSClient 时使用 HTTPS Endpoint：
+```java
+// 使用 https:// 前缀
+OSS ossClient = new OSSClientBuilder().build("https://oss-cn-hangzhou.aliyuncs.com", ak, sk);
+```
+
+---
+
+### 问题六：预签名 URL 上传分片失败（V4 签名）
+
+**表现**：使用 V4 签名生成分片上传的预签名 URL，上传分片时报 SignatureDoesNotMatch。
+
+**常见原因**：
+- initiate multipart upload 和 upload part 使用了不同的签名版本
+- Content-Type 不一致（initiate 时的 Content-Type 与 upload part 时不同）
+
+**解决方案**：
+1. 确保整个分片上传流程统一使用 V4 签名
+2. 每个 upload part 请求的签名需要包含正确的 partNumber 和 uploadId
+3. 推荐使用 SDK 的分片上传方法，而非手动管理预签名 URL
+
+---
+
+### 问题七：预签名 URL 中如何设置文件标签（Tagging）？
+
+在生成预签名 URL 时通过请求头设置标签，需要将 `x-oss-tagging` header 纳入签名计算：
+
+```java
+GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, objectName, HttpMethod.PUT);
+request.setExpiration(expiration);
+request.addHeader("x-oss-tagging", "key1=value1&key2=value2");
+String url = ossClient.generatePresignedUrl(request).toString();
+```
+
+客户端上传时也必须携带相同的 `x-oss-tagging` header。
+
+---
+
+### 问题八：生成的共享链接如何设置 72 小时有效期？
+
+OSS 控制台默认分享链接有效期为 3600 秒（1 小时）。如需更长有效期：
+
+1. 使用 SDK 的 `generatePresignedUrl` 方法，自定义 expiration 时间
+2. V1 签名：理论上无上限，但建议不超过 7 天
+3. V4 签名：最长 7 天（604800 秒）
+
+---
+
+## 预防措施
+
+- 统一使用 SDK 生成预签名 URL，避免手动拼接签名
+- 服务端和客户端约定好 Content-Type，在生成签名时明确指定
+- 对于频繁访问的资源，考虑使用 CDN + 自定义域名替代预签名 URL
+- V4 签名的 7 天上限是硬性限制，需要在业务层做 URL 刷新逻辑

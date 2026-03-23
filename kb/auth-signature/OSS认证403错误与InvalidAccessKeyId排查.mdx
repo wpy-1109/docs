@@ -1,0 +1,169 @@
+---
+title: "OSS 认证相关的 403 错误与 InvalidAccessKeyId 排查"
+description: "访问 OSS 资源时返回 HTTP 403 错误，常见的错误码包括："
+icon: "wrench"
+---
+
+## 症状
+
+访问 OSS 资源时返回 HTTP 403 错误，常见的错误码包括：
+
+```
+ErrorCode: AccessDenied
+ErrorMessage: You have no right to access this object because of bucket acl.
+
+ErrorCode: InvalidAccessKeyId
+ErrorMessage: The OSS Access Key Id you provided does not exist in our records.
+
+ErrorCode: AccessDenied
+ErrorMessage: Anonymous access is forbidden for this operation.
+```
+
+---
+
+## 原因与解决方案
+
+### 原因一：AccessKey ID 无效或不存在
+
+**错误信息**：
+```
+ErrorCode: InvalidAccessKeyId
+ErrorMessage: The OSS Access Key Id you provided does not exist in our records.
+```
+
+**可能原因**：
+1. AccessKey ID 拼写错误或包含多余空格
+2. AccessKey 已被禁用或删除
+3. 使用的 STS 临时凭证已过期
+4. RAM 用户被禁用
+
+**排查步骤**：
+1. 登录 RAM 控制台 → 身份管理 → 用户，确认用户状态为"已启用"
+2. 在用户详情 → 认证管理 → AccessKey 中确认 AK 状态为"已启用"
+3. 如果使用 STS 临时凭证，检查是否已过期（默认 1 小时），重新获取新凭证
+4. 复制 AccessKey ID 时注意前后不要有空格或换行符
+
+---
+
+### 原因二：RAM 用户无 OSS 操作权限
+
+**错误信息**：
+```
+ErrorCode: AccessDenied
+ErrorMessage: You do not have read permission on this object.
+```
+
+**解决方案**：
+
+为 RAM 用户添加 OSS 权限策略：
+- **快速方案**：附加系统策略 `AliyunOSSFullAccess`（拥有 OSS 所有权限）
+- **最小权限方案**：创建自定义策略，仅授权需要的操作和资源
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:ListObjects"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket",
+        "acs:oss:*:*:your-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+**注意**：权限策略中 Resource 需要同时包含 Bucket 本身和 Bucket 下的对象（`bucket` 和 `bucket/*`）。
+
+---
+
+### 原因三：Bucket ACL 限制
+
+**错误信息**：
+```
+ErrorCode: AccessDenied
+ErrorMessage: You have no right to access this object because of bucket acl.
+```
+
+**原因**：Bucket 的读写权限设置为"私有"，匿名访问或不带签名的请求被拒绝。
+
+**解决方案**：
+1. 如果需要公开访问，将 Bucket ACL 设置为"公共读"
+2. 如果需要保持私有，使用签名 URL 或 SDK（携带 AccessKey）访问
+3. 使用 Bucket Policy 对特定 IP 或 Referer 开放匿名访问
+
+---
+
+### 原因四：ossutil / OSS Browser 连接失败
+
+**典型报错**：
+```
+Error: oss: service returned error: StatusCode=403, ErrorCode=AccessDenied
+```
+
+**排查清单**：
+
+| 检查项 | 说明 |
+|--------|------|
+| Endpoint | 是否正确（如 `oss-cn-hangzhou.aliyuncs.com`，不带 Bucket 名） |
+| AccessKey ID | 是否填写正确，无多余空格 |
+| AccessKey Secret | 是否为最新的（Secret 只在创建时显示一次） |
+| stsToken | 使用长期 AK 时应留空 |
+| RAM 权限 | 用户是否有 ListBucket 权限 |
+| 网络 | 是否能 ping 通 OSS Endpoint |
+
+**OSS Browser 特殊说明**：OSS Browser 需要 `oss:ListBuckets` 权限才能显示 Bucket 列表。如果 RAM 用户只有特定 Bucket 的权限，需要在 OSS Browser 中使用"预置 OSS 路径"模式登录。
+
+---
+
+### 原因五：跨账号访问未授权
+
+**场景**：使用 A 公司的 AK 访问 B 公司的 OSS Bucket。
+
+**解决方案**：
+1. B 公司在 Bucket Policy 中授权 A 公司的 RAM 用户 ARN
+2. 或 B 公司创建 RAM 角色，A 公司通过 STS AssumeRole 获取临时凭证访问
+3. ossutil 不支持在单条命令中使用两套凭证，跨账号复制需通过 Bucket Policy 授权
+
+---
+
+### 原因六：Referer 防盗链拦截
+
+**场景**：Bucket 配置了 Referer 白名单，但请求的 Referer 不在白名单中。
+
+**特殊说明**：带签名的 URL 可以绕过 Referer 白名单检查（如果防盗链策略允许空 Referer，签名 URL 在浏览器地址栏直接访问时 Referer 为空，可以正常访问）。
+
+**排查方法**：
+1. 检查 Bucket → 数据安全 → 防盗链设置中的白名单
+2. 确认"是否允许空 Referer"选项
+3. 程序化访问时检查请求中 Referer header 的值
+
+---
+
+## 通用排查流程
+
+```
+403 错误
+  ├── InvalidAccessKeyId → 检查 AK/SK 状态和拼写
+  ├── AccessDenied
+  │     ├── bucket acl → 检查 Bucket 读写权限
+  │     ├── Anonymous access → 请求需要携带签名
+  │     └── no right → 检查 RAM 权限策略
+  ├── SignatureDoesNotMatch → 参见《SignatureDoesNotMatch 排查指南》
+  └── 其他 → 提供 RequestId 联系技术支持
+```
+
+---
+
+## 预防措施
+
+- 使用 RAM 最小权限原则，不要给生产环境使用 FullAccess 策略
+- 定期检查和轮换 AccessKey
+- 开启 ActionTrail 审计日志，监控异常访问
+- AK 泄露后第一时间禁用（不是删除），保留审计能力

@@ -1,0 +1,79 @@
+---
+title: "OSS Endpoint 选择错误导致访问失败或速度慢"
+description: "- ossutil 上传/下载报错，提示连接失败或超时 - SDK 初始化后请求 OSS 返回 `NoSuchBucket` 或连接超时 - ECS 上访问同地域 OSS 走了外网，产生额外流量费用"
+icon: "wrench"
+---
+
+# OSS Endpoint 选择错误导致访问失败或速度慢
+
+## 症状
+
+- ossutil 上传/下载报错，提示连接失败或超时
+- SDK 初始化后请求 OSS 返回 `NoSuchBucket` 或连接超时
+- ECS 上访问同地域 OSS 走了外网，产生额外流量费用
+- 跨地域 Endpoint 导致 `The bucket you are attempting to access must be addressed using the specified endpoint`
+
+## 原因
+
+OSS 的 Endpoint 由地域和网络类型决定，常见错误：
+
+1. **地域不匹配**：Bucket 在杭州但 Endpoint 写了北京（`oss-cn-hangzhou` vs `oss-cn-beijing`）
+2. **内外网混用**：ECS 内网场景使用了外网 Endpoint，或本地电脑使用了内网 Endpoint
+3. **加速 Endpoint 混淆**：未开启传输加速却使用了 `oss-accelerate` Endpoint
+
+## 解决方案
+
+### 步骤 1：确认 Bucket 所在地域
+
+1. 登录 [OSS 控制台](https://oss.console.aliyun.com/)
+2. 在 Bucket 列表中查看"区域"列
+3. 点击 Bucket 名称进入详情页，查看 Endpoint 信息
+
+### 步骤 2：选择正确的 Endpoint
+
+| 场景 | Endpoint 格式 | 示例 |
+|------|-------------|------|
+| 外网访问 | `oss-{region}.aliyuncs.com` | `oss-cn-hangzhou.aliyuncs.com` |
+| 同地域 ECS 内网 | `oss-{region}-internal.aliyuncs.com` | `oss-cn-hangzhou-internal.aliyuncs.com` |
+| 传输加速 | `oss-accelerate.aliyuncs.com` | 不分地域，全局统一 |
+| VPC 内网 | `oss-{region}-internal.aliyuncs.com` | 与经典网络内网相同 |
+
+### 常见地域 Endpoint 对照表
+
+| 地域 | 外网 Endpoint | 内网 Endpoint |
+|------|-------------|-------------|
+| 华东1（杭州） | `oss-cn-hangzhou.aliyuncs.com` | `oss-cn-hangzhou-internal.aliyuncs.com` |
+| 华东2（上海） | `oss-cn-shanghai.aliyuncs.com` | `oss-cn-shanghai-internal.aliyuncs.com` |
+| 华北2（北京） | `oss-cn-beijing.aliyuncs.com` | `oss-cn-beijing-internal.aliyuncs.com` |
+| 华南1（深圳） | `oss-cn-shenzhen.aliyuncs.com` | `oss-cn-shenzhen-internal.aliyuncs.com` |
+| 中国香港 | `oss-cn-hongkong.aliyuncs.com` | `oss-cn-hongkong-internal.aliyuncs.com` |
+| 新加坡 | `oss-ap-southeast-1.aliyuncs.com` | `oss-ap-southeast-1-internal.aliyuncs.com` |
+
+### 步骤 3：验证 Endpoint 连通性
+
+```bash
+# 测试外网 Endpoint
+ping oss-cn-hangzhou.aliyuncs.com
+
+# 测试内网 Endpoint（仅在同地域 ECS 上测试）
+ping oss-cn-hangzhou-internal.aliyuncs.com
+
+# 验证 Bucket 是否可访问
+curl -I "https://your-bucket.oss-cn-hangzhou.aliyuncs.com"
+```
+
+## 常见问题
+
+### Q1：ECS 与 OSS 不在同一地域，能用内网吗？
+
+不能。内网 Endpoint 仅适用于同地域的 ECS/VPC 环境。跨地域访问只能使用外网 Endpoint 或传输加速。
+
+### Q2：内网 Endpoint 访问 OSS 收费吗？
+
+同地域内网访问 OSS 的流入和流出流量均免费。这是使用内网 Endpoint 的主要优势之一。
+
+### Q3：德国/海外的 ECS 访问国内 OSS，Endpoint 怎么选？
+
+使用外网 Endpoint 或传输加速 Endpoint。如果速度不理想：
+1. 开启传输加速，使用 `oss-accelerate.aliyuncs.com`
+2. 或将 Bucket 创建在离用户更近的海外地域

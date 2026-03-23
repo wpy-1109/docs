@@ -1,0 +1,110 @@
+---
+title: "私有 Bucket 中的文件如何对外提供访问"
+description: "Bucket 设为私有权限后，文件无法通过裸 URL 直接访问。本文介绍几种让私有 Bucket 中的文件安全对外提供访问的方式。"
+icon: "book-open"
+---
+
+# 私有 Bucket 中的文件如何对外提供访问
+
+Bucket 设为私有权限后，文件无法通过裸 URL 直接访问。本文介绍几种让私有 Bucket 中的文件安全对外提供访问的方式。
+
+## 适用场景
+
+- 网站或 App 需要展示存储在私有 Bucket 中的图片/视频。
+- 需要分享文件给外部用户下载。
+- 希望保障数据安全的同时不影响业务正常访问。
+
+## 前提条件
+
+- Bucket 已设为私有权限（private）。
+
+## 操作步骤
+
+### 方式一：预签名 URL（适合临时分享）
+
+为单个文件生成带有效期的签名 URL，用户通过该 URL 即可直接访问。
+
+```python
+# Python SDK 示例
+import oss2
+
+auth = oss2.Auth('access-key-id', 'access-key-secret')
+bucket = oss2.Bucket(auth, 'oss-cn-hangzhou.aliyuncs.com', 'your-bucket')
+
+url = bucket.sign_url('GET', 'images/photo.jpg', 3600)  # 有效期3600秒
+print(url)
+```
+
+**适用**：临时文件分享、一次性下载链接。
+**限制**：每个文件需要单独生成 URL，最长有效期 7 天。
+
+### 方式二：CDN + 私有 Bucket 回源（适合网站/App）
+
+通过 CDN 加速域名对外提供访问，OSS Bucket 保持私有。
+
+1. 在 CDN 控制台添加加速域名，源站设为 OSS Bucket。
+2. 开启"私有 Bucket 回源"功能并完成授权。
+3. 将应用中的 OSS URL 替换为 CDN 域名。
+
+**适用**：网站静态资源、App 图片视频加载、长期稳定的文件访问。
+**优势**：加速访问速度、降低流量费用、OSS 域名不对外暴露。
+
+### 方式三：STS 临时凭证（适合客户端直传/直读）
+
+服务端生成 STS 临时凭证给客户端，客户端通过 SDK 直接访问 OSS。
+
+**适用**：移动端 App、微信小程序等需要客户端直接操作 OSS 的场景。
+
+### 方式四：Web 应用代理访问
+
+由后端服务器使用 AK/SK 下载文件，再转发给前端用户。
+
+**适用**：需要在服务端做额外处理（如鉴权、计数、水印）的场景。
+**注意**：流量会经过服务器，增加服务器带宽成本。
+
+### 方式五：Bucket Policy 条件控制
+
+通过 Bucket Policy 设置条件访问规则，例如：
+- 指定 IP 可直接访问，其他 IP 需签名。
+- 指定 Referer（你的网站域名）可匿名访问。
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": ["*"],
+      "Action": ["oss:GetObject"],
+      "Resource": ["acs:oss:*:*:your-bucket/public/*"],
+      "Condition": {
+        "StringLike": {
+          "acs:Referer": ["https://www.example.com/*"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**适用**：只想让特定来源网站引用 OSS 资源的场景。
+
+## 各方式对比
+
+| 方式 | 适合场景 | 安全性 | 成本 | 复杂度 |
+|------|---------|--------|------|--------|
+| 预签名 URL | 临时分享 | 高 | 低 | 低 |
+| CDN + 私有回源 | 网站/App | 高 | 中（CDN 流量费更低）| 中 |
+| STS 临时凭证 | 客户端直传 | 高 | 低 | 中 |
+| 后端代理 | 需服务端处理 | 高 | 高（占用服务器带宽）| 中 |
+| Bucket Policy | 条件控制 | 中 | 低 | 低 |
+
+## 常见问题
+
+**Q: 之前 Bucket 是公共读的，改成私有后所有链接都失效了怎么办？**
+
+修改为私有后立即生效。需要将所有裸 URL 替换为签名 URL 或 CDN 域名链接。如果是网站中大量引用的图片，推荐使用 CDN + 私有回源方案，只需把域名从 OSS 域名改为 CDN 域名。
+
+**Q: 只想让自己的网站能引用 OSS 图片，外部网站引用时显示 403？**
+
+使用防盗链功能：在 Bucket 的防盗链配置中设置你的网站域名为白名单，并禁止空 Referer。

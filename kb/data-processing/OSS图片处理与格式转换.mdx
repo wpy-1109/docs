@@ -1,0 +1,63 @@
+---
+title: "OSS图片处理与格式转换"
+description: "- 需要将 HEIC 格式图片转换为 JPG - 需要为上传的图片添加水印 - 上传图片后缩略图未生成 - 需要批量处理存量图片"
+icon: "book-open"
+---
+
+### 适用场景
+
+- 需要将 HEIC 格式图片转换为 JPG
+- 需要为上传的图片添加水印
+- 上传图片后缩略图未生成
+- 需要批量处理存量图片
+
+### 图片格式转换（HEIC 转 JPG）
+
+OSS 数据处理支持将 HEIC 格式转换为 JPG，但**不能直接覆盖原文件**。操作流程：
+
+1. 通过 URL 参数进行图片处理：
+```
+https://your-bucket.oss-cn-hangzhou.aliyuncs.com/photo.heic?x-oss-process=image/format,jpg
+```
+
+2. 下载处理后的结果，重新上传覆盖原文件。
+
+#### 批量检测 HEIC 文件
+
+OSS 不支持按文件类型推送通知。需要自行遍历文件列表进行过滤：
+
+```bash
+# 使用 ossutil 列出所有文件，然后过滤 HEIC 后缀
+ossutil ls oss://your-bucket/ -s | grep -i "\.heic$"
+```
+
+### 图片水印
+
+OSS 水印功能是**访问时动态添加**，不修改原图。工作流程：
+
+1. 先将图片上传到 OSS。
+2. 通过 URL 参数添加水印：
+```
+?x-oss-process=image/watermark,text_SGVsbG8=,type_d3F5LXpoZW5naGVp,size_30
+```
+
+> 注意：上传时无法同时添加水印。需要先完成上传，再通过图片处理参数访问。
+
+### 缩略图生成
+
+OSS 不会自动生成缩略图。缩略图需要通过图片处理参数实现：
+
+```
+?x-oss-process=image/resize,w_200,h_200
+```
+
+如果通过 API 调用图片处理后未生成缩略图，请检查：
+1. API 调用是否有错误返回
+2. 图片尺寸是否超出处理限制
+3. 图片格式是否受支持
+
+### 补充说明
+
+- HEIC 转 JPG 时，若图片含透明通道则不支持
+- 图片处理有尺寸限制，详见官方文档
+- 如需批量处理存量图片，建议编写脚本遍历文件并调用图片处理 API

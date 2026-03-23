@@ -1,0 +1,202 @@
+---
+title: "OSS 前端直传与 PostObject 签名配置指南"
+description: "- Web 前端页面直接上传文件到 OSS，不经过自有服务器 - 微信小程序、支付宝小程序直传文件到 OSS - 移动端 App 直传文件到 OSS - 需要减少服务器带宽压力和上传延迟"
+icon: "book-open"
+---
+
+## 适用场景
+
+- Web 前端页面直接上传文件到 OSS，不经过自有服务器
+- 微信小程序、支付宝小程序直传文件到 OSS
+- 移动端 App 直传文件到 OSS
+- 需要减少服务器带宽压力和上传延迟
+
+---
+
+## 前提条件
+
+1. 已创建 OSS Bucket
+2. 已准备 AccessKey（推荐使用 STS 临时凭证）
+3. 已在 Bucket 中配置 CORS 跨域规则（Web 直传必须）
+
+---
+
+## 操作步骤
+
+### 方式一：服务端签名直传（推荐）
+
+**流程**：前端 → 请求后端获取签名 → 后端计算 Policy + Signature 返回 → 前端携带签名信息直传 OSS
+
+#### Step 1：后端生成签名信息
+
+```python
+# Python 后端示例
+import json, base64, hmac, hashlib, time
+from datetime import datetime, timedelta
+
+access_key_id = 'your-ak'
+access_key_secret = 'your-sk'
+bucket = 'your-bucket'
+endpoint = 'oss-cn-hangzhou.aliyuncs.com'
+
+# 设置上传策略
+expire_time = datetime.utcnow() + timedelta(hours=1)
+policy_dict = {
+    "expiration": expire_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "conditions": [
+        ["content-length-range", 1, 104857600],  # 限制文件大小 1B - 100MB
+        ["starts-with", "$key", "uploads/"]  # 限制上传路径前缀
+    ]
+}
+
+policy = base64.b64encode(json.dumps(policy_dict).encode()).decode()
+signature = base64.b64encode(
+    hmac.new(access_key_secret.encode(), policy.encode(), hashlib.sha1).digest()
+).decode()
+
+# 返回给前端的信息
+return {
+    "accessid": access_key_id,
+    "policy": policy,
+    "signature": signature,
+    "dir": "uploads/",
+    "host": f"https://{bucket}.{endpoint}",
+    "expire": int(expire_time.timestamp())
+}
+```
+
+#### Step 2：前端表单上传
+
+```html
+<form action="https://your-bucket.oss-cn-hangzhou.aliyuncs.com" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="OSSAccessKeyId" value="从后端获取">
+  <input type="hidden" name="policy" value="从后端获取">
+  <input type="hidden" name="Signature" value="从后端获取">
+  <input type="hidden" name="key" value="uploads/${filename}">
+  <input type="hidden" name="success_action_status" value="200">
+  <input type="file" name="file">
+  <input type="submit" value="上传">
+</form>
+```
+
+#### Step 3：配置 CORS 规则
+
+在 OSS 控制台 → Bucket 设置 → 跨域设置中添加规则：
+
+| 配置项 | 值 |
+|--------|-----|
+| 来源 | `*` 或您的域名 |
+| 允许 Methods | POST |
+| 允许 Headers | `*` |
+| 暴露 Headers | `ETag, x-oss-request-id` |
+
+---
+
+### 方式二：微信小程序直传
+
+微信小程序不支持标准的浏览器 Form 上传，需使用 `wx.uploadFile` API：
+
+```javascript
+// 小程序端代码
+wx.uploadFile({
+  url: 'https://your-bucket.oss-cn-hangzhou.aliyuncs.com',
+  filePath: tempFilePath,
+  name: 'file',
+  formData: {
+    'OSSAccessKeyId': signatureInfo.accessid,
+    'policy': signatureInfo.policy,
+    'Signature': signatureInfo.signature,
+    'key': 'uploads/' + fileName,
+    'success_action_status': '200'
+    // 如果使用 STS，还需要：
+    // 'x-oss-security-token': securityToken
+  },
+  success(res) {
+    console.log('上传成功', res);
+  }
+});
+```
+
+**注意事项**：
+- 微信小程序的签名获取代码与 Web 端不通用，需使用小程序专用的上传方式
+- 小程序的域名白名单中需要添加 `your-bucket.oss-cn-hangzhou.aliyuncs.com`
+- 使用 IP 地址还是域名取决于小程序的开发模式设置
+
+---
+
+## 常见问题
+
+### Q1：上传成功但前端组件状态一直显示 "uploading"
+
+**原因**：前端组件未正确处理 OSS 返回的 HTTP 响应。PostObject 默认返回 HTTP 204 No Content，而部分前端组件期望 HTTP 200。
+
+**解决方案**：在表单中添加 `success_action_status=200`，让 OSS 返回 HTTP 200 状态码。
+
+---
+
+### Q2：上传时报 FieldItemTooLong
+
+**原因**：PostObject 的表单字段值超过了限制。通常是 `policy` 字段过大，或者 `key` 字段值过长。
+
+**解决方案**：
+- 检查 policy JSON 的条件数量，减少不必要的条件
+- 缩短文件路径（key 字段值）
+
+---
+
+### Q3：PostObject 报 SignatureDoesNotMatch（0002-00000705）
+
+**常见原因**：
+1. 签名时的 Policy 与实际上传时的 Policy 不一致
+2. Content-Type 参与了签名但上传时未指定或不匹配
+3. 使用了 Web 端的签名代码去做小程序直传（两者签名方式不同）
+
+**解决方案**：
+- 确保 base64 编码的 policy 字符串在签名和上传请求中完全一致
+- 不要在 PostObject 表单中指定 Content-Type（让 OSS 自动识别）
+
+---
+
+### Q4：服务端签名直传后如何获取上传回调？
+
+在 Policy 或表单中添加 callback 参数：
+
+```json
+{
+  "callbackUrl": "https://your-server.com/callback",
+  "callbackBody": "filename=${object}&size=${size}&mimeType=${mimeType}",
+  "callbackBodyType": "application/x-www-form-urlencoded"
+}
+```
+
+**注意**：
+- callbackBody 是必填项，不能为空字符串
+- 如果回调接口需要自定义 Header，需在预签名上传 URL 中设置（PostObject 方式不支持自定义回调 Header）
+- 回调接口必须返回 HTTP 200 且 body 为 JSON 格式，否则 OSS 会返回 `CallbackFailed`
+
+---
+
+### Q5：直传是否支持大文件分片上传？
+
+PostObject 方式不支持分片上传。对于大文件（超过 100MB）：
+
+1. **推荐方案**：使用 STS 临时凭证 + 官方 SDK 的分片上传功能
+2. **小程序方案**：后端生成分片上传的预签名 URL，小程序逐个分片上传
+
+---
+
+### Q6：直传场景下如何显示上传进度？
+
+PostObject 表单上传方式不支持进度回调。如需进度条功能：
+
+1. 使用官方 Browser.js SDK 的 multipartUpload 方法（支持 progress 回调）
+2. 或使用 XMLHttpRequest 的 `upload.onprogress` 事件（仅限 Web 端）
+
+---
+
+## 预防措施
+
+- 客户端代码中不要硬编码 AccessKey，始终通过服务端获取签名
+- 在 Policy 中通过 `content-length-range` 限制上传文件大小
+- 在 Policy 中通过 `starts-with` 限制上传路径，防止用户覆盖其他文件
+- 使用 STS 临时凭证替代长期 AccessKey，控制权限和有效期

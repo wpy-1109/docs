@@ -1,0 +1,100 @@
+---
+title: "OSS 资源无法访问（403/404/UserDisable）的排查指南"
+description: "通过浏览器或 API 访问 OSS 资源时返回错误，常见错误码："
+icon: "wrench"
+---
+
+# OSS 资源无法访问（403/404/UserDisable）的排查指南
+
+## 症状
+
+通过浏览器或 API 访问 OSS 资源时返回错误，常见错误码：
+
+```xml
+<Code>AccessDenied</Code>
+<Message>You have no right to access this object.</Message>
+```
+
+```xml
+<Code>NoSuchKey</Code>
+<Message>The specified key does not exist.</Message>
+```
+
+```xml
+<Code>UserDisable</Code>
+<ErrorCode>0003-00000801</ErrorCode>
+```
+
+## 按错误码排查
+
+### 错误码：AccessDenied（403）
+
+**可能原因与解决方案**：
+
+| 原因 | 排查方法 | 解决方案 |
+|------|---------|---------|
+| Bucket ACL 为私有 | 检查 Bucket 权限设置 | 改为公共读，或使用签名 URL |
+| Object ACL 为私有 | 检查文件级别权限 | 设为继承 Bucket 或公共读 |
+| 防盗链拦截 | 检查 Referer 白名单 | 添加来源域名到白名单 |
+| Bucket Policy 限制 | 检查 Bucket Policy 规则 | 调整 Policy 允许规则 |
+| RAM 权限不足 | 检查 RAM 用户/角色权限 | 附加 OSS 相关权限策略 |
+| IP 限制 | 检查 Bucket Policy 中的 IP 条件 | 添加客户端 IP 到允许列表 |
+
+**快速排查步骤**：
+1. 在 OSS 控制台中直接点击文件「详情」，复制「URL」栏的链接测试
+2. 如果控制台内可以访问但外部不行，说明是权限/防盗链/Policy 问题
+3. 在报错的 XML 中找到 `RequestId`，可用于工单排查
+
+### 错误码：NoSuchKey（404）
+
+**文件不存在**：
+1. 在 OSS 控制台搜索文件名，确认文件存在
+2. 注意 Object Key 区分大小写：`Image.jpg` 和 `image.jpg` 是不同的文件
+3. 检查文件路径是否正确（前端构建产物的路径可能与预期不同）
+4. 确认文件没有被生命周期规则删除
+
+### 错误码：NoSuchBucket
+
+**Bucket 不存在或名称写错**：
+1. 确认 Bucket 名称拼写正确（大小写敏感）
+2. 确认 Bucket 未被删除
+3. 确认使用了正确的地域 Endpoint
+
+### 错误码：UserDisable（0003-00000801）
+
+**账号被停用**：
+1. 阿里云账号可能因欠费、违规等原因被停用
+2. 登录阿里云控制台检查账号状态
+3. 如果是欠费，充值后服务会自动恢复
+4. 如果域名解析到其他账号的 OSS，需确认是否在正确的账号下操作
+
+> **重要提示**：如果您通过自定义域名访问时出现 UserDisable 错误，可能是域名 CNAME 解析指向了其他账号的 Bucket。请使用 Bucket 所在的账号提交工单。
+
+### 其他常见访问异常
+
+**浏览器显示"不安全"或"连接被拒绝"**：
+- 使用 HTTPS 但未配置 SSL 证书
+- 参考「OSS 自定义域名 HTTPS 证书配置」文章
+
+**访问返回空白页**：
+- index.html 文件内容为空或引用的 CSS/JS 路径错误
+- 检查前端构建配置中的 `publicPath` / `baseUrl`
+
+## 通用排查步骤
+
+1. **获取 RequestId**：所有 OSS 错误响应中都包含 RequestId，这是排查的关键信息
+2. **使用 OSS 异常诊断**：在 OSS 控制台使用「异常诊断」功能输入 RequestId
+3. **检查时间**：确认客户端系统时间是否准确（签名 URL 对时间敏感）
+4. **检查网络**：使用 `curl -v` 查看完整的请求/响应信息
+
+```bash
+curl -v "https://bucket.oss-cn-xxx.aliyuncs.com/path/file.jpg" 2>&1
+```
+
+## 仍有问题？
+
+请提供以下信息提交工单：
+1. 完整的错误 XML 响应（包含 RequestId）
+2. 请求的完整 URL
+3. 请求时间
+4. 客户端环境说明

@@ -1,0 +1,57 @@
+---
+title: "ossbrowser 和 ossutil 工具使用常见问题"
+description: "**回答：** 不同 Bucket 所在区域不同，Endpoint 也不同。常见区域对应的 Endpoint："
+icon: "message-circle-question"
+---
+
+### Q1：ossutil 配置文件中的 Endpoint 或区域填错了怎么办？
+
+**回答：** 不同 Bucket 所在区域不同，Endpoint 也不同。常见区域对应的 Endpoint：
+
+| 区域 | Endpoint |
+|------|----------|
+| 华东1（杭州） | oss-cn-hangzhou.aliyuncs.com |
+| 华东2（上海） | oss-cn-shanghai.aliyuncs.com |
+| 华北2（北京） | oss-cn-beijing.aliyuncs.com |
+| 新加坡 | oss-ap-southeast-1.aliyuncs.com |
+
+如果切换操作不同区域的 Bucket，需要重新配置 Endpoint。当出现连接错误时，建议删除配置文件重新配置：
+
+```bash
+# 重新配置
+ossutil config
+```
+
+### Q2：ossbrowser 上传/下载速度慢或失败怎么办？
+
+**排查步骤：**
+1. 检查 Endpoint 配置是否正确
+2. 确认网络环境（ECS 同地域优先使用内网 Endpoint）
+3. 大文件（>1GB）建议改用 ossutil
+4. 多目录上传时总大小建议不超过 1GB
+
+### Q3：ossutil 命令行安装和初始配置
+
+```bash
+# 下载 ossutil（以 Linux 为例）
+curl -o ossutil https://gosspublic.alicdn.com/ossutil/install.sh && bash install.sh
+
+# 配置 AccessKey 和 Endpoint
+ossutil config -e oss-cn-hangzhou.aliyuncs.com -i YOUR_ACCESS_KEY_ID -k YOUR_ACCESS_KEY_SECRET
+```
+
+### Q4：如何在 ossutil 中设置并发数提升速度？
+
+```bash
+# -j 参数设置并发数（默认 3）
+ossutil cp -r /local/path/ oss://bucket/path/ -j 20
+```
+
+### Q5：ossbrowser 登录后看不到 Bucket，是什么原因？
+
+可能原因：
+1. 使用的 RAM 用户没有 ListBuckets 权限
+2. Endpoint 配置错误
+3. AccessKey 不正确
+
+建议检查 RAM 权限策略，确保包含 `oss:ListBuckets` 权限。

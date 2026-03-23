@@ -1,0 +1,64 @@
+---
+title: "RAM 用户 ListBucket 权限配置与常见问题"
+description: "RAM 用户登录 OSS 控制台或 ossbrowser 后看不到 Bucket 列表，或在列举 Bucket 内文件时报权限不足。本文解释相关权限配置。"
+icon: "message-circle-question"
+---
+
+# RAM 用户 ListBucket 权限配置与常见问题
+
+RAM 用户登录 OSS 控制台或 ossbrowser 后看不到 Bucket 列表，或在列举 Bucket 内文件时报权限不足。本文解释相关权限配置。
+
+## 详细说明
+
+### Bucket 列表权限和文件列举权限是不同的
+
+- **列举 Bucket 列表**：需要 `oss:ListBuckets` 权限（账号级别），允许用户看到自己有权限的 Bucket。
+- **列举 Bucket 内文件**：需要 `oss:ListObjects` / `oss:ListObjectsV2` 权限（Bucket 级别），允许用户浏览某个 Bucket 内的文件列表。
+- **获取 Bucket 信息**：需要 `oss:GetBucketInfo` 权限。
+- **获取 Bucket ACL**：需要 `oss:GetBucketAcl` 权限，这是 Bucket 级别的管控操作。
+
+### 只授权了目录级别权限时的限制
+
+如果 RAM 用户只被授权访问 Bucket 下的某个子目录（如 `bucket/IAV/*`），以下接口**无法调用**：
+- `GetBucketAcl`：获取 Bucket 读写权限，这是 Bucket 级别操作。
+- `ListObjects` 不带 Prefix 参数：列举整个 Bucket 的文件。
+
+SDK 或工具在初始化时可能会自动调用这些 Bucket 级别的接口，导致报错。
+
+## 相关问题
+
+**Q: RAM 用户在 ossbrowser 中看不到任何 Bucket？**
+
+两种解决方法：
+1. 为 RAM 用户添加 `oss:ListBuckets` 权限（Resource 为 `acs:oss:*:*:*`）。
+2. 在 ossbrowser 中直接输入 Bucket 名称和路径登录，跳过 Bucket 列表页面（预设 OSS 路径为 `oss://bucket-name/path/`）。
+
+**Q: 授权了指定目录的读写权限，但代码中调用 ListObjects 报错？**
+
+确保 ListObjects 请求中带了 Prefix 参数限定到授权的目录范围内。如果不带 Prefix 直接列举整个 Bucket，会因为超出授权范围而被拒绝。
+
+推荐在权限策略中配合 Condition 限制 Prefix：
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "oss:ListObjects",
+    "oss:ListObjectsV2"
+  ],
+  "Resource": "acs:oss:*:*:your-bucket",
+  "Condition": {
+    "StringLike": {
+      "oss:Prefix": "target-folder/*"
+    }
+  }
+}
+```
+
+**Q: 调用 GetBucketAcl 报 AccessDenied，但其他操作正常？**
+
+`GetBucketAcl` 是 Bucket 级别的管控 API。如果 RAM 用户只被授权了目录级别的权限，无法调用此接口。解决方法：在代码中避免调用 `GetBucketAcl`，或在权限策略中单独授予该操作。
+
+**Q: 只想让 RAM 用户看到特定 Bucket，不显示其他 Bucket？**
+
+`oss:ListBuckets` 权限无法限定只列举特定 Bucket。系统会返回用户有权限的所有 Bucket 名称。如果不想暴露 Bucket 列表，让用户在 ossbrowser 中直接输入 Bucket 路径登录。

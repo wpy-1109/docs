@@ -1,0 +1,99 @@
+---
+title: "通过 PrivateLink 从 VPC 内网访问 OSS 的配置指南"
+description: "- 需要从 VPC 内通过私网访问 OSS，不走公网 - 安全合规要求所有流量不出 VPC - 使用 Landing Zone 多账号架构管理 OSS 访问 - OSS 内网 Endpoint 无法满足需求（如需跨地域私网访问）"
+icon: "book-open"
+---
+
+# 通过 PrivateLink 从 VPC 内网访问 OSS 的配置指南
+
+## 适用场景
+
+- 需要从 VPC 内通过私网访问 OSS，不走公网
+- 安全合规要求所有流量不出 VPC
+- 使用 Landing Zone 多账号架构管理 OSS 访问
+- OSS 内网 Endpoint 无法满足需求（如需跨地域私网访问）
+
+## 前提条件
+
+- 已创建 VPC 和 vSwitch
+- 了解 OSS Bucket 所在地域
+- **需要提交工单申请加白**：PrivateLink 访问 OSS 需要后端加白，不能直接在控制台开通
+
+## 操作步骤
+
+### 步骤 1：申请开通 PrivateLink 访问 OSS
+
+1. 提交工单，说明：
+   - 需要使用 PrivateLink 的地域（如上海）
+   - 阿里云账号 UID
+   - 使用场景说明
+2. 等待 OSS 侧完成加白配置
+
+### 步骤 2：创建终端节点
+
+加白完成后：
+1. 登录 [PrivateLink 控制台](https://vpc.console.aliyun.com/privatelink)
+2. 创建终端节点，选择服务为 OSS
+3. 选择对应的 VPC 和 vSwitch
+4. 完成创建后获取私网访问 Endpoint
+
+### 步骤 3：配置 DNS 解析
+
+将 OSS 的域名解析到 PrivateLink 提供的私网 IP：
+- 可使用 PrivateZone 配置私网 DNS 解析
+- 或在应用层直接使用私网 Endpoint
+
+## 常见问题
+
+### Q1：是否可以在 Landing Zone 组织级别统一加白？
+
+目前不支持。每个应用账号（Workplace）需单独申请开通 PrivateLink 访问 OSS。每个账号需要分别提交工单。
+
+### Q2：为什么在控制台选不到 OSS 服务？
+
+PrivateLink 访问 OSS 需要提前加白。未加白时，在创建终端节点的服务列表中看不到 OSS。请提交工单申请加白。
+
+### Q3：ECS 内网访问 OSS 一定需要 PrivateLink 吗？
+
+不一定。大多数场景使用 OSS 的内网 Endpoint（`oss-cn-xxx-internal.aliyuncs.com`）即可：
+- **同地域 ECS 内网访问 OSS**：直接使用内网 Endpoint，免流量费
+- **PrivateLink 适用于**：跨账号私网访问、需要更精细的网络隔离、合规要求
+
+### Q4：OSS 内网 Endpoint ping 不通怎么办？
+
+OSS 内网 Endpoint 不响应 ICMP（ping），ping 不通是正常的。可以用以下方式测试连通性：
+```bash
+# 使用 curl 测试 HTTP 连通性
+curl -v "https://bucket-name.oss-cn-hangzhou-internal.aliyuncs.com"
+
+# 使用 telnet 测试端口
+telnet oss-cn-hangzhou-internal.aliyuncs.com 443
+```
+
+### Q5：Bucket Policy 中如何限制仅允许 VPC 访问？
+
+在 Bucket Policy 中使用 `acs:SourceVpc` 条件：
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "oss:*",
+      "Resource": "acs:oss:*:*:bucket-name/*",
+      "Condition": {
+        "StringNotEquals": {
+          "acs:SourceVpc": "vpc-xxx"
+        }
+      }
+    }
+  ]
+}
+```
+
+> **注意**：配置 `acs:SourceVpc` 条件时，如果同时使用 `acs:SourceIp`，需要一起配置，否则会报错 `acs:SourceVpc should be set if acs:SourceIp is set in condition`。
+
+## 相关文档
+
+- [通过 PrivateLink 访问 OSS](https://help.aliyun.com/zh/oss/user-guide/access-oss-via-privatelink-network)

@@ -1,0 +1,167 @@
+---
+title: "OSS V4 签名（OSS4-HMAC-SHA256）迁移配置与常见错误"
+description: "OSS 推荐使用 V4 签名（OSS4-HMAC-SHA256），相比 V1 签名（OSS2-HMAC-SHA1）具有更高的安全性。V4 签名的预签名 URL 支持最长 7 天有效期，且在签名中包含 Region 信息，防止跨区域重放攻击。"
+icon: "book-open"
+---
+
+## 背景
+
+OSS 推荐使用 V4 签名（OSS4-HMAC-SHA256），相比 V1 签名（OSS2-HMAC-SHA1）具有更高的安全性。V4 签名的预签名 URL 支持最长 7 天有效期，且在签名中包含 Region 信息，防止跨区域重放攻击。
+
+V4 签名的 URL 特征：
+```
+?x-oss-signature-version=OSS4-HMAC-SHA256
+&x-oss-credential=AKId/20260318/cn-hangzhou/oss/aliyun_v4_request
+&x-oss-date=20260318T060145Z
+&x-oss-expires=3600
+&x-oss-signature=xxx
+```
+
+---
+
+## 适用场景
+
+- 新项目推荐直接使用 V4 签名
+- 旧项目从 V1 签名迁移到 V4 签名
+- 使用 ossutil V2 版本
+
+---
+
+## 配置方法
+
+### SDK 中启用 V4 签名
+
+```java
+// Java SDK 示例
+import com.aliyun.oss.common.auth.SignVersion;
+
+ClientBuilderConfiguration config = new ClientBuilderConfiguration();
+config.setSignatureVersion(SignVersion.V4);
+
+OSS ossClient = OSSClient.builder()
+    .endpoint("https://oss-cn-hangzhou.aliyuncs.com")
+    .credentialsProvider(new DefaultCredentialProvider(accessKeyId, accessKeySecret))
+    .clientConfiguration(config)
+    .region("cn-hangzhou")  // V4 签名必须指定 Region
+    .build();
+```
+
+```python
+# Python SDK 示例
+import oss2
+from oss2.credentials import EnvironmentVariableCredentialsProvider
+
+auth = oss2.ProviderAuthV4(EnvironmentVariableCredentialsProvider())
+bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', 'bucket-name',
+                     region='cn-hangzhou')  # V4 签名必须指定 region
+```
+
+### ossutil V2 中配置 V4 签名
+
+```ini
+[default]
+accessKeyID = LTAI5t****
+accessKeySecret = ****
+endpoint = oss-cn-hangzhou.aliyuncs.com
+region = cn-hangzhou
+```
+
+**关键点**：V4 签名必须显式指定 `region` 参数，且 region 值使用标准格式（如 `cn-hangzhou`），不带 `oss-` 前缀。
+
+---
+
+## 常见错误与解决方案
+
+### 错误一：Invalid signing region in Authorization header
+
+```
+ErrorCode: InvalidArgument
+ErrorMessage: Invalid signing region in Authorization header
+```
+
+**原因**：`x-oss-credential` 中的 Region 值格式错误或与 Endpoint 的地域不匹配。
+
+**常见错误写法**：
+- 写成 `oss-cn-hangzhou`（多了 `oss-` 前缀）
+- 写成 `cn-hangzhou,`（末尾多了逗号）
+- Endpoint 是杭州但 Region 写成了上海
+
+**解决方案**：
+1. Region 使用标准地域 ID，如 `cn-hangzhou`、`cn-shanghai`、`cn-beijing`
+2. 确保 Endpoint 中的地域与 `x-oss-credential` 中的 Region 一致
+3. ossutil 配置中 Region 后面不要有多余字符
+
+---
+
+### 错误二：V4 签名预签名 URL 上传分片报 SignatureDoesNotMatch
+
+**原因**：分片上传流程中，不同步骤使用了不同的签名版本或参数不一致。
+
+**解决方案**：
+1. InitiateMultipartUpload、UploadPart、CompleteMultipartUpload 三个步骤必须统一使用 V4 签名
+2. 每个 UploadPart 的预签名 URL 需要包含正确的 `partNumber` 和 `uploadId`
+3. Content-Type 在所有步骤中保持一致
+
+---
+
+### 错误三：ossutil 升级到 V2 后报 400 错误
+
+**原因**：ossutil V2 默认使用 V4 签名，需要配置 Region 字段。
+
+**解决方案**：
+```ini
+[default]
+accessKeyID = ****
+accessKeySecret = ****
+endpoint = oss-cn-hangzhou.aliyuncs.com
+region = cn-hangzhou   # 必须添加此行
+```
+
+如果不确定 Bucket 所在地域，可以在 OSS 控制台的 Bucket 概览页查看。
+
+---
+
+### 错误四：WebOffice 在线编辑 URL 有效期限制
+
+**问题**：使用 V4 签名生成 WebOffice 在线编辑 URL 时，设置超过 1 小时的有效期无效。
+
+**原因**：虽然 V4 签名的预签名 URL 支持最长 7 天有效期，但 WebOffice 在线编辑功能受 IMM 服务限制，AccessToken 固定 30 分钟有效，可通过 RefreshWebofficeToken 刷新一次，总计不超过 1 小时。
+
+**解决方案**：
+1. 在前端实现自动刷新逻辑：获取 URL 后启动 25 分钟定时器
+2. 定时器到期前调用 `RefreshWebofficeToken` 接口续期
+3. 每个 RefreshToken 仅可使用一次
+4. 1 小时后需重新获取编辑链接
+
+---
+
+### 错误五：OpenHarmony / ArkTS 环境无法使用 OSS SDK
+
+**问题**：在鸿蒙（OpenHarmony）环境中，OSS SDK 依赖的底层能力未适配，报错 "Cannot read property createSession of undefined"。
+
+**替代方案**：使用 HTTP 表单上传（PostObject）方式，自行计算 V4 签名：
+1. 参考 [PostObject V4 签名文档](https://help.aliyun.com/zh/oss/developer-reference/signature-version-4-recommend)
+2. 在服务端计算好 Policy 和 Signature
+3. 客户端通过 HTTP POST 表单提交文件
+
+---
+
+## V1 与 V4 签名对比
+
+| 对比项 | V1 签名 (OSS2-HMAC-SHA1) | V4 签名 (OSS4-HMAC-SHA256) |
+|--------|--------------------------|---------------------------|
+| 算法 | HMAC-SHA1 | HMAC-SHA256 |
+| 安全性 | 较低 | 更高，包含 Region 防重放 |
+| 预签名 URL 最长有效期 | 无上限（不推荐设过长） | 7 天 (604800 秒) |
+| 是否需要 Region | 否 | 是，必须指定 |
+| URL 参数 | `Expires` + `OSSAccessKeyId` + `Signature` | `x-oss-date` + `x-oss-expires` + `x-oss-credential` + `x-oss-signature` |
+| SDK 支持 | 所有版本 | 需要较新版本 SDK |
+
+---
+
+## 预防措施
+
+- 新项目直接使用 V4 签名，旧项目在 SDK 升级时迁移
+- ossutil 升级到 V2 后，务必在配置文件中添加 `region` 字段
+- 注意 Region 格式为 `cn-hangzhou`，不带 `oss-` 前缀，不带多余字符
+- V4 签名的 7 天有效期上限需要在业务层面做 URL 刷新设计

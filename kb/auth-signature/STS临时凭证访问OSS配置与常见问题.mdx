@@ -1,0 +1,183 @@
+---
+title: "STS 临时凭证访问 OSS 的配置与常见问题"
+description: "- 移动端 App 或前端 Web 应用需要直传文件到 OSS，不希望在客户端暴露长期 AccessKey - 需要为第三方用户授予有限时间和有限权限的 OSS 访问能力"
+icon: "book-open"
+---
+
+## 适用场景
+
+- 移动端 App 或前端 Web 应用需要直传文件到 OSS，不希望在客户端暴露长期 AccessKey
+- 需要为第三方用户授予有限时间和有限权限的 OSS 访问能力
+- 跨账号访问 OSS 资源
+
+---
+
+## 前提条件
+
+1. 已创建 RAM 用户，并为其授予 `AliyunSTSAssumeRoleAccess` 权限
+2. 已创建 RAM 角色，并为角色配置了 OSS 相关权限策略
+3. 已获取 RAM 用户的 AccessKey ID 和 AccessKey Secret
+
+---
+
+## 操作步骤
+
+### Step 1：创建 RAM 角色并配置权限
+
+在 RAM 控制台创建一个角色，信任策略中指定允许调用 AssumeRole 的 RAM 用户。为角色附加 OSS 权限策略，例如：
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "oss:PutObject",
+        "oss:GetObject"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket-name",
+        "acs:oss:*:*:your-bucket-name/*"
+      ]
+    }
+  ]
+}
+```
+
+### Step 2：调用 AssumeRole 获取临时凭证
+
+在服务端调用 STS 的 AssumeRole 接口，获取包含 AccessKeyId、AccessKeySecret 和 SecurityToken 的临时凭证：
+
+```python
+# Python 示例
+from alibabacloud_sts20150401.client import Client
+from alibabacloud_sts20150401.models import AssumeRoleRequest
+from alibabacloud_tea_openapi.models import Config
+
+config = Config(
+    access_key_id='RAM用户的AK',
+    access_key_secret='RAM用户的SK',
+    endpoint='sts.aliyuncs.com'
+)
+client = Client(config)
+request = AssumeRoleRequest(
+    role_arn='acs:ram::主账号ID:role/角色名',
+    role_session_name='session-name',
+    duration_seconds=3600  # 有效期 1 小时，最长 43200 秒（12 小时）
+)
+response = client.assume_role(request)
+
+# 获取三个关键信息
+access_key_id = response.body.credentials.access_key_id
+access_key_secret = response.body.credentials.access_key_secret
+security_token = response.body.credentials.security_token
+```
+
+### Step 3：使用临时凭证初始化 OSS 客户端
+
+```python
+import oss2
+
+auth = oss2.StsAuth(access_key_id, access_key_secret, security_token)
+bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou.aliyuncs.com', 'your-bucket-name')
+
+# 上传文件
+bucket.put_object('test.txt', b'Hello OSS')
+```
+
+```javascript
+// Node.js 示例
+const OSS = require('ali-oss');
+const client = new OSS({
+  region: 'oss-cn-hangzhou',
+  accessKeyId: accessKeyId,
+  accessKeySecret: accessKeySecret,
+  stsToken: securityToken,  // 必须传入 SecurityToken
+  bucket: 'your-bucket-name'
+});
+```
+
+### Step 4：验证
+
+上传一个测试文件，确认返回 HTTP 200，文件在 OSS 控制台中可见。
+
+---
+
+## 常见问题
+
+### Q1：OSS_SESSION_TOKEN 在哪里获取？
+
+OSS_SESSION_TOKEN 就是 STS 临时凭证中的 SecurityToken。它不是在 OSS 控制台获取的，而是通过调用 STS 的 AssumeRole API 返回的三元组之一（AccessKeyId + AccessKeySecret + SecurityToken）。
+
+使用 ossutil 时配置方式：
+```ini
+[default]
+accessKeyID = STS返回的临时AccessKeyId
+accessKeySecret = STS返回的临时AccessKeySecret
+stsToken = STS返回的SecurityToken
+endpoint = oss-cn-hangzhou.aliyuncs.com
+```
+
+---
+
+### Q2：STS Token 过期后 SDK 返回什么错误码？
+
+SecurityToken 过期后，OSS 返回：
+```
+ErrorCode: InvalidAccessKeyId
+ErrorMessage: The OSS Access Key Id you provided does not exist in our records.
+Http Status Code: 403
+```
+
+SDK 返回的错误码因语言而异，但通常包含 `InvalidAccessKeyId`。需要在客户端实现 Token 自动刷新逻辑，在 Token 过期前重新调用 AssumeRole 获取新凭证。
+
+---
+
+### Q3：STS 临时凭证和长期 AccessKey 连接 OSS 有什么区别？
+
+| 对比项 | 长期 AccessKey | STS 临时凭证 |
+|--------|----------------|--------------|
+| 有效期 | 永久有效（除非手动禁用） | 最短 900 秒，最长 43200 秒 |
+| 安全性 | 泄露风险高，需妥善保管 | 自动过期，泄露影响有限 |
+| 权限范围 | 继承 RAM 用户的全部权限 | 可通过 Policy 进一步缩小权限范围 |
+| 使用场景 | 服务端长期运行的程序 | 客户端/前端直传、临时授权 |
+| 初始化方式 | 只需 AK + SK | 需要 AK + SK + SecurityToken |
+
+**推荐**：客户端场景一律使用 STS 临时凭证，服务端场景可使用长期 AccessKey 但需配合 RAM 最小权限原则。
+
+---
+
+### Q4：STS 上传时 OPTIONS 请求返回 403 怎么办？
+
+这通常是跨域（CORS）配置问题，而非 STS 凭证问题。浏览器在发送实际请求前会先发送 OPTIONS 预检请求，如果 OSS Bucket 未配置 CORS 规则，OPTIONS 请求会被拒绝。
+
+解决方案：在 Bucket 的跨域设置中添加 CORS 规则：
+- 来源：`*` 或指定域名
+- 允许 Methods：GET, POST, PUT, HEAD, DELETE
+- 允许 Headers：`*`
+- 暴露 Headers：`ETag, x-oss-request-id`
+
+---
+
+### Q5：前端直传时如何安全传递 STS 凭证？
+
+**推荐流程**：
+
+1. 前端向自己的后端服务请求临时凭证
+2. 后端调用 STS AssumeRole，返回临时 AK/SK/Token 给前端
+3. 前端使用临时凭证直传文件到 OSS
+4. 前端在凭证过期前，再次请求后端刷新凭证
+
+**注意**：不要在前端代码中硬编码长期 AccessKey。
+
+---
+
+### Q6：SecurityToken 和预签名 URL 的区别？
+
+- **STS + SecurityToken**：客户端拿到临时凭证后，可以用 SDK 进行任意授权范围内的操作（上传、下载、列举等）
+- **预签名 URL**：服务端针对单个对象生成带签名的 URL，客户端只能对该特定对象执行特定操作（如下载或上传），无需 SDK
+
+选择建议：
+- 需要批量操作或多次上传 → 使用 STS
+- 只需要单次下载或上传一个文件 → 使用预签名 URL

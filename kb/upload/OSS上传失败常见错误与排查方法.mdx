@@ -1,0 +1,79 @@
+---
+title: "OSS上传失败常见错误与排查方法"
+description: "通过控制台、SDK 或 API 上传文件到 OSS 时失败，可能出现以下表现："
+icon: "wrench"
+---
+
+### 症状
+
+通过控制台、SDK 或 API 上传文件到 OSS 时失败，可能出现以下表现：
+
+- 上传报错，返回错误码
+- 上传显示成功但文件列表中看不到文件
+- 部分文件上传失败
+
+### 常见原因与解决方案
+
+#### 原因一：PostObject 上传超过 5GB 限制
+
+**错误信息：**
+```
+x-oss-ec: 0006-00000003
+文件长度是:1049098526，最大允许值是:1048576000
+```
+
+**说明：** PostObject 接口上传的文件大小不能超过 5GB（精确值为 5×1024×1024×1024 = 5,368,709,120 字节）。Web 端直传常使用此接口。
+
+**解决方案：**
+- 5GB 以内的文件：使用 PutObject 或 PostObject 上传
+- 超过 5GB 的文件：使用分片上传（Multipart Upload）
+- 控制台上传限制为 5GB 以下
+
+#### 原因二：SDK 签名配置错误（V4签名未设置 Region）
+
+**错误信息：**
+```
+java.lang.NullPointerException: Cannot invoke "String.getBytes(java.nio.charset.Charset)" 
+because the return value of "com.aliyun.oss.internal.signer.OSSV4Signer.getRegion()" is null
+```
+
+**说明：** 使用 V4 签名时，必须设置 Region 参数。
+
+**解决方案：** 在初始化 OSSClient 时设置 Region：
+
+```java
+ClientBuilderConfiguration conf = new ClientBuilderConfiguration();
+conf.setSignatureVersion(SignVersion.V4);
+OSS ossClient = OSSClientBuilder.create()
+    .endpoint("oss-cn-hangzhou.aliyuncs.com")
+    .credentialsProvider(credentialsProvider)
+    .clientConfiguration(conf)
+    .region("cn-hangzhou")  // 必须设置
+    .build();
+```
+
+#### 原因三：文件名包含特殊字符
+
+**表现：** 上传提示成功，但控制台文件列表中看不到文件。使用 ossbrowser 通过路径访问时能看到。
+
+**说明：** OSS 是扁平化存储，没有真正的目录概念。文件名（Key）中的斜杠 `/` 用于模拟目录结构。如果 Key 以 `/` 开头或包含连续 `//`，可能导致控制台显示异常。
+
+**解决方案：**
+- 避免文件名以 `/` 开头
+- 避免文件名中出现连续 `//`
+- 避免使用其他特殊字符（如 `\`、`#`、`?` 等）
+
+#### 原因四：批量上传部分文件丢失
+
+**表现：** 批量上传多个文件时，部分文件上传成功但列表中未显示。
+
+**排查步骤：**
+1. 检查上传日志，确认每个文件的上传结果
+2. 打开浏览器 F12 > Console 和 Network > Headers 查看具体错误返回
+3. 检查是否存在同名文件覆盖的情况
+
+### 通用排查方法
+
+1. **获取 RequestId**：每次 OSS 请求都会返回 `x-oss-request-id`，这是排查问题的关键信息。
+2. **使用 OSS 报错自助诊断工具**：在 OSS 控制台提供报错信息进行快速诊断。
+3. **开启实时日志查询**：通过日志服务分析上传请求的详细信息。

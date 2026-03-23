@@ -1,0 +1,60 @@
+---
+title: "OSS搭配CDN使用的计费说明"
+description: "使用 CDN 加速 OSS 资源访问时，流量计费方式会发生变化。了解 CDN + OSS 的计费逻辑可以帮助您合理选购资源包。"
+icon: "message-circle-question"
+---
+
+# OSS搭配CDN使用的计费说明
+
+使用 CDN 加速 OSS 资源访问时，流量计费方式会发生变化。了解 CDN + OSS 的计费逻辑可以帮助您合理选购资源包。
+
+## CDN + OSS 的流量链路
+
+```
+用户 --[CDN下行流量]--> CDN节点 --[CDN回源流量]--> OSS
+```
+
+### 各环节计费
+
+| 计费项 | 产生位置 | 价格参考 | 对应资源包 |
+|--------|---------|---------|-----------|
+| CDN 下行流量 | CDN → 用户 | 按 CDN 定价 | CDN 流量包 |
+| CDN 回源流出流量 | OSS → CDN | 0.15 元/GB | OSS 回源流量包 |
+| OSS 存储费用 | OSS 存储 | 按存储类型定价 | OSS 存储包 |
+
+### 使用 CDN 后的变化
+
+- **不再产生 OSS 外网流出流量**（用户不直接访问 OSS）
+- **改为产生 CDN 回源流出流量**（CDN 从 OSS 拉取文件）
+- CDN 回源流量（0.15 元/GB）比 OSS 外网流出流量（0.50 元/GB 忙时）更便宜
+
+## 常见问题
+
+**Q：用了 CDN 后，之前买的 OSS 下行流量包还有用吗？**
+
+如果所有访问都通过 CDN，OSS 不再产生外网流出流量，OSS 下行流量包就用不上了。可以考虑退订 OSS 下行流量包，改为购买：
+1. CDN 流量包（抵扣 CDN 下行流量）
+2. OSS 回源流量包（抵扣 OSS CDN 回源流量）
+
+**Q：CDN 和 OSS 之间走内网还是公网？**
+
+CDN 回源 OSS 走阿里云内部网络，但仍然按 CDN 回源流量计费（不免费）。
+
+**Q：使用 CDN 一定更省钱吗？**
+
+通常更省钱，因为：
+- CDN 有缓存命中，回源流量远小于总访问流量
+- 回源单价低于外网流出单价
+
+但如果文件被访问频率很低（几乎没有缓存命中），CDN 反而增加了一层费用。
+
+**Q：用了 CDN 后 OSS 资源包怎么买？**
+
+- **继续购买**：OSS 存储包（抵扣存储费用）
+- **可能需要购买**：OSS 回源流量包（抵扣 CDN 回源流量）
+- **可以不买**：OSS 下行流量包（用户不再直接访问 OSS）
+
+## 相关链接
+
+- [CDN 加速 OSS 资源](https://help.aliyun.com/zh/cdn/use-cases/accelerate-the-retrieval-of-resources-from-oss)
+- [OSS 流量计费](https://help.aliyun.com/zh/oss/product-overview/traffic-fees)

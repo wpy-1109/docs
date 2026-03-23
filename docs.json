@@ -39,32 +39,66 @@
       {
         "header": "Product",
         "items": [
-          { "label": "OSS Overview", "href": "https://www.alibabacloud.com/product/object-storage-service" },
-          { "label": "Pricing", "href": "https://www.alibabacloud.com/product/object-storage-service/pricing" },
-          { "label": "Free Trial", "href": "https://www.alibabacloud.com/product/object-storage-service" }
+          {
+            "label": "OSS Overview",
+            "href": "https://www.alibabacloud.com/product/object-storage-service"
+          },
+          {
+            "label": "Pricing",
+            "href": "https://www.alibabacloud.com/product/object-storage-service/pricing"
+          },
+          {
+            "label": "Free Trial",
+            "href": "https://www.alibabacloud.com/product/object-storage-service"
+          }
         ]
       },
       {
         "header": "Resources",
         "items": [
-          { "label": "Blog", "href": "https://www.alibabacloud.com/blog" },
-          { "label": "Community", "href": "https://www.alibabacloud.com/forum" },
-          { "label": "Support", "href": "https://www.alibabacloud.com/help" }
+          {
+            "label": "Blog",
+            "href": "https://www.alibabacloud.com/blog"
+          },
+          {
+            "label": "Community",
+            "href": "https://www.alibabacloud.com/forum"
+          },
+          {
+            "label": "Support",
+            "href": "https://www.alibabacloud.com/help"
+          }
         ]
       },
       {
         "header": "SDKs",
         "items": [
-          { "label": "Java SDK", "href": "https://github.com/aliyun/aliyun-oss-java-sdk" },
-          { "label": "Python SDK", "href": "https://github.com/aliyun/aliyun-oss-python-sdk" },
-          { "label": "Go SDK", "href": "https://github.com/aliyun/alibabacloud-oss-go-sdk-v2" },
-          { "label": "Node.js SDK", "href": "https://github.com/ali-sdk/ali-oss" }
+          {
+            "label": "Java SDK",
+            "href": "https://github.com/aliyun/aliyun-oss-java-sdk"
+          },
+          {
+            "label": "Python SDK",
+            "href": "https://github.com/aliyun/aliyun-oss-python-sdk"
+          },
+          {
+            "label": "Go SDK",
+            "href": "https://github.com/aliyun/alibabacloud-oss-go-sdk-v2"
+          },
+          {
+            "label": "Node.js SDK",
+            "href": "https://github.com/ali-sdk/ali-oss"
+          }
         ]
       }
     ]
   },
   "contextual": {
-    "options": ["copy", "view", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "claude"
+    ]
   },
   "seo": {
     "indexHiddenPages": false
@@ -130,6 +164,164 @@
             "pages": [
               "cpfs/cpfs-lingjun-mount-pai",
               "cpfs/cpfs-lingjun-mount-acs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Knowledge Base",
+        "groups": [
+          {
+            "group": "Billing & Packages (计费与资源包)",
+            "pages": [
+              "kb/billing/ECS快照能用OSS资源包抵扣吗",
+              "kb/billing/OSS不用了还在扣费怎么办",
+              "kb/billing/OSS免费试用额度说明",
+              "kb/billing/OSS内网访问与跨地域访问的计费区别",
+              "kb/billing/OSS同城冗余与本地冗余的区别和费用对比",
+              "kb/billing/OSS外网流出流量费用说明与优化",
+              "kb/billing/OSS存储包与流量包有什么区别",
+              "kb/billing/OSS存储类型转换与生命周期管理",
+              "kb/billing/OSS搭配CDN使用的计费说明",
+              "kb/billing/OSS欠费停服后如何处理",
+              "kb/billing/OSS欠费后数据被删除了还能恢复吗",
+              "kb/billing/OSS计费模式与资源包常见问题",
+              "kb/billing/OSS计费规则与费用构成详解",
+              "kb/billing/OSS请求次数费用说明与资源包购买",
+              "kb/billing/OSS费用优化建议与成本控制方案",
+              "kb/billing/OSS资源包叠加购买与地域匹配规则",
+              "kb/billing/OSS资源包续费指南与过期处理",
+              "kb/billing/OSS资源包购买指南与选型建议",
+              "kb/billing/买了OSS资源包为什么还在扣费",
+              "kb/billing/如何停止OSS计费和删除Bucket",
+              "kb/billing/如何查看OSS费用明细与排查异常扣费",
+              "kb/billing/如何退订OSS资源包"
+            ]
+          },
+          {
+            "group": "Access Control (访问控制与权限)",
+            "pages": [
+              "kb/access-control/Bucket Policy中配置IP和VPC访问限制",
+              "kb/access-control/CDN回源私有OSS Bucket的配置方法",
+              "kb/access-control/OSS AccessDenied 403错误排查指南",
+              "kb/access-control/OSS AccessKey安全管理与泄露应急处理",
+              "kb/access-control/OSS Bucket Policy配置指南",
+              "kb/access-control/OSS Bucket和Object的ACL权限说明",
+              "kb/access-control/OSS内网访问与VPC Endpoint配置",
+              "kb/access-control/OSS网站资源被盗刷导致流量费用异常的应急处理",
+              "kb/access-control/OSS访问控制体系概览与选型建议",
+              "kb/access-control/OSS阻止公共访问功能说明与常见问题",
+              "kb/access-control/RAM用户ListBucket权限配置与常见问题",
+              "kb/access-control/RAM用户只授权访问指定目录的配置方法",
+              "kb/access-control/RAM用户无法删除OSS文件的解决方法",
+              "kb/access-control/如何为RAM用户授权访问指定OSS Bucket",
+              "kb/access-control/微信小程序直传OSS的权限配置",
+              "kb/access-control/私有Bucket中的文件如何对外提供访问",
+              "kb/access-control/跨账号访问OSS Bucket的配置方法"
+            ]
+          },
+          {
+            "group": "Domain & Network (域名与网络)",
+            "pages": [
+              "kb/domain-network/CDN-ESA加速OSS的架构配置与流量异常排查",
+              "kb/domain-network/CDN加速OSS后资源更新未生效缓存刷新问题",
+              "kb/domain-network/OSS Endpoint选择错误导致访问失败或速度慢",
+              "kb/domain-network/OSS上传下载速度慢的排查与优化",
+              "kb/domain-network/OSS传输加速配置与海外访问速度优化",
+              "kb/domain-network/OSS图片处理与样式配置常见问题",
+              "kb/domain-network/OSS在线预览文件配置指南",
+              "kb/domain-network/OSS域名解析DNS配置常见问题",
+              "kb/domain-network/OSS文件下载时文件名乱码或丢失的解决方案",
+              "kb/domain-network/OSS流量带宽限制与QPS配额说明",
+              "kb/domain-network/OSS绑定自定义域名常见问题与配置指南",
+              "kb/domain-network/OSS网络连接异常与SDK报错排查",
+              "kb/domain-network/OSS自定义域名HTTPS证书配置与常见报错处理",
+              "kb/domain-network/OSS资源无法访问403-404-UserDisable排查指南",
+              "kb/domain-network/OSS跨区域复制配置与进度异常排查",
+              "kb/domain-network/OSS跨域CORS配置后仍然报错No Access-Control-Allow-Origin",
+              "kb/domain-network/OSS镜像回源配置与常见问题排查",
+              "kb/domain-network/OSS防盗链Referer配置导致图片无法显示或访问被拒绝",
+              "kb/domain-network/OSS静态网站托管配置访问HTML变成下载的解决方案",
+              "kb/domain-network/通过PrivateLink从VPC内网访问OSS的配置指南"
+            ]
+          },
+          {
+            "group": "Auth & Signatures (签名与认证)",
+            "pages": [
+              "kb/auth-signature/OSS AccessKey配置查找与安全管理",
+              "kb/auth-signature/OSS V4签名迁移配置与常见错误",
+              "kb/auth-signature/OSS前端直传与PostObject签名配置指南",
+              "kb/auth-signature/OSS签名URL中文件预览与下载行为控制",
+              "kb/auth-signature/OSS签名错误SignatureDoesNotMatch排查指南",
+              "kb/auth-signature/OSS认证403错误与InvalidAccessKeyId排查",
+              "kb/auth-signature/OSS跨域CORS配置与签名请求跨域问题排查",
+              "kb/auth-signature/OSS预签名URL生成使用与常见报错处理",
+              "kb/auth-signature/STS临时凭证访问OSS配置与常见问题"
+            ]
+          },
+          {
+            "group": "Security (安全与合规)",
+            "pages": [
+              "kb/security/OSS内容安全检测与违规文件处理",
+              "kb/security/OSS文件误删除后如何恢复数据",
+              "kb/security/OSS日志审计与操作追踪",
+              "kb/security/OSS版本控制与WORM策略常见问题",
+              "kb/security/OSS访问日志目录oss-accesslog无法删除"
+            ]
+          },
+          {
+            "group": "Upload & Transfer (上传与传输)",
+            "pages": [
+              "kb/upload/OSS上传失败常见错误与排查方法",
+              "kb/upload/OSS上传文件名与目录结构常见问题",
+              "kb/upload/OSS各上传方式的文件大小限制",
+              "kb/upload/ossutil增量同步与cp-sync命令对比"
+            ]
+          },
+          {
+            "group": "Download & Preview (下载与预览)",
+            "pages": [
+              "kb/download/OSS文件下载与批量下载方法"
+            ]
+          },
+          {
+            "group": "Data Management (数据管理)",
+            "pages": [
+              "kb/data-management/OSS存储用量查询与成本分析",
+              "kb/data-management/OSS批量删除文件与清理存储空间",
+              "kb/data-management/OSS生命周期规则配置与自动数据清理"
+            ]
+          },
+          {
+            "group": "Data Migration (数据迁移与复制)",
+            "pages": [
+              "kb/data-migration/OSS数据迁移方式选择与常见问题"
+            ]
+          },
+          {
+            "group": "Data Processing (数据处理)",
+            "pages": [
+              "kb/data-processing/OSS图片处理与格式转换"
+            ]
+          },
+          {
+            "group": "Storage Config (存储配置)",
+            "pages": [
+              "kb/storage-config/OSS存储类型转换与解冻操作"
+            ]
+          },
+          {
+            "group": "Tools (工具与客户端)",
+            "pages": [
+              "kb/tools/ossbrowser和ossutil工具使用常见问题"
+            ]
+          },
+          {
+            "group": "Other (其他)",
+            "pages": [
+              "kb/misc/OSS-Bucket基础操作常见问题",
+              "kb/misc/OSS批量导出文件URL与数据查询",
+              "kb/misc/OSS有效请求率报警排查与处理"
             ]
           }
         ]

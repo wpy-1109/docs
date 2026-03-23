@@ -1,0 +1,82 @@
+---
+title: "OSS 域名解析（DNS）配置常见问题"
+description: "绑定自定义域名到 OSS 需要两步 DNS 配置："
+icon: "message-circle-question"
+---
+
+# OSS 域名解析（DNS）配置常见问题
+
+## Q1：绑定自定义域名时需要添加哪些 DNS 记录？
+
+绑定自定义域名到 OSS 需要两步 DNS 配置：
+
+**第一步：域名所有权验证（TXT 记录）**
+| 主机记录 | 记录类型 | 记录值 |
+|---------|---------|--------|
+| `_dnsauth.{子域名}` | TXT | OSS 控制台提供的验证码 |
+
+例如域名为 `static.example.com`，主机记录填 `_dnsauth.static`。
+
+**第二步：CNAME 指向 OSS（CNAME 记录）**
+| 主机记录 | 记录类型 | 记录值 |
+|---------|---------|--------|
+| `static` | CNAME | `bucket-name.oss-cn-hangzhou.aliyuncs.com` |
+
+## Q2：添加了 TXT 记录但验证仍不通过？
+
+排查步骤：
+1. 确认主机记录格式正确：`_dnsauth.{子域名部分}`，不需要包含主域名
+2. 确认记录值与 OSS 控制台显示的完全一致，不要有多余空格
+3. DNS 生效需要时间，等待 10-30 分钟后重试
+4. 使用命令验证：
+```bash
+nslookup -type=TXT _dnsauth.static.example.com
+# 或
+dig TXT _dnsauth.static.example.com
+```
+
+## Q3：提示"解析记录重复"怎么办？
+
+同一个主机记录不能同时存在 CNAME 和 A 记录。解决方案：
+- 删除冲突的 A 记录，保留 CNAME 记录
+- 如果需要裸域名（如 `example.com`）指向 OSS，部分 DNS 服务商支持 CNAME 扁平化
+
+## Q4：域名在 GoDaddy/Cloudflare 等海外注册商，解析怎么配？
+
+配置方式相同，只是操作界面不同：
+1. 登录海外 DNS 服务商后台
+2. 添加 TXT 记录用于验证
+3. 添加 CNAME 记录指向 OSS
+
+> **注意**：`.io`、`.ai` 等域名后缀如果 Bucket 在中国内地，需要先完成 ICP 备案。部分后缀不支持国内备案，建议使用海外地域 Bucket。
+
+## Q5：怎么通过 OSS 做域名所有权验证（可信域名校验）？
+
+部分第三方服务要求在域名下放置验证文件。操作步骤：
+1. 将验证文件上传到 OSS Bucket
+2. 绑定域名到该 Bucket
+3. 确保通过域名可以访问到该验证文件
+4. 到第三方服务进行验证
+
+## Q6：CNAME 记录值应该填什么？
+
+填写 Bucket 的外网访问域名，不要加 `http://` 或 `https://` 前缀：
+```
+# 正确
+bucket-name.oss-cn-hangzhou.aliyuncs.com
+
+# 错误
+http://bucket-name.oss-cn-hangzhou.aliyuncs.com
+https://bucket-name.oss-cn-hangzhou.aliyuncs.com
+```
+
+如果使用了 CDN 加速，CNAME 应指向 CDN 分配的域名而非 OSS 域名。
+
+## Q7：域名解析到 OSS 后还是打不开？
+
+按以下顺序排查：
+1. 确认域名解析已生效：`nslookup yourdomain.com`
+2. 确认 Bucket 中有文件
+3. 确认文件路径正确（OSS 的 Object Key 区分大小写）
+4. 检查 Bucket 是否设置了访问控制（ACL）
+5. 检查是否配置了 HTTPS 但未托管证书

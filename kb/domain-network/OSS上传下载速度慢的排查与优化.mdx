@@ -1,0 +1,102 @@
+---
+title: "OSS 上传下载速度慢的排查与优化"
+description: "- 通过控制台/SDK/ossutil 上传文件到 OSS 速度远低于预期 - 下载 OSS 文件时速度只有几百 KB/s - 上传过程中偶尔失败或超时 - ossbrowser 上传大文件时中断"
+icon: "wrench"
+---
+
+# OSS 上传下载速度慢的排查与优化
+
+## 症状
+
+- 通过控制台/SDK/ossutil 上传文件到 OSS 速度远低于预期
+- 下载 OSS 文件时速度只有几百 KB/s
+- 上传过程中偶尔失败或超时
+- ossbrowser 上传大文件时中断
+
+## 原因分析
+
+OSS 侧的带宽非常充裕（默认 10 Gbps 以上），上传下载慢通常不是 OSS 服务端的问题。常见原因：
+
+1. **客户端网络带宽不足**：上行带宽是瓶颈，尤其是家庭宽带上行通常只有几 Mbps
+2. **Endpoint 选择不当**：使用外网 Endpoint 访问同地域 OSS，而非内网 Endpoint
+3. **跨地域传输**：客户端与 Bucket 不在同一地域，跨地域公网传输慢
+4. **单线程传输**：大文件未使用分片上传/并行下载
+5. **工具选择不当**：ossbrowser 不适合 10GB 以上文件，应使用 ossutil
+6. **客户端 DNS 解析异常**：解析到较远的 OSS 节点
+
+## 解决方案
+
+### 方案 1：使用内网 Endpoint（ECS 同地域场景）
+
+如果客户端是同地域的 ECS，必须使用内网 Endpoint：
+```
+# 外网 Endpoint（慢）
+oss-cn-hangzhou.aliyuncs.com
+
+# 内网 Endpoint（快，且免流量费）
+oss-cn-hangzhou-internal.aliyuncs.com
+```
+
+### 方案 2：使用 ossutil 替代 ossbrowser
+
+对于大文件（>10GB），建议使用 ossutil 命令行工具：
+```bash
+# 上传文件（自动使用分片上传+断点续传）
+ossutil cp /local/path/large-file.zip oss://bucket-name/path/ --parallel 10
+
+# 下载文件
+ossutil cp oss://bucket-name/path/large-file.zip /local/path/ --parallel 10
+```
+
+关键参数：
+- `--parallel`：并行任务数，可设为 10-30
+- `--part-size`：分片大小，默认自动选择
+- 断点续传自动生效，中断后重新运行即可续传
+
+### 方案 3：开启传输加速（跨境场景）
+
+如果客户端在海外但 Bucket 在国内（或反之），开启传输加速：
+```
+endpoint = "oss-accelerate.aliyuncs.com"
+```
+
+### 方案 4：优化上传代码
+
+SDK 层面的优化：
+- 使用分片上传（Multipart Upload）处理大文件
+- 设置合理的超时时间
+- 启用 CRC64 校验确保数据完整性
+- 使用并行上传多个小文件
+
+### 方案 5：排查网络链路
+
+```bash
+# 测试到 OSS Endpoint 的网络延迟
+ping bucket-name.oss-cn-hangzhou.aliyuncs.com
+
+# 测试下载速度
+curl -o /dev/null -w "speed: %{speed_download}\n" \
+  "https://bucket-name.oss-cn-hangzhou.aliyuncs.com/test-file"
+
+# 路由追踪
+traceroute oss-cn-hangzhou.aliyuncs.com
+```
+
+## 上传工具选择指南
+
+| 文件大小 | 推荐工具 | 说明 |
+|---------|---------|------|
+| < 100MB | ossbrowser / 控制台 | 简单直观 |
+| 100MB - 10GB | ossbrowser / ossutil | 都可以 |
+| > 10GB | ossutil | 必须使用，支持断点续传 |
+| > 48.8TB | 不支持 | OSS 单文件上限 48.8TB |
+| 海量小文件 | ossutil（并行） | `ossutil cp -r --parallel 30` |
+
+## 仍有问题？
+
+请提供以下信息提交工单：
+1. Bucket 名称和地域
+2. 客户端所在位置和网络环境
+3. 使用的 Endpoint
+4. 文件大小和上传/下载耗时
+5. ossutil 加 `--loglevel debug` 的日志

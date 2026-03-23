@@ -1,0 +1,151 @@
+---
+title: "OSS 报错 SignatureDoesNotMatch 的常见原因与排查方法"
+description: "调用 OSS API、SDK 或使用 ossutil 操作时，返回以下错误："
+icon: "wrench"
+---
+
+## 症状
+
+调用 OSS API、SDK 或使用 ossutil 操作时，返回以下错误：
+
+```
+ErrorCode: SignatureDoesNotMatch
+ErrorMessage: The request signature we calculated does not match the signature you provided. Check your key and signing method.
+Http Status Code: 403
+```
+
+常见的 Ec 错误码包括 `0002-00000040`（通用签名不匹配）和 `0002-00000705`（PostObject 签名不匹配）。
+
+---
+
+## 原因与解决方案
+
+### 原因一：AccessKey Secret 填写错误
+
+**表现**：所有请求均报 SignatureDoesNotMatch。
+
+**排查方法**：
+
+1. 检查 AccessKey Secret 前后是否有多余的空格或换行符。
+2. 确认使用的是当前启用状态的 AccessKey，而非已禁用或已删除的旧 Key。
+3. 生成一个预签名 URL 并在浏览器中访问，验证 AK/SK 是否有效：
+   ```
+   # 如果预签名 URL 能正常访问，说明 AK/SK 本身没问题
+   # 问题出在其他签名参数上
+   ```
+
+**解决方案**：登录 [RAM 控制台](https://ram.console.aliyun.com/manage/ak) 确认 AccessKey 状态，重新复制 AccessKey Secret 并粘贴到配置中。
+
+---
+
+### 原因二：Content-Type 不匹配
+
+**表现**：使用预签名 URL 上传时报签名错误，尤其在浏览器或前端直传场景中。
+
+**原理**：Content-Type 参与签名计算。如果服务端生成预签名 URL 时的 Content-Type 与客户端实际请求时携带的 Content-Type 不一致，签名校验就会失败。浏览器在发送请求时会自动添加 Content-Type（如 `multipart/form-data`），导致与服务端签名时使用的值不同。
+
+**典型场景**：
+- 服务端生成预签名 URL 时未指定 Content-Type，但客户端发送了 `application/octet-stream`
+- 服务端指定了 `image/jpeg`，但客户端上传的是 `.zip` 文件，浏览器自动设为 `application/zip`
+- V4 签名的分片上传场景中，initiate 和 uploadPart 的 Content-Type 不一致
+
+**解决方案**：
+
+1. 在服务端生成预签名 URL 时，明确指定 Content-Type，确保与客户端实际发送的值一致：
+   ```java
+   // Java SDK 示例
+   GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, objectName, HttpMethod.PUT);
+   request.setContentType("application/octet-stream"); // 明确指定
+   ```
+2. 如果客户端 Content-Type 不可控，服务端生成签名时也不要指定 Content-Type，且客户端也不要设置任何 Content-Type header。
+3. **注意**：OSS 不支持"不校验 Content-Type"的模式，Content-Type 始终参与签名计算。
+
+---
+
+### 原因三：Object Key 以 `/` 开头
+
+**表现**：上传、复制或删除特定文件时报签名错误，而其他文件正常。
+
+**原理**：OSS 的 Object Key 不应以 `/` 开头。以 `/` 开头的 Key 会导致签名计算中 CanonicalizedResource 的拼接与预期不一致。
+
+**典型场景**：
+- CopyObject 时源文件路径写成 `/order/contract/file.pdf`（多了一个前导 `/`）
+- 文件名中包含双斜杠 `//`（如 `path//filename.jpg`），导致签名计算异常
+
+**解决方案**：
+
+1. 确保 Object Key 不以 `/` 开头，例如使用 `order/contract/file.pdf` 而不是 `/order/contract/file.pdf`。
+2. 如果文件名中确实包含 `//`，建议使用官方 SDK 操作（SDK 会自动处理签名细节），避免手动拼接签名。
+
+---
+
+### 原因四：ossutil 配置错误
+
+**表现**：使用 ossutil 执行任何命令（如 `ossutil ls`）均报 SignatureDoesNotMatch。
+
+**常见错误**：
+- Endpoint 填写了包含 Bucket 名称的地址（如 `mybucket.oss-cn-hangzhou.aliyuncs.com`），应填写不带 Bucket 的地域 Endpoint
+- stsToken 字段填写了错误的值（使用长期 AK 时应留空，直接回车跳过）
+- Region 字段填写格式错误（V4 签名下新增的字段）
+
+**正确的 ossutil 配置**：
+
+```ini
+[default]
+accessKeyID = LTAI5t****
+accessKeySecret = ****
+endpoint = oss-cn-hangzhou.aliyuncs.com
+# stsToken 留空（使用长期 AK 时不需要填写）
+# Region = cn-hangzhou（ossutil V2 版本需要）
+```
+
+**注意**：
+- Endpoint 格式为 `oss-{region}.aliyuncs.com`，不带 Bucket 名称
+- 如果使用 ossutil V2（支持 V4 签名），Region 填写 `cn-hangzhou` 而不是 `oss-cn-hangzhou`
+
+---
+
+### 原因五：AWS SDK 兼容 S3 访问 OSS 签名不匹配
+
+**表现**：使用 AWS SDK（Java/Python/Go 等）通过 S3 兼容接口访问 OSS 时报 SignatureDoesNotMatch。
+
+**常见错误**：
+- Endpoint 格式错误，应使用 `https://s3.oss-cn-beijing.aliyuncs.com`（注意 `s3.` 前缀）
+- Endpoint 末尾多了 `/`（如 `https://oss-cn-beijing.aliyuncs.com/`）
+- 启用了 chunked encoding（OSS 不支持）
+- pathStyleAccess 设置不正确
+
+**解决方案**：
+
+1. Endpoint 使用 `https://s3.oss-{region}.aliyuncs.com` 格式
+2. 关闭 chunked encoding
+3. 设置 `pathStyleAccessEnabled = false`
+4. 如非必须，建议优先使用阿里云官方 OSS SDK，避免 S3 兼容性问题
+
+---
+
+### 原因六：URL 编码问题
+
+**表现**：手动拼接签名 URL 时报错，尤其在 Object Key 包含中文或特殊字符时。
+
+**解决方案**：
+- 使用官方 SDK 生成签名 URL，SDK 会自动处理 URL 编码
+- 如果必须手动签名，确保 CanonicalizedResource 中的 Object Key 使用 UTF-8 编码且正确进行 URL 编码
+
+---
+
+## 通用排查步骤
+
+1. **确认 AK/SK 有效**：使用同一对 AK/SK 生成预签名 URL，在浏览器中访问验证。
+2. **对比签名字符串**：错误响应中会返回服务端计算使用的 StringToSign（16 进制格式），将其与客户端构造的待签名字符串对比，定位差异字段。
+3. **使用官方 SDK**：手动签名容易出错，建议优先使用阿里云官方 SDK，并升级到最新版本。
+4. **检查 RequestId**：提供 RequestId 给阿里云技术支持，可以快速定位服务端日志。
+
+---
+
+## 预防措施
+
+- 使用环境变量或配置中心管理 AccessKey，避免硬编码导致的拼写错误
+- 使用官方 SDK 而非手动构造签名请求
+- 在预签名 URL 场景中，服务端和客户端约定好 Content-Type
+- 定期轮换 AccessKey，避免使用已泄露或已禁用的旧 Key

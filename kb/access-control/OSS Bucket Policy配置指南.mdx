@@ -1,0 +1,128 @@
+---
+title: "OSS Bucket Policy 配置指南"
+description: "需要对 OSS Bucket 设置灵活的访问控制策略，比如限制特定用户只能读取、允许匿名用户访问指定目录、或基于 IP 限制访问。本文介绍 Bucket Policy 的配置方法和常见策略示例。"
+icon: "book-open"
+---
+
+# OSS Bucket Policy 配置指南
+
+需要对 OSS Bucket 设置灵活的访问控制策略，比如限制特定用户只能读取、允许匿名用户访问指定目录、或基于 IP 限制访问。本文介绍 Bucket Policy 的配置方法和常见策略示例。
+
+## 适用场景
+
+- 无需在 RAM 控制台操作，直接在 Bucket 层面授权。
+- 需要对非当前账号下的用户（跨账号）授权访问。
+- 需要基于 IP 地址、VPC、Referer 等条件进行精细控制。
+- 需要对 Bucket 下的指定目录单独设置访问权限。
+
+## 前提条件
+
+- 拥有 Bucket 所有者权限或具有 `oss:PutBucketPolicy` 权限的 RAM 用户。
+
+## 操作步骤
+
+### 通过控制台配置
+
+1. 登录 OSS 控制台，进入目标 Bucket。
+2. 点击 **权限控制** > **Bucket 授权策略** > **新增授权**。
+3. 根据需求配置：
+   - **授权用户**：指定 RAM 用户 UID、匿名用户或所有用户。
+   - **授权资源**：整个 Bucket 或指定前缀路径。
+   - **授权操作**：只读、读写、完全控制或自定义。
+   - **条件**：可选配置 IP 地址、VPC、Referer 等。
+
+### 通过语法配置（JSON）
+
+如需更精细的控制，切换到**语法配置**模式，直接编辑 JSON：
+
+**示例 1：允许指定 RAM 用户读写整个 Bucket**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": ["ram用户的UID"],
+      "Action": [
+        "oss:GetObject",
+        "oss:PutObject",
+        "oss:ListObjects"
+      ],
+      "Resource": [
+        "acs:oss:*:*:your-bucket",
+        "acs:oss:*:*:your-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+**示例 2：允许所有人读取指定目录**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": ["*"],
+      "Action": ["oss:GetObject"],
+      "Resource": [
+        "acs:oss:*:*:your-bucket/public/*"
+      ]
+    }
+  ]
+}
+```
+
+**示例 3：拒绝非指定 IP 的所有访问**
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": ["*"],
+      "Action": ["oss:*"],
+      "Resource": [
+        "acs:oss:*:*:your-bucket",
+        "acs:oss:*:*:your-bucket/*"
+      ],
+      "Condition": {
+        "NotIpAddress": {
+          "acs:SourceIp": ["122.224.132.181"]
+        },
+        "StringNotEquals": {
+          "acs:SourceVpc": ["vpc-xxx"]
+        }
+      }
+    }
+  ]
+}
+```
+
+## 验证结果
+
+配置完成后，使用目标用户身份测试访问。可通过 ossutil 或 SDK 验证，确认预期的操作被允许或拒绝。
+
+## 常见问题
+
+**Q: Bucket Policy 和 RAM Policy 有什么区别？**
+
+- **RAM Policy**：在 RAM 控制台配置，绑定到用户/角色，管理维度是"谁能做什么"。
+- **Bucket Policy**：在 OSS 控制台配置，绑定到 Bucket，管理维度是"谁能访问这个 Bucket"。
+- 两者同时生效时，任何一方的显式 Deny 都会拒绝访问。
+
+**Q: Resource 中的路径不支持通配到文件后缀？**
+
+正确。Resource 字段支持通配符 `*`，但只能用于路径前缀匹配（如 `bucket/folder/*`），不支持后缀匹配（如 `bucket/folder/*.html`）。如需限制文件类型，需要通过应用层逻辑实现。
+
+**Q: 配置了 Bucket Policy 后，主账号也被拒绝了？**
+
+如果 Policy 中设置了 `"Principal": ["*"]` + `"Effect": "Deny"`，会影响包括主账号在内的所有用户。建议在 Deny 策略中加入排除条件，或仅对特定用户设置 Deny。
+
+**Q: 拒绝某个 Bucket 的公共访问，但不想影响其他 Bucket？**
+
+可以用 Bucket Policy 拒绝匿名请求来替代全局的"阻止公共访问"设置，这样只影响当前 Bucket。

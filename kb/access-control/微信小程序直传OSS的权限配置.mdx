@@ -1,0 +1,89 @@
+---
+title: "微信小程序直传 OSS 的权限配置"
+description: "在微信小程序中实现文件直传 OSS，不经过业务服务器中转。本文介绍权限配置和常见问题处理。"
+icon: "book-open"
+---
+
+# 微信小程序直传 OSS 的权限配置
+
+在微信小程序中实现文件直传 OSS，不经过业务服务器中转。本文介绍权限配置和常见问题处理。
+
+## 适用场景
+
+- 微信小程序中用户上传图片、视频等文件到 OSS。
+- 不想让文件流经业务服务器，减少服务器带宽压力。
+
+## 前提条件
+
+- 已创建 OSS Bucket。
+- 业务服务端可以调用 STS 接口获取临时凭证。
+
+## 操作步骤
+
+### 1. 服务端：生成 STS 临时凭证
+
+参见 [使用 STS 临时凭证访问 OSS](./使用STS临时凭证访问OSS.md)，在服务端调用 AssumeRole 获取临时凭证，返回给小程序端。
+
+> **注意**：AssumeRole 必须使用 RAM 用户的 AK 调用，不能使用主账号 AK。
+
+### 2. 小程序端：使用临时凭证上传
+
+微信小程序使用 `wx.uploadFile`（表单上传 / PostObject）方式上传：
+
+```javascript
+// 从服务端获取临时凭证
+const credentials = await fetchSTSCredentials();
+
+wx.uploadFile({
+  url: 'https://your-bucket.oss-cn-hangzhou.aliyuncs.com',
+  filePath: tempFilePath,
+  name: 'file',
+  formData: {
+    key: 'uploads/' + fileName,
+    policy: base64Policy,
+    OSSAccessKeyId: credentials.AccessKeyId,
+    signature: signature,
+    'x-oss-security-token': credentials.SecurityToken,
+    success_action_status: '200'
+  },
+  success(res) {
+    console.log('Upload success', res);
+  }
+});
+```
+
+### 3. OSS 侧：配置 CORS
+
+微信小程序直传需要 OSS Bucket 配置 CORS 规则：
+
+1. 进入 OSS 控制台 > Bucket > **权限控制** > **跨域设置**。
+2. 添加规则：
+   - 来源：`*`
+   - 允许方法：`POST, PUT, GET, HEAD`
+   - 允许头：`*`
+   - 暴露头：`ETag, x-oss-request-id`
+
+## 验证结果
+
+在小程序中上传一张测试图片，确认上传成功后在 OSS 控制台能看到对应文件。
+
+## 常见问题
+
+**Q: 上传报错 `RequestError: XHR error`？**
+
+- 检查 CORS 规则是否正确配置。
+- 检查 Bucket 的 ACL 是否为私有但未正确传入签名/凭证。
+- 检查微信小程序是否在开发者工具中勾选了"不校验合法域名"（开发阶段）。
+- 生产环境需要在微信公众平台配置合法请求域名。
+
+**Q: 小程序中加载 OSS 私有图片返回 403？**
+
+私有 Bucket 的图片需要使用签名 URL 访问。在服务端生成签名 URL，传给小程序端作为图片 src。
+
+**Q: 上传文件大小有限制吗？**
+
+小程序端使用 PostObject 方式上传，受微信小程序环境限制，建议单文件不超过 10MB。大文件建议通过分片上传实现，但小程序端实现分片上传较为复杂。
+
+**Q: 小程序防盗链返回 403？**
+
+微信小程序的请求 Referer 格式为 `https://servicewechat.com/wx<AppID>/...`。如果配置了防盗链白名单，需要添加 `https://servicewechat.com`。

@@ -1,0 +1,100 @@
+---
+title: "OSS 绑定自定义域名常见问题与配置指南"
+description: "- 需要通过自己的域名（如 `static.yourdomain.com`）访问 OSS 资源 - 使用 OSS 默认域名时 HTML/图片文件被强制下载，需要改为在线预览"
+icon: "book-open"
+---
+
+# OSS 绑定自定义域名常见问题与配置指南
+
+## 适用场景
+
+- 需要通过自己的域名（如 `static.yourdomain.com`）访问 OSS 资源
+- 使用 OSS 默认域名时 HTML/图片文件被强制下载，需要改为在线预览
+- 需要为 OSS 资源配置 HTTPS 访问
+
+## 前提条件
+
+- 拥有一个已注册的域名
+- **中国内地地域的 Bucket**：域名必须已完成 ICP 备案
+- 域名的 DNS 解析管理权限
+
+## 操作步骤
+
+### 步骤 1：绑定自定义域名
+
+1. 登录 [OSS 控制台](https://oss.console.aliyun.com/)
+2. 点击目标 Bucket 名称进入详情
+3. 在左侧导航栏选择「Bucket 配置」>「域名管理」
+4. 点击「绑定域名」，输入您的域名（如 `static.yourdomain.com`）
+5. 系统会提示添加域名所有权验证的 TXT 记录
+
+### 步骤 2：添加 DNS 解析记录
+
+在您的 DNS 服务商处添加以下记录：
+
+**域名验证记录（TXT）**：
+| 主机记录 | 记录类型 | 记录值 |
+|---------|---------|--------|
+| `_dnsauth.static` | TXT | OSS 控制台提供的验证值 |
+
+**CNAME 记录**：
+| 主机记录 | 记录类型 | 记录值 |
+|---------|---------|--------|
+| `static` | CNAME | `your-bucket.oss-cn-hangzhou.aliyuncs.com` |
+
+> **注意**：CNAME 记录值是 Bucket 的外网访问域名，不要加 `http://` 或 `https://` 前缀。
+
+### 步骤 3：验证绑定
+
+绑定成功后，通过 `http://static.yourdomain.com/your-file.jpg` 访问文件验证是否正常。
+
+## 常见问题
+
+### Q1：为什么用 OSS 默认域名访问 HTML 文件会变成下载？
+
+OSS 默认域名（`bucket-name.oss-cn-xxx.aliyuncs.com`）访问 HTML 等文件时，默认行为是下载而非在浏览器中渲染。这是 OSS 的安全策略。
+
+**解决方案**：绑定自定义域名后，通过自定义域名访问即可在浏览器中正常渲染 HTML 页面。
+
+### Q2：域名没有 ICP 备案怎么办？
+
+中国内地地域的 Bucket 必须使用已备案域名。替代方案：
+1. **使用海外地域 Bucket**：将 Bucket 创建在中国香港、新加坡等地域，不要求域名备案
+2. **先完成 ICP 备案**：备案需要关联阿里云中国内地的 ECS 实例（包月 3 个月及以上，具备公网带宽）
+3. **使用 OSS 默认域名**：临时方案，但 HTML 文件会被下载
+
+### Q3：域名验证失败，提示 TXT 记录未生效？
+
+- DNS 记录生效需要时间，通常 10 分钟到 48 小时不等
+- 确认 TXT 记录的主机记录格式正确：如果域名是 `static.yourdomain.com`，主机记录应填 `_dnsauth.static`（不含主域名部分）
+- 使用 `nslookup -type=TXT _dnsauth.static.yourdomain.com` 验证记录是否已生效
+
+### Q4：能否绑定裸域名（如 `yourdomain.com`）？
+
+可以，但裸域名无法直接使用 CNAME 记录。解决方案：
+- 部分 DNS 服务商支持 CNAME 扁平化（如阿里云云解析的 CNAME 记录支持裸域名）
+- 或使用 A 记录指向 CDN IP（需配合 CDN 使用）
+
+### Q5：绑定域名后原有 OSS 默认域名还能用吗？
+
+能用。绑定自定义域名不影响 OSS 默认域名的使用，两个域名可以同时访问。
+
+### Q6：自定义域名突然失效？
+
+常见原因：
+- 域名的 CNAME 解析被修改或删除
+- 域名过期或被暂停解析
+- SSL 证书过期（HTTPS 场景）
+- 域名备案被注销
+
+### Q7：.io、.ai 等域外域名能绑定到国内 Bucket 吗？
+
+如果 Bucket 在中国内地地域，必须完成 ICP 备案。部分域名后缀（如 `.io`）不支持在国内备案，建议：
+- 使用海外地域的 Bucket（如中国香港、新加坡）
+- 或更换为支持备案的域名后缀（如 `.com`、`.cn`）
+
+## 相关文档
+
+- [绑定自定义域名](https://help.aliyun.com/document_detail/31836.html)
+- [域名所有权验证](https://help.aliyun.com/document_detail/2867899.html)
+- [静态网站托管](https://help.aliyun.com/document_detail/98985.html)

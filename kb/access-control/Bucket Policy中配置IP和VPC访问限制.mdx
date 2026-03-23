@@ -1,0 +1,104 @@
+---
+title: "Bucket Policy 中配置 IP 和 VPC 访问限制"
+description: "需要限制只有特定公网 IP 或 VPC 内的请求才能访问 OSS Bucket。本文介绍 Bucket Policy 中 IP 和 VPC 条件的配置方法及常见注意事项。"
+icon: "book-open"
+---
+
+# Bucket Policy 中配置 IP 和 VPC 访问限制
+
+需要限制只有特定公网 IP 或 VPC 内的请求才能访问 OSS Bucket。本文介绍 Bucket Policy 中 IP 和 VPC 条件的配置方法及常见注意事项。
+
+## 适用场景
+
+- 只允许办公网络的固定公网 IP 访问 Bucket。
+- 只允许特定 VPC 内的 ECS 实例通过内网访问 Bucket。
+- 同时限制公网 IP 和 VPC 来源。
+
+## 前提条件
+
+- 已知需要放行的公网 IP 地址或 VPC ID。
+- Bucket 所有者权限。
+
+## 操作步骤
+
+### 重要变更说明
+
+OSS 当前要求：**Bucket Policy 中设置 `acs:SourceIp` 条件时，必须同时配置 `acs:SourceVpc` 条件**。不能单独设置 IP 条件而不指定 VPC。
+
+### 配置方式：使用 Deny + 反向条件
+
+推荐使用**反向逻辑**配置：拒绝 IP 不等于指定值且 VPC 不等于指定值的请求。
+
+```json
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": ["*"],
+      "Action": ["oss:*"],
+      "Resource": [
+        "acs:oss:*:*:your-bucket",
+        "acs:oss:*:*:your-bucket/*"
+      ],
+      "Condition": {
+        "NotIpAddress": {
+          "acs:SourceIp": ["122.224.132.181"]
+        },
+        "StringNotEquals": {
+          "acs:SourceVpc": ["vpc-xxx"]
+        }
+      }
+    }
+  ]
+}
+```
+
+**工作原理**：条件之间是"且（AND）"关系。只有当客户端 IP **不是** 122.224.132.181 **且** 不来自 vpc-xxx 时，才拒绝访问。也就是说：
+- 来自 122.224.132.181 的公网请求 → 允许
+- 来自 vpc-xxx 的内网请求 → 允许
+- 其他来源 → 拒绝
+
+### 通过控制台配置
+
+1. 进入 OSS 控制台 > 目标 Bucket > **权限控制** > **Bucket 授权策略**。
+2. 点击**新增授权**。
+3. 在条件中同时设置：
+   - IP 不等于指定的公网 IP
+   - VPC 不等于指定的 VPC ID
+4. 效果选择**拒绝访问**。
+
+## 验证结果
+
+- 从指定公网 IP 的机器访问 Bucket，应正常返回数据。
+- 从 VPC 内的 ECS 使用内网 Endpoint 访问 Bucket，应正常返回数据。
+- 从其他 IP 或网络访问 Bucket，应返回 `AccessDenied`。
+
+## 常见问题
+
+**Q: 为什么不能只设置公网 IP 白名单，不填 VPC？**
+
+这是 OSS 产品当前的限制。设置 `acs:SourceIp` 条件时，系统要求同时配置 `acs:SourceVpc`。解决方法是随便选一个 VPC（搭配 NotEquals 反向条件），实际效果不受影响。
+
+**Q: VPC 条件中选哪个 VPC？**
+
+如果你只需要限制公网 IP，VPC 条件可以选择任意一个 VPC。在反向条件（Deny + NotEquals）的逻辑下，来自该 VPC 的请求也会被放行，来自指定公网 IP 的请求也会被放行，二者都满足你的需求。
+
+**Q: 配置了 VPC 限制后，从 VPC 内的 ECS 上传仍然报 AccessDenied？**
+
+- 确认 ECS 使用的是 OSS 内网 Endpoint（如 `oss-cn-hangzhou-internal.aliyuncs.com`），而非外网 Endpoint。
+- 确认 ECS 和 Bucket 在同一地域。
+- 确认 Policy 中的 VPC ID 与 ECS 所在的 VPC 一致。
+- 确认 RAM 用户同时具有对应操作的权限。
+
+**Q: 可以设置多个 IP 地址吗？**
+
+可以。在 `acs:SourceIp` 中传入 IP 数组：
+
+```json
+"NotIpAddress": {
+  "acs:SourceIp": ["1.1.1.1", "2.2.2.2", "3.3.3.0/24"]
+}
+```
+
+支持 CIDR 格式的网段表示。

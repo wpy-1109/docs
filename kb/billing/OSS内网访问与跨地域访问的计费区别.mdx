@@ -1,0 +1,90 @@
+---
+title: "OSS内网访问与跨地域访问的计费区别"
+description: "同地域通过内网访问 OSS 可以免除流量费用，但需要正确配置内网 Endpoint。跨地域访问即使在阿里云内部也会产生流量费用。"
+icon: "message-circle-question"
+---
+
+# OSS内网访问与跨地域访问的计费区别
+
+同地域通过内网访问 OSS 可以免除流量费用，但需要正确配置内网 Endpoint。跨地域访问即使在阿里云内部也会产生流量费用。
+
+## 内网 vs 外网访问
+
+| 访问方式 | 流量费用 | Endpoint 格式 |
+|---------|---------|--------------|
+| 同地域内网 | 免费 | `oss-cn-<region>-internal.aliyuncs.com` |
+| 公网（外网） | 收费 | `oss-cn-<region>.aliyuncs.com` |
+| 跨地域（内网或公网） | 收费 | 取决于使用的 Endpoint |
+
+## 如何确认走的是内网还是外网
+
+### 检查 Endpoint 配置
+
+- **内网 Endpoint** 包含 `-internal`，例如：
+  - `oss-cn-hangzhou-internal.aliyuncs.com`
+  - `oss-cn-beijing-internal.aliyuncs.com`
+
+- **外网 Endpoint** 不含 `-internal`，例如：
+  - `oss-cn-hangzhou.aliyuncs.com`
+
+### 在 ECS 上验证
+
+在同地域 ECS 上，使用内网 Endpoint 发起的请求走内网，不产生流量费用。在 ECS 内部也可以使用公网 Endpoint，但这样会走公网并产生流量费用。
+
+> **重要**：ECS 不会自动将公网 Endpoint 路由到内网。必须显式使用内网 Endpoint 才能走内网。
+
+## 常见场景的计费
+
+| 场景 | 流量是否收费 | 说明 |
+|------|------------|------|
+| ECS（杭州）→ OSS（杭州）内网 | 免费 | 同地域内网 |
+| ECS（杭州）→ OSS（杭州）公网 | 收费 | 虽然同地域，但走了公网 |
+| ECS（杭州）→ OSS（北京） | 收费 | 跨地域 |
+| 云函数（同地域）→ OSS | 免费 | 同地域内网访问 |
+| 本地电脑 → OSS | 收费 | 公网访问 |
+| 同 VPC 内的云产品 → OSS | 免费 | 同地域内网 |
+
+## 如何配置内网访问
+
+### ossutil 配置
+
+```bash
+ossutil config -e oss-cn-hangzhou-internal.aliyuncs.com -i <AccessKeyId> -k <AccessKeySecret>
+```
+
+### ossbrowser 配置
+
+在登录页面的 Endpoint 栏填写内网地址，例如：
+```
+https://oss-cn-guangzhou-internal.aliyuncs.com
+```
+
+### SDK 配置
+
+在初始化 OSSClient 时指定内网 Endpoint：
+
+```python
+import oss2
+auth = oss2.Auth('AccessKeyId', 'AccessKeySecret')
+bucket = oss2.Bucket(auth, 'https://oss-cn-hangzhou-internal.aliyuncs.com', 'bucket-name')
+```
+
+## 常见问题
+
+**Q：ECS 挂载 OSS（ossfs）走内网吗？**
+取决于挂载时使用的 Endpoint。使用内网 Endpoint 挂载则走内网免费，使用公网 Endpoint 则走公网收费。
+
+**Q：ECS 和 OSS 在同一个地域但不同可用区，走内网吗？**
+走内网。内网访问是地域级别的，不区分可用区。
+
+**Q：跨账号同地域访问走内网吗？**
+走内网。内网访问不要求同账号，只要求同地域。
+
+**Q：传输加速和内网访问有什么区别？**
+传输加速是优化跨地域、跨境访问速度的增值服务，会产生额外的传输加速费用。内网访问是同地域免费的基础能力。
+
+## 相关链接
+
+- [OSS 访问域名和数据中心](https://help.aliyun.com/zh/oss/user-guide/regions-and-endpoints)
+- [ECS 通过内网访问 OSS](https://help.aliyun.com/zh/oss/user-guide/access-oss-through-ecs-reverse-proxy)
+- [传输加速](https://help.aliyun.com/document_detail/131312.html)
