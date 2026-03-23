@@ -1,102 +1,65 @@
 ---
-title: "Alibaba Cloud Object Storage Service (OSS)"
-description: "Store, manage, and access any amount of data with Alibaba Cloud OSS."
+title: "OSS Knowledge Base"
+description: "Alibaba Cloud OSS 常见问题知识库 — 来自 4,126 个真实工单的实战解答"
 ---
 
-Alibaba Cloud Object Storage Service (OSS) is a secure, cost-effective, and highly durable cloud storage service that lets you store, back up, and archive any amount of data in the cloud.
+基于 **4,126 个真实客户工单**，整理出 **88 篇**高频问题解答，覆盖计费、权限、网络、签名、安全、上传下载等核心场景。
 
 <CardGroup cols={2}>
   <Card
-    title="Get started"
-    icon="rocket"
-    href="/get-started/what-is-oss"
+    title="计费与资源包"
+    icon="money-bill"
+    href="/kb/billing/OSS计费规则与费用构成详解"
   >
-    Learn what OSS is, explore core concepts, and set up your first bucket.
+    资源包选购、抵扣规则、欠费处理、费用优化（22 篇）
   </Card>
   <Card
-    title="SDKs"
-    icon="code"
-    href="/sdks/overview"
+    title="访问控制与权限"
+    icon="lock"
+    href="/kb/access-control/OSS访问控制体系概览与选型建议"
   >
-    Integrate OSS into your application with SDKs for Java, Python, Go, Node.js, and more.
+    RAM 授权��Bucket Policy、ACL、跨账号访问（17 篇）
   </Card>
   <Card
-    title="API reference"
-    icon="terminal"
-    href="/api-reference/overview"
+    title="域名与网络"
+    icon="globe"
+    href="/kb/domain-network/OSS绑定自定义域名常见问题与配置指南"
   >
-    Complete REST API documentation for all OSS operations.
+    自定义域名、CDN 加速、CORS 跨域、传输加速（20 篇）
   </Card>
   <Card
-    title="Tools & resources"
-    icon="wrench"
-    href="/tools/ossutil/overview"
+    title="签名与认证"
+    icon="key"
+    href="/kb/auth-signature/OSS预签名URL生成使用与常见报错处理"
   >
-    CLI tools, Terraform, vector search, best practices, and troubleshooting.
-  </Card>
-</CardGroup>
-
-## Quickstart
-
-Get up and running with OSS in minutes.
-
-<CardGroup cols={3}>
-  <Card
-    title="Console"
-    icon="browser"
-    href="/quickstart"
-  >
-    Create a bucket and upload objects using the web console.
+    V4 签名、STS 临时凭证、预签名 URL、PostObject（9 篇）
   </Card>
   <Card
-    title="CLI"
-    icon="square-terminal"
-    href="/quickstart"
+    title="安全与合规"
+    icon="shield-check"
+    href="/kb/security/OSS文件误删除后如何恢复数据"
   >
-    Manage OSS resources from the command line with ossutil.
+    数据恢复、版本控制、WORM、内容安全、日志审计（5 篇）
   </Card>
   <Card
-    title="SDK"
-    icon="laptop-code"
-    href="/quickstart"
+    title="上传与传输"
+    icon="upload"
+    href="/kb/upload/OSS上传失败常见错误与排查方法"
   >
-    Upload your first object programmatically with Python, Java, Go, or Node.js.
+    上传方式、大小限制、ossutil 增量同步（4 篇）
   </Card>
-</CardGroup>
-
-## Key capabilities
-
-<CardGroup cols={2}>
-  <Card title="Flexible storage classes" icon="layer-group">
-    Standard, Infrequent Access, Archive, Cold Archive, and Deep Cold Archive tiers to optimize cost and performance.
+  <Card
+    title="数据管理"
+    icon="database"
+    href="/kb/data-management/OSS生命周期规则配置与自动数据清理"
+  >
+    生命周期、批量删除、存储用量查询（3 篇）
   </Card>
-  <Card title="Data protection" icon="shield-check">
-    Server-side encryption, versioning, cross-region replication, and WORM retention policies.
-  </Card>
-  <Card title="Access control" icon="lock">
-    Fine-grained permissions with RAM policies, bucket policies, ACLs, STS temporary credentials, and presigned URLs.
-  </Card>
-  <Card title="Data processing" icon="wand-magic-sparkles">
-    Built-in image processing, video snapshots, content detection, and AI-powered data indexing.
-  </Card>
-  <Card title="Acceleration" icon="bolt">
-    Transfer acceleration, CDN integration, and global acceleration for low-latency access worldwide.
-  </Card>
-  <Card title="S3 compatibility" icon="arrows-rotate">
-    Compatible with Amazon S3 APIs, making migration and multi-cloud workflows straightforward.
-  </Card>
-</CardGroup>
-
-## Explore more
-
-<CardGroup cols={3}>
-  <Card title="Pricing" icon="money-bill" href="/resources/pricing/overview">
-    Pay-as-you-go and resource plan options for storage, traffic, and API requests.
-  </Card>
-  <Card title="Best practices" icon="star" href="/resources/best-practices/performance">
-    Optimize performance, security, and cost.
-  </Card>
-  <Card title="FAQ" icon="circle-question" href="/resources/faq/general">
-    Answers to common questions about OSS.
+  <Card
+    title="更多主题"
+    icon="ellipsis"
+    href="/kb/download/OSS文件下载与批量下载方法"
+  >
+    下载预览、数据迁移、图片处理、存储配置、工具使用（8 篇）
   </Card>
 </CardGroup>

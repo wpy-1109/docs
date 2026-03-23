@@ -103,74 +103,7 @@
   "seo": {
     "indexHiddenPages": false
   },
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "OSS",
-        "groups": [
-          {
-            "group": "Concepts",
-            "pages": [
-              "get-started/concepts/storage-classes"
-            ]
-          },
-          {
-            "group": "Access and network",
-            "pages": [
-              "oss/access-and-network/overview",
-              "oss/access-and-network/custom-domain-names",
-              "oss/access-and-network/browser-preview"
-            ]
-          },
-          {
-            "group": "Best Practices",
-            "pages": [
-              "resources/best-practices/cost-optimization",
-              "guides/data-management/data-migration"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "resources/s3-compatibility"
-            ]
-          },
-          {
-            "group": "Tools",
-            "pages": [
-              "tools/ossbrowser/overview"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "CPFS for Lingjun",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "cpfs/what-is-cpfs-for-lingjun"
-            ]
-          },
-          {
-            "group": "Product details",
-            "pages": [
-              "cpfs/cpfs-lingjun-specifications",
-              "cpfs/cpfs-lingjun-limits"
-            ]
-          },
-          {
-            "group": "Mounting guides",
-            "pages": [
-              "cpfs/cpfs-lingjun-mount-pai",
-              "cpfs/cpfs-lingjun-mount-acs"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Knowledge Base",
-        "groups": [
+  "navigation": [
           {
             "group": "Billing & Packages (计费与资源包)",
             "pages": [
@@ -324,8 +257,5 @@
               "kb/misc/OSS有效请求率报警排查与处理"
             ]
           }
-        ]
-      }
-    ]
-  }
+  ]
 }
